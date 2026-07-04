@@ -1,12 +1,14 @@
 """
 noise_sim.py — Depolarizing noise robustness experiment for FQCNN
 
-The model was trained with patch (quanvolutional) encoding, so this evaluates the
-trained weights on the REAL 196-dim quanvolutional features of the reconstructed
-test set (not raw pixels). It reconstructs the exact training test split (seed-42
-pipeline) to recover aligned labels, reuses the cached quanv features (with an
-alignment guard), derives the circuit qubit count from the saved weights, then
-sweeps depolarizing noise p across [0, 0.20] and plots experimental vs theoretical.
+Evaluates the trained weights on the REAL test set under a depolarizing-noise sweep.
+The encoding used for training (amplitude, patch, …) is read from Results/metadata.json
+so the reconstructed test features match exactly what the model was trained on:
+  - amplitude : flattened, normalized raw-pixel features (image_size²-dim)
+  - patch     : 196-dim quanvolutional features (with a cache-alignment guard)
+It reconstructs the exact training test split (seed-42 pipeline) to recover aligned
+labels, derives the circuit qubit count from the saved weights, then sweeps depolarizing
+noise p across [0, 0.20] and plots experimental vs theoretical.
 
 Standalone:   python noise_sim.py
 Programmatic: from noise_sim import run_noise_simulation
@@ -14,11 +16,39 @@ Programmatic: from noise_sim import run_noise_simulation
 
 import sys
 import os
+import json
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 import pennylane as qml
 from sklearn.model_selection import train_test_split
+
+
+# Batch size for broadcasted circuit execution. A broadcasted ``default.mixed`` batch
+# holds a (CHUNK, 2**n, 2**n) complex density tensor (~CHUNK MB at 8 qubits) plus
+# intermediates, so we chunk the test set to bound peak memory. CHUNK=1 degenerates to
+# the original one-sample-at-a-time behaviour (kept as a safety fallback).
+DEFAULT_CHUNK = 64
+
+
+def _load_training_config(weights_path):
+    """
+    Read the training config saved alongside the weights (Results/metadata.json).
+
+    Returns the ``config`` dict (encoding_type, image_size, classes, preprocessing_mode,
+    …) or None if the metadata file is absent, so callers can fall back to defaults.
+    """
+    meta_path = os.path.normpath(
+        os.path.join(os.path.dirname(os.path.abspath(weights_path)), '..', 'metadata.json'))
+    if not os.path.isfile(meta_path):
+        return None
+    with open(meta_path) as f:
+        meta = json.load(f)
+    cfg = meta.get('config', meta)
+    print(f"  Loaded training config from {meta_path}: "
+          f"encoding={cfg.get('encoding_type')}, image_size={cfg.get('image_size')}, "
+          f"classes={cfg.get('classes')}")
+    return cfg
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -35,16 +65,20 @@ def _find_mnist_idx(mnist_dir):
     return os.path.join(mnist_dir, images_f), os.path.join(mnist_dir, labels_f)
 
 
-def _reconstruct_training_split(image_size, classes, n_samples, mnist_path=None):
+def _reconstruct_training_split(image_size, classes, n_samples, mnist_path=None,
+                                encoding_type='patch', normalization='minmax'):
     """
-    Reproduce the EXACT data pipeline from main.py so the recovered test images and
-    labels line up with the trained model (and with the cached quanv features).
+    Reproduce the EXACT data pipeline from main.py so the recovered test data and
+    labels line up with the trained model.
 
-    Mirrors: load IDX → filter classes → preprocess_for_quantum(patch) →
+    Mirrors: load IDX → filter classes → preprocess_for_quantum(encoding_type) →
     seed-42 stratified downsample to n_samples/0.7 → train_test_split(random_state=42).
 
-    Returns (X_test_img, y_test): normalized (image_size x image_size) test images
-    and labels in {-1, +1}, in the same order the trainer saw them.
+    Returns (X_test, y_test) with labels in {-1, +1}, in the same order the trainer saw:
+      - 'patch'     : X_test is normalized (image_size x image_size) 2D images (the quanv
+                      layer runs on these downstream).
+      - 'amplitude' : X_test is the flattened, normalized feature matrix the QCNN circuit
+                      consumes directly (image_size²-dim raw-pixel features).
     """
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from QCNN.utils.dataset_loader import load_idx_dataset
@@ -62,13 +96,14 @@ def _reconstruct_training_split(image_size, classes, n_samples, mnist_path=None)
     X_raw, y_raw = X_raw[mask], y_raw[mask]
     print(f"  After class filter {classes}: {len(X_raw)} samples")
 
-    # patch-mode preprocessing keeps 2D image structure (exactly as in training)
+    # Preprocess exactly as in training. 'patch' keeps 2D image structure for the quanv
+    # layer; 'amplitude' returns the flattened, normalized feature matrix the circuit uses.
     X_pp, y_pp = preprocess_for_quantum(
         X_raw, y_raw,
         n_qubits=int(math.ceil(math.log2(max(image_size * image_size, 2)))),
         image_size=image_size,
-        normalization='minmax',
-        encoding_type='patch',
+        normalization=normalization,
+        encoding_type=encoding_type,
     )
 
     # stratified downsample to total_needed = n_samples / 0.7 (mirrors main.py:153-181).
@@ -213,15 +248,20 @@ def _make_noisy_circuit(n_qubits, n_conv, n_pool, flat_params, spec):
 
     dev = qml.device('default.mixed', wires=n_qubits)
 
+    # Hoisted out of the QNode: these are identical on every execution, so computing
+    # them once (instead of per sample / per broadcasted batch) removes redundant work.
+    params = _unflatten_params(flat_params, n_conv, n_pool, n_qubits)
+    all_qubits = list(range(n_qubits))
+
     def _cnot(a, b):
         qml.CNOT(wires=[a, b])
         _apply_2q_noise(a, b, spec)
 
     @qml.qnode(dev, interface='numpy')
     def circuit(x):
-        params = _unflatten_params(flat_params, n_conv, n_pool, n_qubits)
-        all_qubits = list(range(n_qubits))
-
+        # ``x`` may be a single amplitude vector (2**n_qubits,) or a batch
+        # (batch, 2**n_qubits); AmplitudeEmbedding broadcasts over the leading
+        # batch dim and expval then returns a (batch,) array.
         qml.AmplitudeEmbedding(features=x, wires=all_qubits, normalize=True)
         _apply_1q_noise(all_qubits, spec)
 
@@ -299,9 +339,23 @@ def run_noise_simulation(
     classes=(0, 1),
     max_test=200,
     noise_model='depolarizing',
+    levels=None,
+    chunk_size=DEFAULT_CHUNK,
 ):
     np.random.seed(42)
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+
+    # ── config: read the encoding the model was actually trained with ───────────
+    cfg = _load_training_config(weights_path)
+    if cfg is not None:
+        encoding_type = cfg.get('encoding_type', 'patch')
+        image_size    = cfg.get('image_size', image_size)
+        normalization = cfg.get('preprocessing_mode', 'minmax')
+        if cfg.get('classes'):
+            classes = tuple(cfg['classes'])
+    else:
+        print("  No metadata.json found — defaulting to patch encoding.")
+        encoding_type, normalization = 'patch', 'minmax'
 
     # ── weights ───────────────────────────────────────────────────────────────
     print("Loading trained weights...")
@@ -313,51 +367,56 @@ def run_noise_simulation(
     n_pool = len([k for k in w.keys() if 'pooling' in k])
 
     # Derive n_qubits from the saved pooling weights (pool_size = 3 * (n_qubits // 2)).
-    # The trained model uses 8 qubits regardless of image_size, because patch encoding
-    # reduces the image to a fixed-length quanvolutional feature vector first.
     n_qubits = 2 * (w['quantum_pooling_0'].size // 3)
     target_len = 2 ** n_qubits
-    print(f"\nInferred: {n_conv} conv layers, {n_pool} pool layers, {n_qubits} qubits (target_len={target_len})")
+    print(f"\nInferred: {n_conv} conv layers, {n_pool} pool layers, {n_qubits} qubits "
+          f"(target_len={target_len}), encoding='{encoding_type}'")
 
-    # ── reconstruct the REAL test set (images + aligned labels) ─────────────────
+    # ── reconstruct the REAL test set (features/images + aligned labels) ────────
     print(f"\nReconstructing the trained test set (image_size={image_size}, "
           f"n_samples={n_samples}, classes={classes})...")
-    X_test_img, y_test = _reconstruct_training_split(image_size, classes, n_samples, mnist_path)
-
-    out_dim = (image_size - 4) // 4 + 1  # patch_size=4, stride=4
-    n_feat = out_dim * out_dim * 4       # quanv output features (4 filters) → 196 for 28x28
-
-    # ── obtain the quanvolutional features for the test set (matching training) ─
-    # The model was trained on these features, NOT raw pixels. Prefer the cached
-    # features written during training; verify alignment before trusting them.
-    cache_dir = os.path.normpath(
-        os.path.join(os.path.dirname(os.path.abspath(weights_path)), '..', 'Cache'))
-    cached = _resolve_cached_features(cache_dir, len(X_test_img), n_feat)
-    if cached is not None:
-        check = _quanv_features_for(X_test_img[:5])
-        if np.allclose(check, cached[:5], atol=1e-6):
-            print("  Alignment guard PASSED — using cached quanvolutional features.")
-        else:
-            print("  Alignment guard FAILED — will recompute quanv for the evaluated subset.")
-            cached = None
+    X_test, y_test = _reconstruct_training_split(
+        image_size, classes, n_samples, mnist_path,
+        encoding_type=encoding_type, normalization=normalization)
 
     # ── pick the evaluation subset ──────────────────────────────────────────────
     np.random.seed(123)  # reproducible subset selection, independent of pipeline RNG
-    if max_test is not None and len(X_test_img) > max_test:
-        sub = np.random.choice(len(X_test_img), max_test, replace=False)
+    if max_test is not None and len(X_test) > max_test:
+        sub = np.random.choice(len(X_test), max_test, replace=False)
     else:
-        sub = np.arange(len(X_test_img))
+        sub = np.arange(len(X_test))
     y_test = y_test[sub]
 
-    if cached is not None:
-        X_feat = cached[sub]
+    # ── obtain the circuit-input features matching the trained encoding ─────────
+    if encoding_type == 'patch':
+        # Model was trained on 196-dim quanvolutional features (NOT raw pixels).
+        # Prefer the cache written during training; verify alignment before trusting it.
+        out_dim = (image_size - 4) // 4 + 1  # patch_size=4, stride=4
+        n_feat = out_dim * out_dim * 4       # quanv output features (4 filters) → 196 for 28x28
+        cache_dir = os.path.normpath(
+            os.path.join(os.path.dirname(os.path.abspath(weights_path)), '..', 'Cache'))
+        cached = _resolve_cached_features(cache_dir, len(X_test), n_feat)
+        if cached is not None:
+            check = _quanv_features_for(X_test[:5])
+            if np.allclose(check, cached[:5], atol=1e-6):
+                print("  Alignment guard PASSED — using cached quanvolutional features.")
+            else:
+                print("  Alignment guard FAILED — recomputing quanv for the evaluated subset.")
+                cached = None
+        if cached is not None:
+            X_feat = cached[sub]
+        else:
+            print(f"  Computing quanvolutional features for {len(sub)} test images...")
+            X_feat = _quanv_features_for(X_test[sub])
     else:
-        print(f"  Computing quanvolutional features for {len(sub)} test images...")
-        X_feat = _quanv_features_for(X_test_img[sub])
+        # amplitude/feature_map: the reconstructed split IS already the feature matrix
+        # the circuit consumes (flattened, normalized raw pixels).
+        X_feat = X_test[sub]
+
     print(f"  Evaluating on {len(sub)} real test samples ({X_feat.shape[1]}-dim features)")
 
-    # Model pads 196→256 then AmplitudeEmbedding(normalize=True); _preprocess_for_circuit
-    # reproduces that (pad to 2^n_qubits + unit-norm).
+    # Model pads features → 2^n_qubits then AmplitudeEmbedding(normalize=True);
+    # _preprocess_for_circuit reproduces that (pad to target_len + unit-norm).
     X_test_proc = _preprocess_for_circuit(X_feat, target_len)
     flat_params  = _flatten_weights(w, n_conv, n_pool)
     print(f"  Flat params: {len(flat_params)}")
@@ -365,13 +424,16 @@ def run_noise_simulation(
     # ── noise sweep ───────────────────────────────────────────────────────────
     print(f"\nNoise model: '{noise_model}'")
     if noise_model == 'depolarizing':
-        levels = [0.00, 0.01, 0.02, 0.03, 0.05, 0.07, 0.10, 0.13, 0.15, 0.20]
+        default_levels = [0.00, 0.01, 0.02, 0.03, 0.05, 0.07, 0.10, 0.13, 0.15, 0.20]
         x_label = 'Depolarizing noise probability p'
         level_fmt = lambda v: f"p={v:.2f}"
     else:  # 'realistic'
-        levels = [0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 5.0]
+        default_levels = [0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 5.0]
         x_label = 'Noise multiplier (x IBM base rates)'
         level_fmt = lambda v: f"{v:.1f}x"
+    # ``levels`` may be overridden by the caller (fewer points → faster sweep on the
+    # heavy 10-qubit default.mixed device). Falls back to the full-resolution default.
+    levels = list(levels) if levels else default_levels
     p_values = levels  # alias kept for the plotting/summary code below
 
     real_accs = []
@@ -381,10 +443,18 @@ def run_noise_simulation(
     print(f"  {'level':>8}  {'accuracy':>10}")
     print("  " + "-" * 24)
 
+    cs = max(1, int(chunk_size))
     for p in levels:
         spec = _build_noise_spec(noise_model, p)
         circuit = _make_noisy_circuit(n_qubits, n_conv, n_pool, flat_params, spec)
-        raw_outputs = np.array([float(circuit(xi)) for xi in X_test_proc])
+        # Broadcast the amplitude embedding over a batch of samples in a single
+        # traced execution instead of one QNode call per image. Chunked to bound the
+        # broadcasted density-matrix memory; results are identical to the per-sample
+        # path (see sanity check). cs == 1 reproduces the original one-at-a-time loop.
+        raw_outputs = np.concatenate([
+            np.atleast_1d(np.asarray(circuit(X_test_proc[i:i + cs]), dtype=float))
+            for i in range(0, len(X_test_proc), cs)
+        ])
 
         # Calibrate the decision threshold once at the zero-noise point.
         if p == levels[0]:
@@ -452,6 +522,9 @@ if __name__ == "__main__":
     ap.add_argument('--image-size', type=int, default=28)
     ap.add_argument('--n-samples', type=int, default=8000)
     ap.add_argument('--classes', type=int, nargs=2, default=[0, 1])
+    ap.add_argument('--chunk-size', type=int, default=DEFAULT_CHUNK,
+                    help="batch size for broadcasted circuit execution "
+                         "(lower = less memory; 1 = original per-sample loop)")
     args = ap.parse_args()
 
     suffix = 'realistic' if args.noise_model == 'realistic' else 'depolarizing'
@@ -462,4 +535,5 @@ if __name__ == "__main__":
         n_samples=args.n_samples,
         classes=tuple(args.classes),
         noise_model=args.noise_model,
+        chunk_size=args.chunk_size,
     )
