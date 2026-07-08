@@ -37,7 +37,8 @@ class QuantumNativeTrainer:
                                X_test: np.ndarray, y_test: np.ndarray,
                                log_filepath='quantum_training_log.txt',
                                summary_filepath='training_summary.txt',
-                               validate_data: bool = True) -> PureQuantumNativeCNN:
+                               validate_data: bool = True,
+                               save_weights: bool = True) -> PureQuantumNativeCNN:
 
         if validate_data:
             self._validate_dataset(X_train, y_train, model)
@@ -122,13 +123,14 @@ class QuantumNativeTrainer:
                 def quantum_cost(params):
                     model.quantum_params = model._unflatten_params(params)
                     X_processed = model._preprocess_input(X_quantum_batch)
-                    # FIX: loop sample-by-sample — AmplitudeEmbedding with
-                    # MottonenStatePreparation does not support batched input
-                    # in PennyLane 0.38 without broadcast_expand
-                    preds = pnp.array([
-                        model.quantum_circuit(pnp.array(X_processed[j]), params)
-                        for j in range(len(X_processed))
-                    ])
+                    if model.fast_backprop:
+                        # Single broadcasted pass over the whole batch (default.qubit + backprop).
+                        preds = model.quantum_circuit(pnp.array(X_processed), params)
+                    else:
+                        preds = pnp.array([
+                            model.quantum_circuit(pnp.array(X_processed[j]), params)
+                            for j in range(len(X_processed))
+                        ])
                     preds = pnp.atleast_1d(preds)
                     if self.use_bce:
                         loss = self._bce_loss(preds, y_quantum_batch)
@@ -148,10 +150,15 @@ class QuantumNativeTrainer:
 
                 X_processed = model._preprocess_input(X_quantum_batch)
                 if i == 0:
-                    quantum_outputs = pnp.array([
-                        float(model.quantum_circuit(pnp.array(X_processed[j]), params_flat))
-                        for j in range(min(5, len(X_processed)))  # only first 5 for speed
-                    ])
+                    probe = X_processed[:min(5, len(X_processed))]  # only first 5 for speed
+                    if model.fast_backprop:
+                        quantum_outputs = pnp.atleast_1d(
+                            np.asarray(model.quantum_circuit(pnp.array(probe), params_flat)))
+                    else:
+                        quantum_outputs = pnp.array([
+                            float(model.quantum_circuit(pnp.array(probe[j]), params_flat))
+                            for j in range(len(probe))
+                        ])
                     print(
                         f"Epoch {epoch+1} Batch {i//model.config.batch_size+1} | "
                         f"Loss: {float(loss_val):.6f} | "
@@ -223,11 +230,15 @@ class QuantumNativeTrainer:
             with open(summary_filepath, 'a', encoding='utf-8') as sf:
                 sf.write(final_msg)
 
-        weights_dir = os.path.join('Results', 'Weights')
-        os.makedirs(weights_dir, exist_ok=True)
-        weights_path = os.path.join(weights_dir, 'quantum_model_params.npz')
-        self.save_params(model.quantum_params, weights_path)
-        print(f"Saved trained quantum model parameters to '{weights_path}'")
+        # save_weights=False for parallel ablation runs: they don't consume the saved
+        # weights (metrics come from the in-memory model) and share this single fixed path,
+        # so concurrent writers would corrupt it.
+        if save_weights:
+            weights_dir = os.path.join('Results', 'Weights')
+            os.makedirs(weights_dir, exist_ok=True)
+            weights_path = os.path.join(weights_dir, 'quantum_model_params.npz')
+            self.save_params(model.quantum_params, weights_path)
+            print(f"Saved trained quantum model parameters to '{weights_path}'")
         print(f"\nBest Quantum Test Accuracy: {best_accuracy:.3f}")
         return model
 

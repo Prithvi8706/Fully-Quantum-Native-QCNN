@@ -80,7 +80,16 @@ class QuantumNativeConfig:
         # Quantum device
         self.device = 'lightning.qubit'
         self.shots = None  # Exact quantum simulation
-    
+
+        # Fast training path: use default.qubit + backprop with a single broadcasted
+        # whole-batch forward pass (one circuit execution per batch instead of one per
+        # sample). ~10-100x faster on the small qubit counts used here. Set False to fall
+        # back to the exact-reproduction lightning.qubit + adjoint per-sample loop.
+        self.fast_backprop = True
+        # Batched backprop keeps batch × 2^n_qubits × depth in memory. Above this qubit
+        # count it OOMs, so fall back to the memory-light lightning+adjoint per-sample path.
+        self.fast_backprop_max_qubits = 12
+
     def configure_for_image(self, image_size: int, encoding: str = 'auto'):
         """
         Auto-configure qubit count and encoding based on image size.

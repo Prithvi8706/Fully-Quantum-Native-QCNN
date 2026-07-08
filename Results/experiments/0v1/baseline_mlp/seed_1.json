@@ -3,14 +3,14 @@
   "precision": 0.5,
   "recall": 1.0,
   "f1": 0.6666666666666666,
-  "roc_auc": 0.23964497041420116,
-  "pr_auc": 0.3396125372212328,
-  "tp": 13,
+  "roc_auc": 0.31104651162790703,
+  "pr_auc": 0.3732908950150766,
+  "tp": 86,
   "tn": 0,
-  "fp": 13,
+  "fp": 86,
   "fn": 0,
-  "prediction_bias": -0.4108098729425522,
-  "prediction_variance": 0.04250305200729468,
+  "prediction_bias": -0.4174208837554514,
+  "prediction_variance": 0.023918443815717352,
   "hidden_layer_sizes": [
     2
   ]

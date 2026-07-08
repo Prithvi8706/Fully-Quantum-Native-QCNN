@@ -20,7 +20,20 @@ class PureQuantumNativeCNN:
     #constructor
     def __init__(self, config: QuantumNativeConfig):
         self.config = config
-        self.device = qml.device(config.device, wires=config.n_qubits)
+        # Fast path: default.qubit + backprop natively broadcasts a whole batch through a
+        # single statevector pass. Fallback: the configured device (lightning.qubit) with
+        # adjoint, evaluated one sample at a time.
+        # Batched backprop OOMs at high qubit counts (memory ~ batch × 2^n_qubits × depth),
+        # so gate the fast path by qubit count; larger circuits use the memory-light
+        # lightning+adjoint per-sample path instead.
+        _want_fast = getattr(config, 'fast_backprop', False)
+        _max_q = getattr(config, 'fast_backprop_max_qubits', 12)
+        self.fast_backprop = _want_fast and config.n_qubits <= _max_q
+        if _want_fast and not self.fast_backprop:
+            print(f"[QCNNModel] {config.n_qubits} qubits > {_max_q}: using memory-safe "
+                  f"lightning+adjoint per-sample path (batched backprop would OOM).")
+        device_name = 'default.qubit' if self.fast_backprop else config.device
+        self.device = qml.device(device_name, wires=config.n_qubits)
         self.num_qubits = config.n_qubits
 
         self.quanv_layer = None
@@ -35,9 +48,11 @@ class PureQuantumNativeCNN:
 
         self.quantum_params = self._initialize_quantum_parameters()
 
-        # FIX: removed @qml.transforms.broadcast_expand — not compatible with
-        # AmplitudeEmbedding / MottonenStatePreparation in PennyLane 0.38
-        @qml.qnode(self.device, interface='autograd', diff_method='best')
+        # default.qubit supports backprop + input broadcasting, so a batched x (shape
+        # (batch, features)) returns one <Z> per sample in a single pass. lightning.qubit
+        # uses adjoint ('best') and is driven one sample at a time by the callers.
+        diff_method = 'backprop' if self.fast_backprop else 'best'
+        @qml.qnode(self.device, interface='autograd', diff_method=diff_method)
         def quantum_circuit(x, flat_params):
             params = self._unflatten_params(flat_params)
             return self._pure_quantum_forward(x, params)
@@ -216,23 +231,27 @@ class PureQuantumNativeCNN:
         return float(self.quantum_circuit(x_processed, flat_params))
 
     def quantum_predict_batch(self, X: np.ndarray) -> np.ndarray:
-        # FIX: loop sample-by-sample — AmplitudeEmbedding doesn't support
-        # batched input with MottonenStatePreparation in PennyLane 0.38
         X_processed = self._preprocess_input(X)
         flat_params = self._flatten_params(self.quantum_params)
-        outputs = np.array([
-            float(self.quantum_circuit(X_processed[i], flat_params))
-            for i in range(len(X_processed))
-        ])
+        if self.fast_backprop:
+            # Single broadcasted pass → vector of <Z>, one per sample.
+            outputs = np.asarray(self.quantum_circuit(pnp.array(X_processed), flat_params))
+        else:
+            outputs = np.array([
+                float(self.quantum_circuit(X_processed[i], flat_params))
+                for i in range(len(X_processed))
+            ])
         return np.where(outputs > 0, 1, -1)
 
     def quantum_loss_function(self, X_batch: np.ndarray, y_batch: np.ndarray) -> float:
-        # FIX: loop sample-by-sample for same reason as predict_batch
         X_processed = self._preprocess_input(X_batch)
         flat_params = self._flatten_params(self.quantum_params)
-        preds = pnp.array([
-            self.quantum_circuit(pnp.array(X_processed[i]), flat_params)
-            for i in range(len(X_processed))
-        ])
+        if self.fast_backprop:
+            preds = self.quantum_circuit(pnp.array(X_processed), flat_params)
+        else:
+            preds = pnp.array([
+                self.quantum_circuit(pnp.array(X_processed[i]), flat_params)
+                for i in range(len(X_processed))
+            ])
         y_batch = pnp.array(y_batch)
         return pnp.mean((preds - y_batch) ** 2)

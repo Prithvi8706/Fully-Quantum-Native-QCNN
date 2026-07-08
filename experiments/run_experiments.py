@@ -33,6 +33,14 @@ import json
 import os
 import random
 
+# Pin BLAS to one thread per process BEFORE numpy imports. Runs are parallelised across
+# processes (--jobs); default.qubit+backprop is numpy/BLAS-bound, so letting each worker
+# also spawn BLAS threads would oversubscribe the cores and thrash.
+for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
+           "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+    os.environ.setdefault(_v, "1")
+
+import concurrent.futures
 import numpy as np
 from sklearn.model_selection import train_test_split
 
@@ -62,8 +70,10 @@ ABLATION_CONFIGS = {
     "ent_one_diagonal":dict(image_size=16, encoding="amplitude", conv_entanglement="one_diagonal"),
     "ent_none":        dict(image_size=16, encoding="amplitude", conv_entanglement="none"),
     "kernel_ry":       dict(image_size=16, encoding="amplitude", kernel_rotations="ry"),
-    # Encoding ablation uses a small image so feature_map stays simulable.
-    "enc_feature_map": dict(image_size=4, encoding="feature_map"),
+    # Encoding ablation uses a small image so feature_map (1 qubit/pixel) stays
+    # simulable. 3x3 -> 9 qubits keeps it on the fast, memory-safe batched backprop path;
+    # 4x4 -> 16 qubits OOMs under backprop and is ~50x slower on the per-sample fallback.
+    "enc_feature_map": dict(image_size=3, encoding="feature_map"),
 }
 
 
@@ -142,6 +152,7 @@ def run_qcnn(cfg: QuantumNativeConfig, split, use_bce: bool, log_path: str) -> d
         trained = trainer.train_pure_quantum_cnn(
             model, X_train, y_train, X_test, y_test,
             log_filepath=log_path, summary_filepath=None,
+            save_weights=False,  # parallel runs share one weights path; don't race on it
         )
         X_eval = getattr(trained, "_quantum_preprocessed_test", X_test)
         if len(X_eval) != len(y_test):
@@ -188,6 +199,26 @@ def run_single(config_name: str, classes, seed: int, dataset_dir: str,
     return metrics
 
 
+def _run_cell(task: tuple):
+    """Module-level worker for one (config, dataset, seed) grid cell (picklable).
+
+    Returns (ds_name, config_name, seed, metrics_or_None, error_or_None). Never raises —
+    a failed cell is reported so the study continues, matching the sequential behaviour.
+    """
+    (config_name, pair, seed, mnist_dir, samples, epochs, use_bce,
+     ds_dir, with_baselines) = task
+    ds_name = _fmt_pair(pair)
+    try:
+        m = run_single(
+            config_name, pair, seed, mnist_dir, samples, epochs,
+            use_bce=use_bce, out_dir=ds_dir, with_baselines=with_baselines,
+        )
+        return (ds_name, config_name, seed, m, None)
+    except Exception:
+        import traceback
+        return (ds_name, config_name, seed, None, traceback.format_exc())
+
+
 def _fmt_pair(pair) -> str:
     return f"{pair[0]}v{pair[1]}"
 
@@ -206,6 +237,11 @@ def main():
     ap.add_argument("--no-baselines", action="store_true")
     ap.add_argument("--quick", action="store_true",
                     help="Tiny smoke run: 1 pair, proposed+pool_none, 2 seeds, 60 samples")
+    ap.add_argument("--jobs", "-j", type=int, default=None,
+                    help="Parallel worker processes over the (dataset,config,seed) grid. "
+                         "Default: min(n_tasks, cpu_count-1, 8). Use 1 for sequential. "
+                         "NOTE: the enc_feature_map config uses 16 qubits — lower --jobs "
+                         "if it exhausts memory under backprop.")
     args = ap.parse_args()
 
     if args.quick:
@@ -218,37 +254,60 @@ def main():
     pairs = [tuple(int(c) for c in d.split(",")) for d in args.datasets]
     os.makedirs(EXP_ROOT, exist_ok=True)
 
+    # Build the flat (config, dataset, seed) task grid. Every cell is independent and
+    # writes only its own unique seed_<s>.json / .log, so cells run concurrently as
+    # separate processes; aggregation happens in this parent AFTER all cells finish.
+    tasks = []
+    for pair in pairs:
+        ds_dir = os.path.join(EXP_ROOT, _fmt_pair(pair))
+        for config_name in args.configs:
+            for seed in args.seeds:
+                tasks.append((config_name, pair, seed, args.mnist_dir, args.samples,
+                              args.epochs, not args.use_mse, ds_dir,
+                              not args.no_baselines))
+
+    n_cpu = os.cpu_count() or 1
+    jobs = args.jobs if args.jobs is not None else min(len(tasks), max(1, n_cpu - 1), 8)
+    jobs = max(1, min(jobs, len(tasks)))
+    print(f"Running {len(tasks)} cells across {jobs} worker process(es)...", flush=True)
+
+    # (ds_name, config_name) -> {seed: metrics}
+    results: dict = {}
+
+    def _record(res):
+        ds_name, config_name, seed, m, err = res
+        if err is not None:
+            print(f"  [{ds_name}] {config_name} seed={seed} FAILED:\n{err}", flush=True)
+            return
+        results.setdefault((ds_name, config_name), {})[seed] = m
+        print(f"  [{ds_name}] {config_name} seed={seed}  "
+              f"acc={m['accuracy']:.3f} f1={m['f1']:.3f} auc={m['roc_auc']:.3f}", flush=True)
+
+    if jobs == 1:
+        for task in tasks:
+            _record(_run_cell(task))
+    else:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=jobs) as ex:
+            futures = [ex.submit(_run_cell, task) for task in tasks]
+            for fut in concurrent.futures.as_completed(futures):
+                _record(fut.result())
+
+    # ── aggregation (parent only, after the barrier) ────────────────────────────
     summary_rows = []
     for pair in pairs:
         ds_name = _fmt_pair(pair)
         ds_dir = os.path.join(EXP_ROOT, ds_name)
-        print(f"\n{'='*70}\nDATASET {ds_name}\n{'='*70}")
-
         for config_name in args.configs:
-            per_seed = []
-            for seed in args.seeds:
-                print(f"  [{ds_name}] {config_name} seed={seed} ...", flush=True)
-                try:
-                    m = run_single(
-                        config_name, pair, seed, args.mnist_dir, args.samples, args.epochs,
-                        use_bce=not args.use_mse, out_dir=ds_dir,
-                        with_baselines=not args.no_baselines,
-                    )
-                    per_seed.append(m)
-                    print(f"      acc={m['accuracy']:.3f} f1={m['f1']:.3f} "
-                          f"auc={m['roc_auc']:.3f}", flush=True)
-                except Exception as e:
-                    import traceback
-                    traceback.print_exc()
-                    print(f"      FAILED: {e}", flush=True)
-
-            if per_seed:
-                agg = aggregate_metrics(per_seed)
-                cfg_dir = os.path.join(ds_dir, config_name)
-                os.makedirs(cfg_dir, exist_ok=True)
-                with open(os.path.join(cfg_dir, "aggregate.json"), "w") as f:
-                    json.dump(agg, f, indent=2)
-                summary_rows.append((ds_name, config_name, agg))
+            by_seed = results.get((ds_name, config_name), {})
+            per_seed = [by_seed[s] for s in args.seeds if s in by_seed]
+            if not per_seed:
+                continue
+            agg = aggregate_metrics(per_seed)
+            cfg_dir = os.path.join(ds_dir, config_name)
+            os.makedirs(cfg_dir, exist_ok=True)
+            with open(os.path.join(cfg_dir, "aggregate.json"), "w") as f:
+                json.dump(agg, f, indent=2)
+            summary_rows.append((ds_name, config_name, agg))
 
     # Aggregate baselines (collected under baseline_* dirs) into the summary too.
     _append_baseline_rows(pairs, args.seeds, summary_rows)

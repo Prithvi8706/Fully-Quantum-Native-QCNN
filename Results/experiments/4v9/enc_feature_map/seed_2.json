@@ -1,0 +1,15 @@
+{
+  "accuracy": 0.5,
+  "precision": 0.5,
+  "recall": 1.0,
+  "f1": 0.6666666666666666,
+  "roc_auc": 0.5,
+  "pr_auc": 0.75,
+  "tp": 86,
+  "tn": 0,
+  "fp": 86,
+  "fn": 0,
+  "prediction_bias": -0.5,
+  "prediction_variance": 0.0,
+  "n_params": 260
+}
