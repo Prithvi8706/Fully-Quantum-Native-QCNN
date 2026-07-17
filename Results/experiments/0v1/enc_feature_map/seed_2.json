@@ -1,15 +1,15 @@
 {
-  "accuracy": 0.5,
-  "precision": 0.5,
-  "recall": 1.0,
-  "f1": 0.6666666666666666,
-  "roc_auc": 0.5,
-  "pr_auc": 0.75,
-  "tp": 86,
-  "tn": 0,
-  "fp": 86,
-  "fn": 0,
-  "prediction_bias": -0.5,
-  "prediction_variance": 0.0,
-  "n_params": 260
+  "accuracy": 0.9593023255813954,
+  "precision": 0.9340659340659341,
+  "recall": 0.9883720930232558,
+  "f1": 0.96045197740113,
+  "roc_auc": 0.9962141698215252,
+  "pr_auc": 0.9966889291815492,
+  "tp": 85,
+  "tn": 80,
+  "fp": 6,
+  "fn": 1,
+  "prediction_bias": 0.10910531929368839,
+  "prediction_variance": 0.12248177845571936,
+  "n_params": 140
 }

@@ -45,34 +45,47 @@ def run_logistic_baseline(X_train, y_train, X_test, y_test, seed: int = 42) -> d
     return _metrics_from_proba(y_test, proba)
 
 
-def _hidden_for_param_budget(n_features: int, target_params: int | None) -> tuple:
+def _mlp_hidden_layers(target_params: int | None = None) -> tuple:
     """
-    Pick a single hidden-layer width so the MLP's parameter count roughly matches
-    ``target_params`` (the QCNN's trainable-param count). MLP params ≈
-    h*(n_features+1) + (h+1). If no target given, use a modest default.
+    Hidden-layer sizes for the MLP baseline.
+
+    NOTE: matching a classical net's parameter count to the QCNN's (~260) is
+    meaningless here — on a ~256-dim input the first-layer weights alone dwarf that
+    budget, so param-matching forces a ~2-neuron net that cannot learn (collapses to
+    ~0.5). Instead we use a fixed, sensible non-linear capacity and report BOTH models'
+    parameter counts in the results for an honest comparison (a classical net having
+    more parameters than a quantum circuit is an expected, disclosed tradeoff).
+    ``target_params`` is accepted for backwards-compatibility but no longer caps width.
     """
-    if not target_params or target_params <= 0:
-        return (16,)
-    h = max(2, int(round((target_params - 1) / (n_features + 2))))
-    h = min(h, 256)  # keep it small / fast
-    return (h,)
+    return (128, 64)
 
 
 def run_mlp_baseline(X_train, y_train, X_test, y_test, seed: int = 42,
                      target_params: int | None = None) -> dict:
-    """Small MLP baseline; hidden width can be matched to the QCNN param budget."""
+    """Non-linear MLP baseline on the shared representation (standardized input)."""
     from sklearn.neural_network import MLPClassifier
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.pipeline import make_pipeline
 
     Xtr, Xte = _flatten(X_train), _flatten(X_test)
     ytr01 = np.where(np.asarray(y_train) == 1, 1, 0)
 
-    hidden = _hidden_for_param_budget(Xtr.shape[1], target_params)
-    clf = MLPClassifier(hidden_layer_sizes=hidden, max_iter=500,
-                        random_state=seed, early_stopping=True)
+    hidden = _mlp_hidden_layers(target_params)
+    # StandardScaler + a real 2-layer net, trained to convergence (no early_stopping,
+    # which on a hold-out split was stopping the collapsed net at its constant init).
+    clf = make_pipeline(
+        StandardScaler(),
+        MLPClassifier(hidden_layer_sizes=hidden, max_iter=1000, alpha=1e-4,
+                      random_state=seed, early_stopping=False),
+    )
     clf.fit(Xtr, ytr01)
     proba = clf.predict_proba(Xte)[:, 1]
     metrics = _metrics_from_proba(y_test, proba)
     metrics["hidden_layer_sizes"] = list(hidden)
+    # Report the MLP's own parameter count for transparency in the comparison table.
+    mlp = clf.named_steps["mlpclassifier"]
+    metrics["n_params"] = int(sum(c.size for c in mlp.coefs_)
+                              + sum(b.size for b in mlp.intercepts_))
     return metrics
 
 

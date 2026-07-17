@@ -134,22 +134,37 @@ def aggregate_metrics(metric_dicts: list[dict]) -> dict:
         metric_dicts: list of dicts as returned by ``compute_classification_metrics``.
 
     Returns:
-        dict mapping ``<metric>`` -> {"mean": float, "std": float, "n": int,
-        "values": [..]}. NaNs (e.g. degenerate ROC-AUC) are ignored in the stats.
+        dict mapping ``<metric>`` -> {"mean", "std", "n", "values", "ci_low", "ci_high"}.
+        ``std`` is the sample standard deviation (ddof=1). ``ci_low``/``ci_high`` are the
+        95% confidence interval for the mean via the Student-t interval
+        (mean ± t_{0.975, n-1} * s/sqrt(n)). NaNs (e.g. degenerate ROC-AUC) are ignored.
     """
+    from scipy import stats  # scipy is already a project dependency
+
     out = {"n_runs": len(metric_dicts)}
     for key in _SCALAR_METRIC_KEYS:
         vals = np.array([d[key] for d in metric_dicts if key in d], dtype=float)
         finite = vals[np.isfinite(vals)]
         if finite.size:
+            mean = float(np.mean(finite))
+            n = int(finite.size)
+            # sample std (ddof=1) for an unbiased spread; 0 when n==1
+            std = float(np.std(finite, ddof=1)) if n > 1 else 0.0
+            if n > 1 and std > 0:
+                half = float(stats.t.ppf(0.975, n - 1) * std / np.sqrt(n))
+            else:
+                half = 0.0
             out[key] = {
-                "mean": float(np.mean(finite)),
-                "std": float(np.std(finite)),
-                "n": int(finite.size),
+                "mean": mean,
+                "std": std,
+                "n": n,
                 "values": finite.tolist(),
+                "ci_low": mean - half,
+                "ci_high": mean + half,
             }
         else:
-            out[key] = {"mean": float("nan"), "std": float("nan"), "n": 0, "values": []}
+            out[key] = {"mean": float("nan"), "std": float("nan"), "n": 0,
+                        "values": [], "ci_low": float("nan"), "ci_high": float("nan")}
     return out
 
 

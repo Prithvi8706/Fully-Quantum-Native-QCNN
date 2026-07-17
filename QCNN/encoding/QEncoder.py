@@ -110,9 +110,14 @@ class PureQuantumEncoder:
         angles_z = pnp.pi * x           # RZ(π x) ∈ [0, π]
         angles_y = pnp.pi * x           # RY(π x) ∈ [0, π]
 
-        # Layer 1: Individual qubit rotations
+        # Layer 1: population-visible single-qubit data injection.
+        # RY(pi*x) on |0> sets <Z> = cos(pi*x), i.e. the data reaches the measured
+        # observable at first order. The previous H + RZ(pi*x) injected the data as a
+        # phase on |+>, invisible to the <Z> readout, which (with deep pooling onto a
+        # single readout qubit) left the output constant and untrainable.
         for i in range(L):
-            qml.Hadamard(wires=wires[i])
+            angle_y_i = angles_y[:, i] if is_batched else angles_y[i]
+            qml.RY(angle_y_i, wires=wires[i])
             angle_z_i = angles_z[:, i] if is_batched else angles_z[i]
             qml.RZ(angle_z_i, wires=wires[i])
 

@@ -1,17 +1,19 @@
 {
-  "accuracy": 0.5,
-  "precision": 0.0,
-  "recall": 0.0,
-  "f1": 0.0,
-  "roc_auc": 0.5056787452677123,
-  "pr_auc": 0.4604028752326533,
-  "tp": 0,
-  "tn": 86,
-  "fp": 0,
-  "fn": 86,
-  "prediction_bias": -0.16282408483141014,
-  "prediction_variance": 0.05236719467540027,
+  "accuracy": 0.9941860465116279,
+  "precision": 0.9885057471264368,
+  "recall": 1.0,
+  "f1": 0.9942196531791907,
+  "roc_auc": 1.0,
+  "pr_auc": 1.0,
+  "tp": 86,
+  "tn": 85,
+  "fp": 1,
+  "fn": 0,
+  "prediction_bias": 0.0043445390550814755,
+  "prediction_variance": 0.2476597696804111,
   "hidden_layer_sizes": [
-    2
-  ]
+    128,
+    64
+  ],
+  "n_params": 41217
 }

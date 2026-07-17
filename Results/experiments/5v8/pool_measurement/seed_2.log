@@ -2,444 +2,445 @@ DEBUG: Qtrainer enters train_pure_quantum_cnn. Encoding: amplitude
   Class Weights: +1 (Target): 1.00 | -1 (Rest): 1.00
 Starting Training
 ==================================================
-Epoch 1 Batch 1 | Loss: 0.789567 | Stats: min: -0.176, max: 0.091, mean: -0.059
-Epoch 1 Batch 2 | Loss: 0.680318
-Epoch 1 Batch 3 | Loss: 0.693316
-Epoch 1 Batch 4 | Loss: 0.683485
-Epoch 1 Batch 5 | Loss: 0.676129
-Epoch 1 Batch 6 | Loss: 0.713905
-Epoch 1 Batch 7 | Loss: 0.678181
-Epoch 1 Batch 8 | Loss: 0.659902
-Epoch 1 Batch 9 | Loss: 0.705050
-Epoch 1 Batch 10 | Loss: 0.692434
-Epoch 1 Batch 11 | Loss: 0.678621
-Epoch 1 Batch 12 | Loss: 0.672040
-Epoch 1 Batch 13 | Loss: 0.672402
-  [STABILITY] Test accuracy improved: 0.00% -> 48.26% (via EMA). Saving best params.
---- Epoch 1/30 | Loss: 0.6920 | Train Acc: 45.5% | Test Acc: 48.3% | CM: [TP:12, TN:71, FP:15, FN:74] | Progress: 3.3% | ETA: 228.2s ---
-Epoch 2 Batch 1 | Loss: 0.655362 | Stats: min: -0.130, max: 0.125, mean: -0.004
-Epoch 2 Batch 2 | Loss: 0.666830
-Epoch 2 Batch 3 | Loss: 0.638763
-Epoch 2 Batch 4 | Loss: 0.632834
-Epoch 2 Batch 5 | Loss: 0.648540
-Epoch 2 Batch 6 | Loss: 0.645720
-Epoch 2 Batch 7 | Loss: 0.642699
-Epoch 2 Batch 8 | Loss: 0.652307
-Epoch 2 Batch 9 | Loss: 0.652879
-Epoch 2 Batch 10 | Loss: 0.630896
-Epoch 2 Batch 11 | Loss: 0.668742
-Epoch 2 Batch 12 | Loss: 0.638556
-Epoch 2 Batch 13 | Loss: 0.599708
-  [STABILITY] Test accuracy improved: 48.26% -> 53.49% (via EMA). Saving best params.
---- Epoch 2/30 | Loss: 0.6441 | Train Acc: 48.5% | Test Acc: 53.5% | CM: [TP:27, TN:65, FP:21, FN:59] | Progress: 6.7% | ETA: 88.6s ---
-Epoch 3 Batch 1 | Loss: 0.618398 | Stats: min: -0.231, max: 0.017, mean: -0.066
-Epoch 3 Batch 2 | Loss: 0.670334
-Epoch 3 Batch 3 | Loss: 0.637135
-Epoch 3 Batch 4 | Loss: 0.619972
-Epoch 3 Batch 5 | Loss: 0.643544
-Epoch 3 Batch 6 | Loss: 0.636973
-Epoch 3 Batch 7 | Loss: 0.589278
-Epoch 3 Batch 8 | Loss: 0.657587
-Epoch 3 Batch 9 | Loss: 0.650166
-Epoch 3 Batch 10 | Loss: 0.573380
-Epoch 3 Batch 11 | Loss: 0.638898
-Epoch 3 Batch 12 | Loss: 0.645785
-Epoch 3 Batch 13 | Loss: 0.627414
-  [STABILITY] Test accuracy improved: 53.49% -> 58.72% (via EMA). Saving best params.
---- Epoch 3/30 | Loss: 0.6315 | Train Acc: 52.0% | Test Acc: 58.7% | CM: [TP:40, TN:61, FP:25, FN:46] | Progress: 10.0% | ETA: 65.0s ---
-Epoch 4 Batch 1 | Loss: 0.608367 | Stats: min: -0.215, max: 0.183, mean: -0.014
-Epoch 4 Batch 2 | Loss: 0.633184
-Epoch 4 Batch 3 | Loss: 0.611497
-Epoch 4 Batch 4 | Loss: 0.641269
-Epoch 4 Batch 5 | Loss: 0.654330
-Epoch 4 Batch 6 | Loss: 0.657395
-Epoch 4 Batch 7 | Loss: 0.645959
-Epoch 4 Batch 8 | Loss: 0.645560
-Epoch 4 Batch 9 | Loss: 0.649262
-Epoch 4 Batch 10 | Loss: 0.627285
-Epoch 4 Batch 11 | Loss: 0.560256
-Epoch 4 Batch 12 | Loss: 0.593483
-Epoch 4 Batch 13 | Loss: 0.602615
-  [STABILITY] Test accuracy improved: 58.72% -> 60.47% (via EMA). Saving best params.
---- Epoch 4/30 | Loss: 0.6254 | Train Acc: 54.0% | Test Acc: 60.5% | CM: [TP:51, TN:53, FP:33, FN:35] | Progress: 13.3% | ETA: 52.1s ---
-Epoch 5 Batch 1 | Loss: 0.641693 | Stats: min: -0.223, max: 0.300, mean: 0.093
-Epoch 5 Batch 2 | Loss: 0.620687
-Epoch 5 Batch 3 | Loss: 0.622569
-Epoch 5 Batch 4 | Loss: 0.623604
-Epoch 5 Batch 5 | Loss: 0.627593
-Epoch 5 Batch 6 | Loss: 0.620877
-Epoch 5 Batch 7 | Loss: 0.589445
-Epoch 5 Batch 8 | Loss: 0.560422
-Epoch 5 Batch 9 | Loss: 0.641227
-Epoch 5 Batch 10 | Loss: 0.589191
-Epoch 5 Batch 11 | Loss: 0.630371
-Epoch 5 Batch 12 | Loss: 0.617164
-Epoch 5 Batch 13 | Loss: 0.652525
-  [STABILITY] Test accuracy improved: 60.47% -> 63.95% (via EMA). Saving best params.
---- Epoch 5/30 | Loss: 0.6183 | Train Acc: 55.5% | Test Acc: 64.0% | CM: [TP:60, TN:50, FP:36, FN:26] | Progress: 16.7% | ETA: 56.6s ---
-Epoch 6 Batch 1 | Loss: 0.561376 | Stats: min: -0.339, max: 0.403, mean: 0.077
-Epoch 6 Batch 2 | Loss: 0.607702
-Epoch 6 Batch 3 | Loss: 0.606799
-Epoch 6 Batch 4 | Loss: 0.653806
-Epoch 6 Batch 5 | Loss: 0.630686
-Epoch 6 Batch 6 | Loss: 0.593285
-Epoch 6 Batch 7 | Loss: 0.587961
-Epoch 6 Batch 8 | Loss: 0.628554
-Epoch 6 Batch 9 | Loss: 0.621006
-Epoch 6 Batch 10 | Loss: 0.622474
-Epoch 6 Batch 11 | Loss: 0.646985
-Epoch 6 Batch 12 | Loss: 0.620690
-Epoch 6 Batch 13 | Loss: 0.606661
-  [STABILITY] Test accuracy improved: 63.95% -> 68.02% (via EMA). Saving best params.
---- Epoch 6/30 | Loss: 0.6145 | Train Acc: 59.0% | Test Acc: 68.0% | CM: [TP:64, TN:53, FP:33, FN:22] | Progress: 20.0% | ETA: 34.5s ---
-Epoch 7 Batch 1 | Loss: 0.615528 | Stats: min: -0.114, max: 0.301, mean: 0.044
-Epoch 7 Batch 2 | Loss: 0.578175
-Epoch 7 Batch 3 | Loss: 0.596887
-Epoch 7 Batch 4 | Loss: 0.579123
-Epoch 7 Batch 5 | Loss: 0.612907
-Epoch 7 Batch 6 | Loss: 0.608202
-Epoch 7 Batch 7 | Loss: 0.625049
-Epoch 7 Batch 8 | Loss: 0.633608
-Epoch 7 Batch 9 | Loss: 0.578222
-Epoch 7 Batch 10 | Loss: 0.603717
-Epoch 7 Batch 11 | Loss: 0.621215
-Epoch 7 Batch 12 | Loss: 0.626638
-Epoch 7 Batch 13 | Loss: 0.645548
-  [STABILITY] Test accuracy improved: 68.02% -> 70.35% (via EMA). Saving best params.
---- Epoch 7/30 | Loss: 0.6096 | Train Acc: 62.5% | Test Acc: 70.3% | CM: [TP:65, TN:56, FP:30, FN:21] | Progress: 23.3% | ETA: 35.7s ---
-Epoch 8 Batch 1 | Loss: 0.585884 | Stats: min: -0.178, max: 0.276, mean: 0.022
-Epoch 8 Batch 2 | Loss: 0.579650
-Epoch 8 Batch 3 | Loss: 0.649058
-Epoch 8 Batch 4 | Loss: 0.609765
-Epoch 8 Batch 5 | Loss: 0.592456
-Epoch 8 Batch 6 | Loss: 0.618751
-Epoch 8 Batch 7 | Loss: 0.630069
-Epoch 8 Batch 8 | Loss: 0.574122
-Epoch 8 Batch 9 | Loss: 0.642966
-Epoch 8 Batch 10 | Loss: 0.609495
-Epoch 8 Batch 11 | Loss: 0.564017
-Epoch 8 Batch 12 | Loss: 0.619527
-Epoch 8 Batch 13 | Loss: 0.565232
---- Epoch 8/30 | Loss: 0.6032 | Train Acc: 67.0% | Test Acc: 70.3% | CM: [TP:64, TN:57, FP:29, FN:22] | Progress: 26.7% | ETA: 34.6s ---
-Epoch 9 Batch 1 | Loss: 0.652310 | Stats: min: -0.347, max: 0.351, mean: 0.000
-Epoch 9 Batch 2 | Loss: 0.626424
-Epoch 9 Batch 3 | Loss: 0.560201
-Epoch 9 Batch 4 | Loss: 0.571531
-Epoch 9 Batch 5 | Loss: 0.645559
-Epoch 9 Batch 6 | Loss: 0.567121
-Epoch 9 Batch 7 | Loss: 0.584426
-Epoch 9 Batch 8 | Loss: 0.589290
-Epoch 9 Batch 9 | Loss: 0.620921
-Epoch 9 Batch 10 | Loss: 0.565921
-Epoch 9 Batch 11 | Loss: 0.610670
-Epoch 9 Batch 12 | Loss: 0.598363
-Epoch 9 Batch 13 | Loss: 0.681928
---- Epoch 9/30 | Loss: 0.6057 | Train Acc: 67.5% | Test Acc: 69.8% | CM: [TP:63, TN:57, FP:29, FN:23] | Progress: 30.0% | ETA: 29.2s ---
-Epoch 10 Batch 1 | Loss: 0.630123 | Stats: min: -0.123, max: 0.076, mean: 0.019
-Epoch 10 Batch 2 | Loss: 0.584876
-Epoch 10 Batch 3 | Loss: 0.557131
-Epoch 10 Batch 4 | Loss: 0.620309
-Epoch 10 Batch 5 | Loss: 0.603819
-Epoch 10 Batch 6 | Loss: 0.599489
-Epoch 10 Batch 7 | Loss: 0.624947
-Epoch 10 Batch 8 | Loss: 0.557327
-Epoch 10 Batch 9 | Loss: 0.627023
-Epoch 10 Batch 10 | Loss: 0.614222
-Epoch 10 Batch 11 | Loss: 0.590866
-Epoch 10 Batch 12 | Loss: 0.633369
-Epoch 10 Batch 13 | Loss: 0.515365
-  [STABILITY] Test accuracy improved: 70.35% -> 72.09% (via EMA). Saving best params.
---- Epoch 10/30 | Loss: 0.5968 | Train Acc: 70.0% | Test Acc: 72.1% | CM: [TP:62, TN:62, FP:24, FN:24] | Progress: 33.3% | ETA: 19.1s ---
-Epoch 11 Batch 1 | Loss: 0.590764 | Stats: min: -0.114, max: 0.156, mean: 0.040
-Epoch 11 Batch 2 | Loss: 0.631754
-Epoch 11 Batch 3 | Loss: 0.612586
-Epoch 11 Batch 4 | Loss: 0.566690
-Epoch 11 Batch 5 | Loss: 0.576244
-Epoch 11 Batch 6 | Loss: 0.640342
-Epoch 11 Batch 7 | Loss: 0.611019
-Epoch 11 Batch 8 | Loss: 0.611966
-Epoch 11 Batch 9 | Loss: 0.614195
-Epoch 11 Batch 10 | Loss: 0.553901
-Epoch 11 Batch 11 | Loss: 0.598668
-Epoch 11 Batch 12 | Loss: 0.586587
-Epoch 11 Batch 13 | Loss: 0.550736
-  [STABILITY] Test accuracy improved: 72.09% -> 72.67% (via EMA). Saving best params.
---- Epoch 11/30 | Loss: 0.5958 | Train Acc: 71.0% | Test Acc: 72.7% | CM: [TP:62, TN:63, FP:23, FN:24] | Progress: 36.7% | ETA: 16.0s ---
-Epoch 12 Batch 1 | Loss: 0.586964 | Stats: min: 0.029, max: 0.382, mean: 0.165
-Epoch 12 Batch 2 | Loss: 0.604886
-Epoch 12 Batch 3 | Loss: 0.632679
-Epoch 12 Batch 4 | Loss: 0.587862
-Epoch 12 Batch 5 | Loss: 0.560569
-Epoch 12 Batch 6 | Loss: 0.636544
-Epoch 12 Batch 7 | Loss: 0.588650
-Epoch 12 Batch 8 | Loss: 0.577698
-Epoch 12 Batch 9 | Loss: 0.596567
-Epoch 12 Batch 10 | Loss: 0.651708
-Epoch 12 Batch 11 | Loss: 0.559544
-Epoch 12 Batch 12 | Loss: 0.608904
-Epoch 12 Batch 13 | Loss: 0.531152
-  [STABILITY] Test accuracy improved: 72.67% -> 73.84% (via EMA). Saving best params.
---- Epoch 12/30 | Loss: 0.5941 | Train Acc: 70.0% | Test Acc: 73.8% | CM: [TP:63, TN:64, FP:22, FN:23] | Progress: 40.0% | ETA: 14.7s ---
-Epoch 13 Batch 1 | Loss: 0.589073 | Stats: min: 0.003, max: 0.397, mean: 0.167
-Epoch 13 Batch 2 | Loss: 0.582103
-Epoch 13 Batch 3 | Loss: 0.584878
-Epoch 13 Batch 4 | Loss: 0.582635
-Epoch 13 Batch 5 | Loss: 0.687071
-Epoch 13 Batch 6 | Loss: 0.607403
-Epoch 13 Batch 7 | Loss: 0.627362
-Epoch 13 Batch 8 | Loss: 0.596930
-Epoch 13 Batch 9 | Loss: 0.598611
-Epoch 13 Batch 10 | Loss: 0.564651
-Epoch 13 Batch 11 | Loss: 0.565066
-Epoch 13 Batch 12 | Loss: 0.568854
-Epoch 13 Batch 13 | Loss: 0.610235
---- Epoch 13/30 | Loss: 0.5973 | Train Acc: 70.0% | Test Acc: 72.7% | CM: [TP:63, TN:62, FP:24, FN:23] | Progress: 43.3% | ETA: 12.6s ---
-Epoch 14 Batch 1 | Loss: 0.573189 | Stats: min: -0.190, max: 0.250, mean: 0.054
-Epoch 14 Batch 2 | Loss: 0.571686
-Epoch 14 Batch 3 | Loss: 0.606621
-Epoch 14 Batch 4 | Loss: 0.612480
-Epoch 14 Batch 5 | Loss: 0.530458
-Epoch 14 Batch 6 | Loss: 0.579497
-Epoch 14 Batch 7 | Loss: 0.573741
-Epoch 14 Batch 8 | Loss: 0.577526
-Epoch 14 Batch 9 | Loss: 0.658822
-Epoch 14 Batch 10 | Loss: 0.596094
-Epoch 14 Batch 11 | Loss: 0.572462
-Epoch 14 Batch 12 | Loss: 0.661523
-Epoch 14 Batch 13 | Loss: 0.637035
-  [STABILITY] Test accuracy improved: 73.84% -> 75.00% (via EMA). Saving best params.
---- Epoch 14/30 | Loss: 0.5962 | Train Acc: 72.0% | Test Acc: 75.0% | CM: [TP:67, TN:62, FP:24, FN:19] | Progress: 46.7% | ETA: 10.8s ---
-Epoch 15 Batch 1 | Loss: 0.554392 | Stats: min: -0.409, max: 0.182, mean: -0.210
-Epoch 15 Batch 2 | Loss: 0.574732
-Epoch 15 Batch 3 | Loss: 0.609734
-Epoch 15 Batch 4 | Loss: 0.581429
-Epoch 15 Batch 5 | Loss: 0.568111
-Epoch 15 Batch 6 | Loss: 0.634072
-Epoch 15 Batch 7 | Loss: 0.599688
-Epoch 15 Batch 8 | Loss: 0.615332
-Epoch 15 Batch 9 | Loss: 0.630441
-Epoch 15 Batch 10 | Loss: 0.528188
-Epoch 15 Batch 11 | Loss: 0.610997
-Epoch 15 Batch 12 | Loss: 0.589123
-Epoch 15 Batch 13 | Loss: 0.624475
---- Epoch 15/30 | Loss: 0.5939 | Train Acc: 71.5% | Test Acc: 73.3% | CM: [TP:66, TN:60, FP:26, FN:20] | Progress: 50.0% | ETA: 12.5s ---
-Epoch 16 Batch 1 | Loss: 0.592720 | Stats: min: -0.107, max: 0.259, mean: 0.107
-Epoch 16 Batch 2 | Loss: 0.630765
-Epoch 16 Batch 3 | Loss: 0.522890
-Epoch 16 Batch 4 | Loss: 0.617694
-Epoch 16 Batch 5 | Loss: 0.584346
-Epoch 16 Batch 6 | Loss: 0.570657
-Epoch 16 Batch 7 | Loss: 0.590973
-Epoch 16 Batch 8 | Loss: 0.582647
-Epoch 16 Batch 9 | Loss: 0.596661
-Epoch 16 Batch 10 | Loss: 0.624048
-Epoch 16 Batch 11 | Loss: 0.573045
-Epoch 16 Batch 12 | Loss: 0.632725
-Epoch 16 Batch 13 | Loss: 0.606111
---- Epoch 16/30 | Loss: 0.5943 | Train Acc: 71.0% | Test Acc: 72.7% | CM: [TP:66, TN:59, FP:27, FN:20] | Progress: 53.3% | ETA: 10.9s ---
-Epoch 17 Batch 1 | Loss: 0.633167 | Stats: min: -0.096, max: 0.269, mean: 0.076
-Epoch 17 Batch 2 | Loss: 0.595865
-Epoch 17 Batch 3 | Loss: 0.562343
-Epoch 17 Batch 4 | Loss: 0.608677
-Epoch 17 Batch 5 | Loss: 0.572901
-Epoch 17 Batch 6 | Loss: 0.580792
-Epoch 17 Batch 7 | Loss: 0.641487
-Epoch 17 Batch 8 | Loss: 0.658663
-Epoch 17 Batch 9 | Loss: 0.570910
-Epoch 17 Batch 10 | Loss: 0.618350
-Epoch 17 Batch 11 | Loss: 0.602488
-Epoch 17 Batch 12 | Loss: 0.575481
-Epoch 17 Batch 13 | Loss: 0.619405
+Epoch 1 Batch 1 | Loss: 0.684485 | Stats: min: 0.033, max: 0.153, mean: 0.070
+Epoch 1 Batch 2 | Loss: 0.656484
+Epoch 1 Batch 3 | Loss: 0.649804
+Epoch 1 Batch 4 | Loss: 0.659390
+Epoch 1 Batch 5 | Loss: 0.633327
+Epoch 1 Batch 6 | Loss: 0.665959
+Epoch 1 Batch 7 | Loss: 0.627885
+Epoch 1 Batch 8 | Loss: 0.646719
+Epoch 1 Batch 9 | Loss: 0.654238
+Epoch 1 Batch 10 | Loss: 0.651076
+Epoch 1 Batch 11 | Loss: 0.643563
+Epoch 1 Batch 12 | Loss: 0.633029
+Epoch 1 Batch 13 | Loss: 0.639065
+  [STABILITY] Test accuracy improved: 0.00% -> 58.72% (via EMA). Saving best params.
+--- Epoch 1/30 | Loss: 0.6496 | Train Acc: 61.0% | Test Acc: 58.7% | CM: [TP:60, TN:41, FP:45, FN:26] | Progress: 3.3% | ETA: 391.4s ---
+Epoch 2 Batch 1 | Loss: 0.623393 | Stats: min: -0.103, max: 0.164, mean: 0.060
+Epoch 2 Batch 2 | Loss: 0.615449
+Epoch 2 Batch 3 | Loss: 0.622098
+Epoch 2 Batch 4 | Loss: 0.596942
+Epoch 2 Batch 5 | Loss: 0.613041
+Epoch 2 Batch 6 | Loss: 0.607209
+Epoch 2 Batch 7 | Loss: 0.607134
+Epoch 2 Batch 8 | Loss: 0.607421
+Epoch 2 Batch 9 | Loss: 0.612761
+Epoch 2 Batch 10 | Loss: 0.620723
+Epoch 2 Batch 11 | Loss: 0.592530
+Epoch 2 Batch 12 | Loss: 0.559301
+Epoch 2 Batch 13 | Loss: 0.582593
+  [STABILITY] Test accuracy improved: 58.72% -> 62.21% (via EMA). Saving best params.
+--- Epoch 2/30 | Loss: 0.6047 | Train Acc: 68.5% | Test Acc: 62.2% | CM: [TP:65, TN:42, FP:44, FN:21] | Progress: 6.7% | ETA: 186.6s ---
+Epoch 3 Batch 1 | Loss: 0.586788 | Stats: min: -0.093, max: 0.275, mean: 0.051
+Epoch 3 Batch 2 | Loss: 0.593198
+Epoch 3 Batch 3 | Loss: 0.626937
+Epoch 3 Batch 4 | Loss: 0.601094
+Epoch 3 Batch 5 | Loss: 0.596620
+Epoch 3 Batch 6 | Loss: 0.576943
+Epoch 3 Batch 7 | Loss: 0.593202
+Epoch 3 Batch 8 | Loss: 0.564351
+Epoch 3 Batch 9 | Loss: 0.560351
+Epoch 3 Batch 10 | Loss: 0.561190
+Epoch 3 Batch 11 | Loss: 0.590831
+Epoch 3 Batch 12 | Loss: 0.592280
+Epoch 3 Batch 13 | Loss: 0.540014
+  [STABILITY] Test accuracy improved: 62.21% -> 66.86% (via EMA). Saving best params.
+--- Epoch 3/30 | Loss: 0.5834 | Train Acc: 75.0% | Test Acc: 66.9% | CM: [TP:70, TN:45, FP:41, FN:16] | Progress: 10.0% | ETA: 122.5s ---
+Epoch 4 Batch 1 | Loss: 0.553610 | Stats: min: -0.165, max: 0.162, mean: 0.014
+Epoch 4 Batch 2 | Loss: 0.558139
+Epoch 4 Batch 3 | Loss: 0.577743
+Epoch 4 Batch 4 | Loss: 0.553729
+Epoch 4 Batch 5 | Loss: 0.566443
+Epoch 4 Batch 6 | Loss: 0.578433
+Epoch 4 Batch 7 | Loss: 0.560692
+Epoch 4 Batch 8 | Loss: 0.582217
+Epoch 4 Batch 9 | Loss: 0.544181
+Epoch 4 Batch 10 | Loss: 0.568568
+Epoch 4 Batch 11 | Loss: 0.578463
+Epoch 4 Batch 12 | Loss: 0.566996
+Epoch 4 Batch 13 | Loss: 0.604547
+  [STABILITY] Test accuracy improved: 66.86% -> 74.42% (via EMA). Saving best params.
+--- Epoch 4/30 | Loss: 0.5688 | Train Acc: 81.0% | Test Acc: 74.4% | CM: [TP:73, TN:55, FP:31, FN:13] | Progress: 13.3% | ETA: 88.5s ---
+Epoch 5 Batch 1 | Loss: 0.571023 | Stats: min: -0.241, max: 0.328, mean: 0.045
+Epoch 5 Batch 2 | Loss: 0.526948
+Epoch 5 Batch 3 | Loss: 0.586109
+Epoch 5 Batch 4 | Loss: 0.590519
+Epoch 5 Batch 5 | Loss: 0.546667
+Epoch 5 Batch 6 | Loss: 0.551420
+Epoch 5 Batch 7 | Loss: 0.541269
+Epoch 5 Batch 8 | Loss: 0.550302
+Epoch 5 Batch 9 | Loss: 0.588752
+Epoch 5 Batch 10 | Loss: 0.533488
+Epoch 5 Batch 11 | Loss: 0.549639
+Epoch 5 Batch 12 | Loss: 0.568422
+Epoch 5 Batch 13 | Loss: 0.563822
+  [STABILITY] Test accuracy improved: 74.42% -> 78.49% (via EMA). Saving best params.
+--- Epoch 5/30 | Loss: 0.5591 | Train Acc: 81.5% | Test Acc: 78.5% | CM: [TP:78, TN:57, FP:29, FN:8] | Progress: 16.7% | ETA: 68.9s ---
+Epoch 6 Batch 1 | Loss: 0.531047 | Stats: min: -0.114, max: 0.356, mean: 0.160
+Epoch 6 Batch 2 | Loss: 0.589512
+Epoch 6 Batch 3 | Loss: 0.550683
+Epoch 6 Batch 4 | Loss: 0.549763
+Epoch 6 Batch 5 | Loss: 0.559459
+Epoch 6 Batch 6 | Loss: 0.563061
+Epoch 6 Batch 7 | Loss: 0.566839
+Epoch 6 Batch 8 | Loss: 0.558177
+Epoch 6 Batch 9 | Loss: 0.533093
+Epoch 6 Batch 10 | Loss: 0.552263
+Epoch 6 Batch 11 | Loss: 0.537275
+Epoch 6 Batch 12 | Loss: 0.532741
+Epoch 6 Batch 13 | Loss: 0.586186
+  [STABILITY] Test accuracy improved: 78.49% -> 81.40% (via EMA). Saving best params.
+--- Epoch 6/30 | Loss: 0.5546 | Train Acc: 82.5% | Test Acc: 81.4% | CM: [TP:79, TN:61, FP:25, FN:7] | Progress: 20.0% | ETA: 54.3s ---
+Epoch 7 Batch 1 | Loss: 0.555779 | Stats: min: -0.207, max: 0.310, mean: 0.044
+Epoch 7 Batch 2 | Loss: 0.525971
+Epoch 7 Batch 3 | Loss: 0.546069
+Epoch 7 Batch 4 | Loss: 0.532314
+Epoch 7 Batch 5 | Loss: 0.559691
+Epoch 7 Batch 6 | Loss: 0.527374
+Epoch 7 Batch 7 | Loss: 0.565192
+Epoch 7 Batch 8 | Loss: 0.550541
+Epoch 7 Batch 9 | Loss: 0.531692
+Epoch 7 Batch 10 | Loss: 0.533413
+Epoch 7 Batch 11 | Loss: 0.562852
+Epoch 7 Batch 12 | Loss: 0.536701
+Epoch 7 Batch 13 | Loss: 0.550662
+  [STABILITY] Test accuracy improved: 81.40% -> 81.98% (via EMA). Saving best params.
+--- Epoch 7/30 | Loss: 0.5445 | Train Acc: 85.0% | Test Acc: 82.0% | CM: [TP:80, TN:61, FP:25, FN:6] | Progress: 23.3% | ETA: 44.2s ---
+Epoch 8 Batch 1 | Loss: 0.534739 | Stats: min: -0.170, max: 0.337, mean: 0.048
+Epoch 8 Batch 2 | Loss: 0.523788
+Epoch 8 Batch 3 | Loss: 0.564235
+Epoch 8 Batch 4 | Loss: 0.541942
+Epoch 8 Batch 5 | Loss: 0.570219
+Epoch 8 Batch 6 | Loss: 0.523041
+Epoch 8 Batch 7 | Loss: 0.576196
+Epoch 8 Batch 8 | Loss: 0.537284
+Epoch 8 Batch 9 | Loss: 0.506516
+Epoch 8 Batch 10 | Loss: 0.506323
+Epoch 8 Batch 11 | Loss: 0.544372
+Epoch 8 Batch 12 | Loss: 0.528533
+Epoch 8 Batch 13 | Loss: 0.559695
+  [STABILITY] Test accuracy improved: 81.98% -> 82.56% (via EMA). Saving best params.
+--- Epoch 8/30 | Loss: 0.5398 | Train Acc: 86.0% | Test Acc: 82.6% | CM: [TP:81, TN:61, FP:25, FN:5] | Progress: 26.7% | ETA: 36.6s ---
+Epoch 9 Batch 1 | Loss: 0.531937 | Stats: min: -0.218, max: 0.432, mean: -0.016
+Epoch 9 Batch 2 | Loss: 0.558006
+Epoch 9 Batch 3 | Loss: 0.554763
+Epoch 9 Batch 4 | Loss: 0.531578
+Epoch 9 Batch 5 | Loss: 0.507010
+Epoch 9 Batch 6 | Loss: 0.527941
+Epoch 9 Batch 7 | Loss: 0.525274
+Epoch 9 Batch 8 | Loss: 0.541112
+Epoch 9 Batch 9 | Loss: 0.552619
+Epoch 9 Batch 10 | Loss: 0.506939
+Epoch 9 Batch 11 | Loss: 0.510923
+Epoch 9 Batch 12 | Loss: 0.534203
+Epoch 9 Batch 13 | Loss: 0.592914
+--- Epoch 9/30 | Loss: 0.5366 | Train Acc: 86.5% | Test Acc: 80.8% | CM: [TP:81, TN:58, FP:28, FN:5] | Progress: 30.0% | ETA: 30.9s ---
+Epoch 10 Batch 1 | Loss: 0.528823 | Stats: min: -0.096, max: 0.278, mean: 0.092
+Epoch 10 Batch 2 | Loss: 0.536945
+Epoch 10 Batch 3 | Loss: 0.524131
+Epoch 10 Batch 4 | Loss: 0.517478
+Epoch 10 Batch 5 | Loss: 0.549955
+Epoch 10 Batch 6 | Loss: 0.503636
+Epoch 10 Batch 7 | Loss: 0.521980
+Epoch 10 Batch 8 | Loss: 0.540826
+Epoch 10 Batch 9 | Loss: 0.530984
+Epoch 10 Batch 10 | Loss: 0.534243
+Epoch 10 Batch 11 | Loss: 0.523064
+Epoch 10 Batch 12 | Loss: 0.526273
+Epoch 10 Batch 13 | Loss: 0.599795
+--- Epoch 10/30 | Loss: 0.5337 | Train Acc: 87.5% | Test Acc: 80.8% | CM: [TP:81, TN:58, FP:28, FN:5] | Progress: 33.3% | ETA: 26.9s ---
+Epoch 11 Batch 1 | Loss: 0.495881 | Stats: min: -0.190, max: 0.370, mean: 0.165
+Epoch 11 Batch 2 | Loss: 0.511676
+Epoch 11 Batch 3 | Loss: 0.550056
+Epoch 11 Batch 4 | Loss: 0.494471
+Epoch 11 Batch 5 | Loss: 0.512262
+Epoch 11 Batch 6 | Loss: 0.530032
+Epoch 11 Batch 7 | Loss: 0.529671
+Epoch 11 Batch 8 | Loss: 0.578778
+Epoch 11 Batch 9 | Loss: 0.511502
+Epoch 11 Batch 10 | Loss: 0.546708
+Epoch 11 Batch 11 | Loss: 0.524229
+Epoch 11 Batch 12 | Loss: 0.528879
+Epoch 11 Batch 13 | Loss: 0.552773
   [STABILITY] Plateau detected. Reducing Learning Rate to 0.010000
---- Epoch 17/30 | Loss: 0.6031 | Train Acc: 71.5% | Test Acc: 72.1% | CM: [TP:66, TN:58, FP:28, FN:20] | Progress: 56.7% | ETA: 9.6s ---
-Epoch 18 Batch 1 | Loss: 0.577865 | Stats: min: -0.403, max: 0.313, mean: -0.059
-Epoch 18 Batch 2 | Loss: 0.590807
-Epoch 18 Batch 3 | Loss: 0.611116
-Epoch 18 Batch 4 | Loss: 0.618006
-Epoch 18 Batch 5 | Loss: 0.589368
-Epoch 18 Batch 6 | Loss: 0.611030
-Epoch 18 Batch 7 | Loss: 0.597637
-Epoch 18 Batch 8 | Loss: 0.565641
-Epoch 18 Batch 9 | Loss: 0.613833
-Epoch 18 Batch 10 | Loss: 0.624157
-Epoch 18 Batch 11 | Loss: 0.537649
-Epoch 18 Batch 12 | Loss: 0.560392
-Epoch 18 Batch 13 | Loss: 0.611069
---- Epoch 18/30 | Loss: 0.5930 | Train Acc: 71.0% | Test Acc: 72.7% | CM: [TP:67, TN:58, FP:28, FN:19] | Progress: 60.0% | ETA: 8.4s ---
-Epoch 19 Batch 1 | Loss: 0.538722 | Stats: min: -0.218, max: 0.406, mean: 0.019
-Epoch 19 Batch 2 | Loss: 0.552783
-Epoch 19 Batch 3 | Loss: 0.625400
-Epoch 19 Batch 4 | Loss: 0.586665
-Epoch 19 Batch 5 | Loss: 0.604173
-Epoch 19 Batch 6 | Loss: 0.661116
-Epoch 19 Batch 7 | Loss: 0.593997
-Epoch 19 Batch 8 | Loss: 0.605262
-Epoch 19 Batch 9 | Loss: 0.631256
-Epoch 19 Batch 10 | Loss: 0.549011
-Epoch 19 Batch 11 | Loss: 0.558444
-Epoch 19 Batch 12 | Loss: 0.543286
-Epoch 19 Batch 13 | Loss: 0.599403
---- Epoch 19/30 | Loss: 0.5884 | Train Acc: 70.5% | Test Acc: 72.7% | CM: [TP:68, TN:57, FP:29, FN:18] | Progress: 63.3% | ETA: 7.2s ---
-Epoch 20 Batch 1 | Loss: 0.591569 | Stats: min: -0.283, max: 0.331, mean: 0.045
-Epoch 20 Batch 2 | Loss: 0.541137
-Epoch 20 Batch 3 | Loss: 0.570752
-Epoch 20 Batch 4 | Loss: 0.568729
-Epoch 20 Batch 5 | Loss: 0.616845
-Epoch 20 Batch 6 | Loss: 0.592317
-Epoch 20 Batch 7 | Loss: 0.612214
-Epoch 20 Batch 8 | Loss: 0.590974
-Epoch 20 Batch 9 | Loss: 0.550849
-Epoch 20 Batch 10 | Loss: 0.632695
-Epoch 20 Batch 11 | Loss: 0.606182
-Epoch 20 Batch 12 | Loss: 0.588029
-Epoch 20 Batch 13 | Loss: 0.590292
+--- Epoch 11/30 | Loss: 0.5282 | Train Acc: 89.0% | Test Acc: 81.4% | CM: [TP:81, TN:59, FP:27, FN:5] | Progress: 36.7% | ETA: 22.8s ---
+Epoch 12 Batch 1 | Loss: 0.510002 | Stats: min: -0.223, max: 0.539, mean: 0.069
+Epoch 12 Batch 2 | Loss: 0.554730
+Epoch 12 Batch 3 | Loss: 0.529945
+Epoch 12 Batch 4 | Loss: 0.500415
+Epoch 12 Batch 5 | Loss: 0.508383
+Epoch 12 Batch 6 | Loss: 0.536885
+Epoch 12 Batch 7 | Loss: 0.544453
+Epoch 12 Batch 8 | Loss: 0.546871
+Epoch 12 Batch 9 | Loss: 0.528564
+Epoch 12 Batch 10 | Loss: 0.535916
+Epoch 12 Batch 11 | Loss: 0.511529
+Epoch 12 Batch 12 | Loss: 0.479767
+Epoch 12 Batch 13 | Loss: 0.538781
+--- Epoch 12/30 | Loss: 0.5251 | Train Acc: 89.5% | Test Acc: 82.6% | CM: [TP:81, TN:61, FP:25, FN:5] | Progress: 40.0% | ETA: 19.9s ---
+Epoch 13 Batch 1 | Loss: 0.546894 | Stats: min: -0.203, max: 0.386, mean: -0.025
+Epoch 13 Batch 2 | Loss: 0.539362
+Epoch 13 Batch 3 | Loss: 0.530172
+Epoch 13 Batch 4 | Loss: 0.549505
+Epoch 13 Batch 5 | Loss: 0.527607
+Epoch 13 Batch 6 | Loss: 0.506530
+Epoch 13 Batch 7 | Loss: 0.528024
+Epoch 13 Batch 8 | Loss: 0.501678
+Epoch 13 Batch 9 | Loss: 0.498265
+Epoch 13 Batch 10 | Loss: 0.489137
+Epoch 13 Batch 11 | Loss: 0.520683
+Epoch 13 Batch 12 | Loss: 0.529736
+Epoch 13 Batch 13 | Loss: 0.579670
+  [STABILITY] Test accuracy improved: 82.56% -> 84.88% (via EMA). Saving best params.
+--- Epoch 13/30 | Loss: 0.5267 | Train Acc: 91.0% | Test Acc: 84.9% | CM: [TP:82, TN:64, FP:22, FN:4] | Progress: 43.3% | ETA: 17.3s ---
+Epoch 14 Batch 1 | Loss: 0.510013 | Stats: min: -0.278, max: 0.470, mean: 0.027
+Epoch 14 Batch 2 | Loss: 0.525381
+Epoch 14 Batch 3 | Loss: 0.508923
+Epoch 14 Batch 4 | Loss: 0.523013
+Epoch 14 Batch 5 | Loss: 0.507313
+Epoch 14 Batch 6 | Loss: 0.520207
+Epoch 14 Batch 7 | Loss: 0.514869
+Epoch 14 Batch 8 | Loss: 0.542570
+Epoch 14 Batch 9 | Loss: 0.536777
+Epoch 14 Batch 10 | Loss: 0.520055
+Epoch 14 Batch 11 | Loss: 0.569411
+Epoch 14 Batch 12 | Loss: 0.487987
+Epoch 14 Batch 13 | Loss: 0.508766
+  [STABILITY] Test accuracy improved: 84.88% -> 85.47% (via EMA). Saving best params.
+--- Epoch 14/30 | Loss: 0.5212 | Train Acc: 91.5% | Test Acc: 85.5% | CM: [TP:82, TN:65, FP:21, FN:4] | Progress: 46.7% | ETA: 15.2s ---
+Epoch 15 Batch 1 | Loss: 0.534608 | Stats: min: -0.226, max: 0.443, mean: -0.026
+Epoch 15 Batch 2 | Loss: 0.508808
+Epoch 15 Batch 3 | Loss: 0.508782
+Epoch 15 Batch 4 | Loss: 0.529734
+Epoch 15 Batch 5 | Loss: 0.520425
+Epoch 15 Batch 6 | Loss: 0.514573
+Epoch 15 Batch 7 | Loss: 0.523269
+Epoch 15 Batch 8 | Loss: 0.528589
+Epoch 15 Batch 9 | Loss: 0.547326
+Epoch 15 Batch 10 | Loss: 0.520571
+Epoch 15 Batch 11 | Loss: 0.505976
+Epoch 15 Batch 12 | Loss: 0.510834
+Epoch 15 Batch 13 | Loss: 0.541854
+  [STABILITY] Test accuracy improved: 85.47% -> 87.79% (via EMA). Saving best params.
+--- Epoch 15/30 | Loss: 0.5227 | Train Acc: 91.5% | Test Acc: 87.8% | CM: [TP:82, TN:69, FP:17, FN:4] | Progress: 50.0% | ETA: 13.3s ---
+Epoch 16 Batch 1 | Loss: 0.518139 | Stats: min: -0.116, max: 0.343, mean: 0.060
+Epoch 16 Batch 2 | Loss: 0.539450
+Epoch 16 Batch 3 | Loss: 0.513352
+Epoch 16 Batch 4 | Loss: 0.514098
+Epoch 16 Batch 5 | Loss: 0.507574
+Epoch 16 Batch 6 | Loss: 0.544723
+Epoch 16 Batch 7 | Loss: 0.521841
+Epoch 16 Batch 8 | Loss: 0.489212
+Epoch 16 Batch 9 | Loss: 0.510551
+Epoch 16 Batch 10 | Loss: 0.513620
+Epoch 16 Batch 11 | Loss: 0.529663
+Epoch 16 Batch 12 | Loss: 0.543010
+Epoch 16 Batch 13 | Loss: 0.525959
+--- Epoch 16/30 | Loss: 0.5209 | Train Acc: 92.0% | Test Acc: 87.8% | CM: [TP:82, TN:69, FP:17, FN:4] | Progress: 53.3% | ETA: 11.6s ---
+Epoch 17 Batch 1 | Loss: 0.512599 | Stats: min: -0.119, max: 0.316, mean: 0.063
+Epoch 17 Batch 2 | Loss: 0.519998
+Epoch 17 Batch 3 | Loss: 0.508634
+Epoch 17 Batch 4 | Loss: 0.509693
+Epoch 17 Batch 5 | Loss: 0.567181
+Epoch 17 Batch 6 | Loss: 0.523981
+Epoch 17 Batch 7 | Loss: 0.526756
+Epoch 17 Batch 8 | Loss: 0.534538
+Epoch 17 Batch 9 | Loss: 0.566532
+Epoch 17 Batch 10 | Loss: 0.512807
+Epoch 17 Batch 11 | Loss: 0.500533
+Epoch 17 Batch 12 | Loss: 0.525653
+Epoch 17 Batch 13 | Loss: 0.495889
+  [STABILITY] Test accuracy improved: 87.79% -> 88.37% (via EMA). Saving best params.
+--- Epoch 17/30 | Loss: 0.5234 | Train Acc: 92.0% | Test Acc: 88.4% | CM: [TP:82, TN:70, FP:16, FN:4] | Progress: 56.7% | ETA: 10.1s ---
+Epoch 18 Batch 1 | Loss: 0.500032 | Stats: min: -0.122, max: 0.277, mean: 0.068
+Epoch 18 Batch 2 | Loss: 0.561231
+Epoch 18 Batch 3 | Loss: 0.513592
+Epoch 18 Batch 4 | Loss: 0.523274
+Epoch 18 Batch 5 | Loss: 0.536740
+Epoch 18 Batch 6 | Loss: 0.542549
+Epoch 18 Batch 7 | Loss: 0.514575
+Epoch 18 Batch 8 | Loss: 0.499597
+Epoch 18 Batch 9 | Loss: 0.538388
+Epoch 18 Batch 10 | Loss: 0.508491
+Epoch 18 Batch 11 | Loss: 0.478556
+Epoch 18 Batch 12 | Loss: 0.507708
+Epoch 18 Batch 13 | Loss: 0.532201
+--- Epoch 18/30 | Loss: 0.5198 | Train Acc: 92.5% | Test Acc: 87.8% | CM: [TP:82, TN:69, FP:17, FN:4] | Progress: 60.0% | ETA: 8.8s ---
+Epoch 19 Batch 1 | Loss: 0.519853 | Stats: min: -0.199, max: 0.312, mean: -0.007
+Epoch 19 Batch 2 | Loss: 0.488080
+Epoch 19 Batch 3 | Loss: 0.555047
+Epoch 19 Batch 4 | Loss: 0.502295
+Epoch 19 Batch 5 | Loss: 0.496235
+Epoch 19 Batch 6 | Loss: 0.492204
+Epoch 19 Batch 7 | Loss: 0.521891
+Epoch 19 Batch 8 | Loss: 0.533729
+Epoch 19 Batch 9 | Loss: 0.538582
+Epoch 19 Batch 10 | Loss: 0.528959
+Epoch 19 Batch 11 | Loss: 0.501115
+Epoch 19 Batch 12 | Loss: 0.527270
+Epoch 19 Batch 13 | Loss: 0.492254
+--- Epoch 19/30 | Loss: 0.5152 | Train Acc: 92.0% | Test Acc: 87.8% | CM: [TP:81, TN:70, FP:16, FN:5] | Progress: 63.3% | ETA: 7.7s ---
+Epoch 20 Batch 1 | Loss: 0.521228 | Stats: min: -0.289, max: 0.338, mean: -0.069
+Epoch 20 Batch 2 | Loss: 0.521177
+Epoch 20 Batch 3 | Loss: 0.516824
+Epoch 20 Batch 4 | Loss: 0.505916
+Epoch 20 Batch 5 | Loss: 0.541637
+Epoch 20 Batch 6 | Loss: 0.503761
+Epoch 20 Batch 7 | Loss: 0.492386
+Epoch 20 Batch 8 | Loss: 0.530524
+Epoch 20 Batch 9 | Loss: 0.510099
+Epoch 20 Batch 10 | Loss: 0.504144
+Epoch 20 Batch 11 | Loss: 0.539545
+Epoch 20 Batch 12 | Loss: 0.505683
+Epoch 20 Batch 13 | Loss: 0.541148
   [STABILITY] Plateau detected. Reducing Learning Rate to 0.005000
---- Epoch 20/30 | Loss: 0.5887 | Train Acc: 68.0% | Test Acc: 72.7% | CM: [TP:68, TN:57, FP:29, FN:18] | Progress: 66.7% | ETA: 6.2s ---
-Epoch 21 Batch 1 | Loss: 0.564900 | Stats: min: -0.348, max: 0.392, mean: -0.129
-Epoch 21 Batch 2 | Loss: 0.583416
-Epoch 21 Batch 3 | Loss: 0.627427
-Epoch 21 Batch 4 | Loss: 0.533684
-Epoch 21 Batch 5 | Loss: 0.604587
-Epoch 21 Batch 6 | Loss: 0.581771
-Epoch 21 Batch 7 | Loss: 0.643356
-Epoch 21 Batch 8 | Loss: 0.566836
-Epoch 21 Batch 9 | Loss: 0.596199
-Epoch 21 Batch 10 | Loss: 0.543370
-Epoch 21 Batch 11 | Loss: 0.581324
-Epoch 21 Batch 12 | Loss: 0.611865
-Epoch 21 Batch 13 | Loss: 0.567474
---- Epoch 21/30 | Loss: 0.5851 | Train Acc: 67.5% | Test Acc: 72.7% | CM: [TP:68, TN:57, FP:29, FN:18] | Progress: 70.0% | ETA: 5.3s ---
-Epoch 22 Batch 1 | Loss: 0.558575 | Stats: min: -0.389, max: 0.226, mean: -0.070
-Epoch 22 Batch 2 | Loss: 0.591337
-Epoch 22 Batch 3 | Loss: 0.574077
-Epoch 22 Batch 4 | Loss: 0.638955
-Epoch 22 Batch 5 | Loss: 0.627252
-Epoch 22 Batch 6 | Loss: 0.592561
-Epoch 22 Batch 7 | Loss: 0.589293
-Epoch 22 Batch 8 | Loss: 0.578640
-Epoch 22 Batch 9 | Loss: 0.575863
-Epoch 22 Batch 10 | Loss: 0.558750
-Epoch 22 Batch 11 | Loss: 0.531106
-Epoch 22 Batch 12 | Loss: 0.582088
-Epoch 22 Batch 13 | Loss: 0.648749
---- Epoch 22/30 | Loss: 0.5882 | Train Acc: 67.5% | Test Acc: 72.7% | CM: [TP:68, TN:57, FP:29, FN:18] | Progress: 73.3% | ETA: 4.5s ---
-Epoch 23 Batch 1 | Loss: 0.596582 | Stats: min: -0.035, max: 0.265, mean: 0.113
-Epoch 23 Batch 2 | Loss: 0.599350
-Epoch 23 Batch 3 | Loss: 0.598750
-Epoch 23 Batch 4 | Loss: 0.575148
-Epoch 23 Batch 5 | Loss: 0.588801
-Epoch 23 Batch 6 | Loss: 0.620905
-Epoch 23 Batch 7 | Loss: 0.568731
-Epoch 23 Batch 8 | Loss: 0.586742
-Epoch 23 Batch 9 | Loss: 0.560699
-Epoch 23 Batch 10 | Loss: 0.561137
-Epoch 23 Batch 11 | Loss: 0.572734
-Epoch 23 Batch 12 | Loss: 0.600592
-Epoch 23 Batch 13 | Loss: 0.577667
+--- Epoch 20/30 | Loss: 0.5180 | Train Acc: 92.5% | Test Acc: 87.2% | CM: [TP:80, TN:70, FP:16, FN:6] | Progress: 66.7% | ETA: 6.6s ---
+Epoch 21 Batch 1 | Loss: 0.485310 | Stats: min: -0.348, max: 0.351, mean: -0.068
+Epoch 21 Batch 2 | Loss: 0.524099
+Epoch 21 Batch 3 | Loss: 0.540280
+Epoch 21 Batch 4 | Loss: 0.499039
+Epoch 21 Batch 5 | Loss: 0.539731
+Epoch 21 Batch 6 | Loss: 0.493433
+Epoch 21 Batch 7 | Loss: 0.536763
+Epoch 21 Batch 8 | Loss: 0.514315
+Epoch 21 Batch 9 | Loss: 0.526055
+Epoch 21 Batch 10 | Loss: 0.506310
+Epoch 21 Batch 11 | Loss: 0.512089
+Epoch 21 Batch 12 | Loss: 0.502738
+Epoch 21 Batch 13 | Loss: 0.477796
+--- Epoch 21/30 | Loss: 0.5122 | Train Acc: 92.5% | Test Acc: 87.2% | CM: [TP:79, TN:71, FP:15, FN:7] | Progress: 70.0% | ETA: 5.7s ---
+Epoch 22 Batch 1 | Loss: 0.502468 | Stats: min: -0.265, max: 0.417, mean: -0.072
+Epoch 22 Batch 2 | Loss: 0.535537
+Epoch 22 Batch 3 | Loss: 0.518552
+Epoch 22 Batch 4 | Loss: 0.494953
+Epoch 22 Batch 5 | Loss: 0.483299
+Epoch 22 Batch 6 | Loss: 0.507097
+Epoch 22 Batch 7 | Loss: 0.504745
+Epoch 22 Batch 8 | Loss: 0.529521
+Epoch 22 Batch 9 | Loss: 0.506184
+Epoch 22 Batch 10 | Loss: 0.524870
+Epoch 22 Batch 11 | Loss: 0.512540
+Epoch 22 Batch 12 | Loss: 0.519519
+Epoch 22 Batch 13 | Loss: 0.532804
+--- Epoch 22/30 | Loss: 0.5132 | Train Acc: 92.0% | Test Acc: 87.2% | CM: [TP:79, TN:71, FP:15, FN:7] | Progress: 73.3% | ETA: 4.8s ---
+Epoch 23 Batch 1 | Loss: 0.528051 | Stats: min: -0.044, max: 0.512, mean: 0.176
+Epoch 23 Batch 2 | Loss: 0.485267
+Epoch 23 Batch 3 | Loss: 0.536833
+Epoch 23 Batch 4 | Loss: 0.489700
+Epoch 23 Batch 5 | Loss: 0.503634
+Epoch 23 Batch 6 | Loss: 0.511969
+Epoch 23 Batch 7 | Loss: 0.528800
+Epoch 23 Batch 8 | Loss: 0.517568
+Epoch 23 Batch 9 | Loss: 0.505346
+Epoch 23 Batch 10 | Loss: 0.488638
+Epoch 23 Batch 11 | Loss: 0.521130
+Epoch 23 Batch 12 | Loss: 0.526937
+Epoch 23 Batch 13 | Loss: 0.508143
   [STABILITY] Plateau detected. Reducing Learning Rate to 0.002500
---- Epoch 23/30 | Loss: 0.5852 | Train Acc: 68.0% | Test Acc: 72.7% | CM: [TP:68, TN:57, FP:29, FN:18] | Progress: 76.7% | ETA: 3.9s ---
-Epoch 24 Batch 1 | Loss: 0.571612 | Stats: min: -0.080, max: 0.463, mean: 0.086
-Epoch 24 Batch 2 | Loss: 0.593778
-Epoch 24 Batch 3 | Loss: 0.575266
-Epoch 24 Batch 4 | Loss: 0.567119
-Epoch 24 Batch 5 | Loss: 0.587276
-Epoch 24 Batch 6 | Loss: 0.622183
-Epoch 24 Batch 7 | Loss: 0.567369
-Epoch 24 Batch 8 | Loss: 0.593087
-Epoch 24 Batch 9 | Loss: 0.574277
-Epoch 24 Batch 10 | Loss: 0.595661
-Epoch 24 Batch 11 | Loss: 0.579889
-Epoch 24 Batch 12 | Loss: 0.555681
-Epoch 24 Batch 13 | Loss: 0.670589
---- Epoch 24/30 | Loss: 0.5888 | Train Acc: 68.0% | Test Acc: 72.7% | CM: [TP:68, TN:57, FP:29, FN:18] | Progress: 80.0% | ETA: 3.1s ---
-Epoch 25 Batch 1 | Loss: 0.557584 | Stats: min: -0.048, max: 0.269, mean: 0.076
-Epoch 25 Batch 2 | Loss: 0.565396
-Epoch 25 Batch 3 | Loss: 0.575405
-Epoch 25 Batch 4 | Loss: 0.534364
-Epoch 25 Batch 5 | Loss: 0.577793
-Epoch 25 Batch 6 | Loss: 0.599834
-Epoch 25 Batch 7 | Loss: 0.565860
-Epoch 25 Batch 8 | Loss: 0.584804
-Epoch 25 Batch 9 | Loss: 0.643588
-Epoch 25 Batch 10 | Loss: 0.619791
-Epoch 25 Batch 11 | Loss: 0.591117
-Epoch 25 Batch 12 | Loss: 0.605591
-Epoch 25 Batch 13 | Loss: 0.582795
---- Epoch 25/30 | Loss: 0.5849 | Train Acc: 68.5% | Test Acc: 72.1% | CM: [TP:68, TN:56, FP:30, FN:18] | Progress: 83.3% | ETA: 1.3s ---
-Epoch 26 Batch 1 | Loss: 0.547691 | Stats: min: -0.061, max: 0.498, mean: 0.172
-Epoch 26 Batch 2 | Loss: 0.626386
-Epoch 26 Batch 3 | Loss: 0.523149
-Epoch 26 Batch 4 | Loss: 0.550511
-Epoch 26 Batch 5 | Loss: 0.602448
-Epoch 26 Batch 6 | Loss: 0.629340
-Epoch 26 Batch 7 | Loss: 0.573867
-Epoch 26 Batch 8 | Loss: 0.574545
-Epoch 26 Batch 9 | Loss: 0.635862
-Epoch 26 Batch 10 | Loss: 0.554392
-Epoch 26 Batch 11 | Loss: 0.631718
-Epoch 26 Batch 12 | Loss: 0.611412
-Epoch 26 Batch 13 | Loss: 0.492624
+--- Epoch 23/30 | Loss: 0.5117 | Train Acc: 92.0% | Test Acc: 86.6% | CM: [TP:79, TN:70, FP:16, FN:7] | Progress: 76.7% | ETA: 4.6s ---
+Epoch 24 Batch 1 | Loss: 0.495142 | Stats: min: -0.264, max: 0.485, mean: 0.043
+Epoch 24 Batch 2 | Loss: 0.533214
+Epoch 24 Batch 3 | Loss: 0.489398
+Epoch 24 Batch 4 | Loss: 0.541399
+Epoch 24 Batch 5 | Loss: 0.504407
+Epoch 24 Batch 6 | Loss: 0.557424
+Epoch 24 Batch 7 | Loss: 0.533877
+Epoch 24 Batch 8 | Loss: 0.508368
+Epoch 24 Batch 9 | Loss: 0.482430
+Epoch 24 Batch 10 | Loss: 0.495513
+Epoch 24 Batch 11 | Loss: 0.521980
+Epoch 24 Batch 12 | Loss: 0.495498
+Epoch 24 Batch 13 | Loss: 0.460727
+--- Epoch 24/30 | Loss: 0.5092 | Train Acc: 91.5% | Test Acc: 86.6% | CM: [TP:79, TN:70, FP:16, FN:7] | Progress: 80.0% | ETA: 3.9s ---
+Epoch 25 Batch 1 | Loss: 0.505854 | Stats: min: -0.233, max: 0.502, mean: 0.088
+Epoch 25 Batch 2 | Loss: 0.562215
+Epoch 25 Batch 3 | Loss: 0.511102
+Epoch 25 Batch 4 | Loss: 0.466470
+Epoch 25 Batch 5 | Loss: 0.513596
+Epoch 25 Batch 6 | Loss: 0.528818
+Epoch 25 Batch 7 | Loss: 0.468387
+Epoch 25 Batch 8 | Loss: 0.539890
+Epoch 25 Batch 9 | Loss: 0.494628
+Epoch 25 Batch 10 | Loss: 0.512903
+Epoch 25 Batch 11 | Loss: 0.506003
+Epoch 25 Batch 12 | Loss: 0.503259
+Epoch 25 Batch 13 | Loss: 0.543823
+--- Epoch 25/30 | Loss: 0.5121 | Train Acc: 91.5% | Test Acc: 87.2% | CM: [TP:79, TN:71, FP:15, FN:7] | Progress: 83.3% | ETA: 3.1s ---
+Epoch 26 Batch 1 | Loss: 0.478016 | Stats: min: -0.220, max: 0.420, mean: 0.217
+Epoch 26 Batch 2 | Loss: 0.518015
+Epoch 26 Batch 3 | Loss: 0.507669
+Epoch 26 Batch 4 | Loss: 0.477318
+Epoch 26 Batch 5 | Loss: 0.547162
+Epoch 26 Batch 6 | Loss: 0.527543
+Epoch 26 Batch 7 | Loss: 0.523252
+Epoch 26 Batch 8 | Loss: 0.507549
+Epoch 26 Batch 9 | Loss: 0.540629
+Epoch 26 Batch 10 | Loss: 0.488240
+Epoch 26 Batch 11 | Loss: 0.494388
+Epoch 26 Batch 12 | Loss: 0.506411
+Epoch 26 Batch 13 | Loss: 0.526943
   [STABILITY] Plateau detected. Reducing Learning Rate to 0.001250
---- Epoch 26/30 | Loss: 0.5811 | Train Acc: 69.0% | Test Acc: 72.1% | CM: [TP:68, TN:56, FP:30, FN:18] | Progress: 86.7% | ETA: 1.0s ---
-Epoch 27 Batch 1 | Loss: 0.607739 | Stats: min: -0.011, max: 0.187, mean: 0.094
-Epoch 27 Batch 2 | Loss: 0.584255
-Epoch 27 Batch 3 | Loss: 0.598785
-Epoch 27 Batch 4 | Loss: 0.573152
-Epoch 27 Batch 5 | Loss: 0.592953
-Epoch 27 Batch 6 | Loss: 0.631588
-Epoch 27 Batch 7 | Loss: 0.539550
-Epoch 27 Batch 8 | Loss: 0.572328
-Epoch 27 Batch 9 | Loss: 0.559701
-Epoch 27 Batch 10 | Loss: 0.626628
-Epoch 27 Batch 11 | Loss: 0.563312
-Epoch 27 Batch 12 | Loss: 0.562795
-Epoch 27 Batch 13 | Loss: 0.591123
---- Epoch 27/30 | Loss: 0.5849 | Train Acc: 69.0% | Test Acc: 72.1% | CM: [TP:68, TN:56, FP:30, FN:18] | Progress: 90.0% | ETA: 0.7s ---
-Epoch 28 Batch 1 | Loss: 0.595119 | Stats: min: -0.253, max: 0.454, mean: 0.048
-Epoch 28 Batch 2 | Loss: 0.544162
-Epoch 28 Batch 3 | Loss: 0.556513
-Epoch 28 Batch 4 | Loss: 0.646670
-Epoch 28 Batch 5 | Loss: 0.590556
-Epoch 28 Batch 6 | Loss: 0.570640
-Epoch 28 Batch 7 | Loss: 0.604872
-Epoch 28 Batch 8 | Loss: 0.595735
-Epoch 28 Batch 9 | Loss: 0.562505
-Epoch 28 Batch 10 | Loss: 0.568285
-Epoch 28 Batch 11 | Loss: 0.590435
-Epoch 28 Batch 12 | Loss: 0.574849
-Epoch 28 Batch 13 | Loss: 0.618386
---- Epoch 28/30 | Loss: 0.5861 | Train Acc: 69.0% | Test Acc: 72.1% | CM: [TP:68, TN:56, FP:30, FN:18] | Progress: 93.3% | ETA: 0.6s ---
-Epoch 29 Batch 1 | Loss: 0.553907 | Stats: min: -0.335, max: 0.340, mean: -0.039
-Epoch 29 Batch 2 | Loss: 0.607250
-Epoch 29 Batch 3 | Loss: 0.541426
-Epoch 29 Batch 4 | Loss: 0.572795
-Epoch 29 Batch 5 | Loss: 0.548320
-Epoch 29 Batch 6 | Loss: 0.560747
-Epoch 29 Batch 7 | Loss: 0.586872
-Epoch 29 Batch 8 | Loss: 0.632722
-Epoch 29 Batch 9 | Loss: 0.575900
-Epoch 29 Batch 10 | Loss: 0.578606
-Epoch 29 Batch 11 | Loss: 0.653701
-Epoch 29 Batch 12 | Loss: 0.596728
-Epoch 29 Batch 13 | Loss: 0.597644
+--- Epoch 26/30 | Loss: 0.5110 | Train Acc: 91.5% | Test Acc: 87.8% | CM: [TP:80, TN:71, FP:15, FN:6] | Progress: 86.7% | ETA: 2.4s ---
+Epoch 27 Batch 1 | Loss: 0.515493 | Stats: min: -0.395, max: 0.355, mean: 0.048
+Epoch 27 Batch 2 | Loss: 0.486820
+Epoch 27 Batch 3 | Loss: 0.532560
+Epoch 27 Batch 4 | Loss: 0.500848
+Epoch 27 Batch 5 | Loss: 0.527624
+Epoch 27 Batch 6 | Loss: 0.530100
+Epoch 27 Batch 7 | Loss: 0.531533
+Epoch 27 Batch 8 | Loss: 0.492803
+Epoch 27 Batch 9 | Loss: 0.498379
+Epoch 27 Batch 10 | Loss: 0.512381
+Epoch 27 Batch 11 | Loss: 0.496952
+Epoch 27 Batch 12 | Loss: 0.502938
+Epoch 27 Batch 13 | Loss: 0.488969
+--- Epoch 27/30 | Loss: 0.5090 | Train Acc: 91.5% | Test Acc: 87.8% | CM: [TP:80, TN:71, FP:15, FN:6] | Progress: 90.0% | ETA: 1.7s ---
+Epoch 28 Batch 1 | Loss: 0.500164 | Stats: min: -0.297, max: 0.423, mean: 0.137
+Epoch 28 Batch 2 | Loss: 0.495289
+Epoch 28 Batch 3 | Loss: 0.520277
+Epoch 28 Batch 4 | Loss: 0.511660
+Epoch 28 Batch 5 | Loss: 0.475572
+Epoch 28 Batch 6 | Loss: 0.531480
+Epoch 28 Batch 7 | Loss: 0.534406
+Epoch 28 Batch 8 | Loss: 0.515430
+Epoch 28 Batch 9 | Loss: 0.487921
+Epoch 28 Batch 10 | Loss: 0.518427
+Epoch 28 Batch 11 | Loss: 0.503319
+Epoch 28 Batch 12 | Loss: 0.521638
+Epoch 28 Batch 13 | Loss: 0.514800
+--- Epoch 28/30 | Loss: 0.5100 | Train Acc: 91.5% | Test Acc: 87.8% | CM: [TP:79, TN:72, FP:14, FN:7] | Progress: 93.3% | ETA: 1.1s ---
+Epoch 29 Batch 1 | Loss: 0.480061 | Stats: min: -0.361, max: 0.356, mean: -0.071
+Epoch 29 Batch 2 | Loss: 0.514853
+Epoch 29 Batch 3 | Loss: 0.504285
+Epoch 29 Batch 4 | Loss: 0.516317
+Epoch 29 Batch 5 | Loss: 0.526989
+Epoch 29 Batch 6 | Loss: 0.500807
+Epoch 29 Batch 7 | Loss: 0.481776
+Epoch 29 Batch 8 | Loss: 0.496913
+Epoch 29 Batch 9 | Loss: 0.517444
+Epoch 29 Batch 10 | Loss: 0.523724
+Epoch 29 Batch 11 | Loss: 0.538815
+Epoch 29 Batch 12 | Loss: 0.502884
+Epoch 29 Batch 13 | Loss: 0.531951
   [STABILITY] Plateau detected. Reducing Learning Rate to 0.000625
---- Epoch 29/30 | Loss: 0.5851 | Train Acc: 68.0% | Test Acc: 72.1% | CM: [TP:68, TN:56, FP:30, FN:18] | Progress: 96.7% | ETA: 0.3s ---
-Epoch 30 Batch 1 | Loss: 0.595285 | Stats: min: -0.191, max: 0.321, mean: 0.003
-Epoch 30 Batch 2 | Loss: 0.590119
-Epoch 30 Batch 3 | Loss: 0.609835
-Epoch 30 Batch 4 | Loss: 0.582326
-Epoch 30 Batch 5 | Loss: 0.570551
-Epoch 30 Batch 6 | Loss: 0.573928
-Epoch 30 Batch 7 | Loss: 0.573120
-Epoch 30 Batch 8 | Loss: 0.551081
-Epoch 30 Batch 9 | Loss: 0.594595
-Epoch 30 Batch 10 | Loss: 0.556582
-Epoch 30 Batch 11 | Loss: 0.589611
-Epoch 30 Batch 12 | Loss: 0.597446
-Epoch 30 Batch 13 | Loss: 0.646721
---- Epoch 30/30 | Loss: 0.5870 | Train Acc: 68.0% | Test Acc: 72.1% | CM: [TP:68, TN:56, FP:30, FN:18] | Progress: 100.0% | ETA: 0.0s ---
+--- Epoch 29/30 | Loss: 0.5105 | Train Acc: 91.5% | Test Acc: 87.8% | CM: [TP:79, TN:72, FP:14, FN:7] | Progress: 96.7% | ETA: 0.5s ---
+Epoch 30 Batch 1 | Loss: 0.505237 | Stats: min: -0.015, max: 0.400, mean: 0.274
+Epoch 30 Batch 2 | Loss: 0.492694
+Epoch 30 Batch 3 | Loss: 0.513341
+Epoch 30 Batch 4 | Loss: 0.512601
+Epoch 30 Batch 5 | Loss: 0.497450
+Epoch 30 Batch 6 | Loss: 0.542838
+Epoch 30 Batch 7 | Loss: 0.513094
+Epoch 30 Batch 8 | Loss: 0.466162
+Epoch 30 Batch 9 | Loss: 0.515619
+Epoch 30 Batch 10 | Loss: 0.540196
+Epoch 30 Batch 11 | Loss: 0.489083
+Epoch 30 Batch 12 | Loss: 0.490066
+Epoch 30 Batch 13 | Loss: 0.582730
+--- Epoch 30/30 | Loss: 0.5124 | Train Acc: 91.0% | Test Acc: 87.8% | CM: [TP:79, TN:72, FP:14, FN:7] | Progress: 100.0% | ETA: 0.0s ---
 
-Final Best Test Accuracy: 75.00%
+Final Best Test Accuracy: 88.37%
 
 
-Best Quantum Test Accuracy: 0.750
+Best Quantum Test Accuracy: 0.884

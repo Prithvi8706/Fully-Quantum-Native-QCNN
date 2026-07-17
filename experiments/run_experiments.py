@@ -73,7 +73,12 @@ ABLATION_CONFIGS = {
     # Encoding ablation uses a small image so feature_map (1 qubit/pixel) stays
     # simulable. 3x3 -> 9 qubits keeps it on the fast, memory-safe batched backprop path;
     # 4x4 -> 16 qubits OOMs under backprop and is ~50x slower on the per-sample fallback.
-    "enc_feature_map": dict(image_size=3, encoding="feature_map"),
+    # n_conv_layers=2 (override, this config only) avoids over-pooling the 9-qubit state
+    # onto a single readout qubit; a higher LR helps it escape the near-constant init.
+    # These overrides are scoped to feature_map — the proposed amplitude model's depth is
+    # untouched.
+    "enc_feature_map": dict(image_size=3, encoding="feature_map",
+                            n_conv_layers=2, learning_rate=0.05),
 }
 
 
@@ -315,6 +320,13 @@ def main():
     _write_summary_csv(summary_rows, os.path.join(EXP_ROOT, "summary.csv"))
     print(f"\nWrote summary to {os.path.join(EXP_ROOT, 'summary.csv')}")
 
+    # Publication stats + figure (paired significance tests, CI bar chart).
+    try:
+        from experiments.analyze_results import run_analysis
+        run_analysis(EXP_ROOT)
+    except Exception as e:
+        print(f"  Warning: analysis/figure step failed: {e}")
+
 
 def _append_baseline_rows(pairs, seeds, summary_rows):
     """Aggregate the per-seed baseline JSONs that run_single saved."""
@@ -343,7 +355,7 @@ _SUMMARY_METRICS = ("accuracy", "precision", "recall", "f1", "roc_auc", "pr_auc"
 def _write_summary_csv(rows, path):
     header = ["dataset", "config", "n_runs"]
     for m in _SUMMARY_METRICS:
-        header += [f"{m}_mean", f"{m}_std"]
+        header += [f"{m}_mean", f"{m}_std", f"{m}_ci_low", f"{m}_ci_high"]
     with open(path, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(header)
@@ -352,7 +364,9 @@ def _write_summary_csv(rows, path):
             for m in _SUMMARY_METRICS:
                 stat = agg.get(m, {})
                 row += [f"{stat.get('mean', float('nan')):.4f}",
-                        f"{stat.get('std', float('nan')):.4f}"]
+                        f"{stat.get('std', float('nan')):.4f}",
+                        f"{stat.get('ci_low', float('nan')):.4f}",
+                        f"{stat.get('ci_high', float('nan')):.4f}"]
             w.writerow(row)
 
 
