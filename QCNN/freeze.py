@@ -5,9 +5,12 @@ incidental layout of the source. Everything here exists to pin that function
 down so structural or semantic drift becomes a test failure instead of a silent
 change in the paper's numbers.
 """
+import hashlib
+import json
 import os
 
 import numpy as np
+import pennylane as qml
 import pennylane.numpy as pnp
 
 from QCNN.config.Qconfig import QuantumNativeConfig
@@ -58,3 +61,58 @@ def slot_ranges(model: PureQuantumNativeCNN) -> dict:
         ranges[name] = [cursor, cursor + size]
         cursor += size
     return ranges
+
+
+SIGNATURE_FIXTURE = os.path.join(FIXTURE_DIR, 'headline_signature.json')
+
+# State-preparation operations carry data, not trainable slots; their parameters
+# are described by length so the signature stays a topology statement.
+_STATE_PREP_OPS = ('AmplitudeEmbedding', 'StatePrep', 'MottonenStatePreparation')
+
+
+def headline_tape(model, x, flat_params):
+    """Construct and return the QNode's tape for one (input, parameter) pair."""
+    model.quantum_circuit.construct((x, flat_params), {})
+    return model.quantum_circuit.tape
+
+
+def _marker_vector(n_slots: int) -> pnp.ndarray:
+    """Parameter vector whose slot ``i`` carries the unique tag ``i + 1``."""
+    return pnp.array(np.arange(1, n_slots + 1, dtype=float), requires_grad=True)
+
+
+def _describe_param(value, lookup) -> str:
+    slot = lookup.get(round(float(value), 9))
+    if slot is not None:
+        return 'slot{}'.format(slot)
+    return 'const{:.12g}'.format(float(value))
+
+
+def circuit_signature(model) -> dict:
+    """Serialise the frozen topology: gate name, wires, and parameter slot."""
+    n_slots = len(model._flatten_params(model.quantum_params))
+    marker = _marker_vector(n_slots)
+    lookup = {round(float(i + 1), 9): i for i in range(n_slots)}
+    tape = headline_tape(model, fixed_regression_inputs()[0], marker)
+
+    operations = []
+    for op in tape.operations:
+        if op.name in _STATE_PREP_OPS:
+            params = ['data{}'.format(int(np.shape(op.data[0])[0]))]
+        else:
+            params = [_describe_param(p, lookup) for p in op.data]
+        operations.append({
+            'name': op.name,
+            'wires': [int(w) for w in op.wires],
+            'params': params,
+        })
+
+    return {
+        'operations': operations,
+        'measurements': [str(m) for m in tape.measurements],
+    }
+
+
+def signature_hash(signature: dict) -> str:
+    blob = json.dumps(signature, sort_keys=True, separators=(',', ':'))
+    return hashlib.sha256(blob.encode('utf-8')).hexdigest()
