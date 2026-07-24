@@ -118,6 +118,74 @@ def signature_hash(signature: dict) -> str:
     return hashlib.sha256(blob.encode('utf-8')).hexdigest()
 
 
+EFFECTIVE_PARAMS_FIXTURE = os.path.join(FIXTURE_DIR, 'effective_params.json')
+
+# Gradient magnitudes on this circuit fall into two populations separated by
+# ~14 orders of magnitude: real gradients above 1e-3, and adjoint-differentiation
+# round-off at ~3e-17. This threshold sits in the empty gap between them, so the
+# reported effective count does not depend on where in that gap it is placed
+# (verified by test_effective_params.py::test_gradient_populations_are_separated).
+EFFECTIVE_GRADIENT_TOL = 1e-12
+
+
+def syntactically_used_slots(model) -> list:
+    """Slots that appear as a gate argument anywhere in the frozen tape."""
+    used = set()
+    for op in circuit_signature(model)['operations']:
+        for descriptor in op['params']:
+            if descriptor.startswith('slot'):
+                used.add(int(descriptor[len('slot'):]))
+    return sorted(used)
+
+
+def effective_parameter_audit(model, flat_params, inputs) -> dict:
+    """Which parameter slots actually influence ``<Z_readout>``.
+
+    Two counts are reported because they differ and only one is defensible:
+
+    - ``n_effective_raw``: slots whose gradient is not exactly zero. This
+      over-reports, because adjoint differentiation leaves round-off at ~3e-17
+      on some structurally dead slots.
+    - ``n_effective``: slots whose gradient exceeds ``EFFECTIVE_GRADIENT_TOL``.
+      This is the number the manuscript reports (UPGRADE_PLAN.md F1, A6).
+    """
+    jacobian = np.array([
+        np.asarray(qml.jacobian(lambda p: model.quantum_circuit(np.asarray(x), p))(flat_params))
+        for x in inputs
+    ])
+    max_abs = np.max(np.abs(jacobian), axis=0)
+
+    effective = [int(i) for i in np.flatnonzero(max_abs > EFFECTIVE_GRADIENT_TOL)]
+    effective_raw = [int(i) for i in np.flatnonzero(max_abs > 0.0)]
+    dead = [int(i) for i in np.flatnonzero(max_abs <= EFFECTIVE_GRADIENT_TOL)]
+    used = syntactically_used_slots(model)
+
+    per_group = {}
+    for name, (start, stop) in slot_ranges(model).items():
+        group = [i for i in effective if start <= i < stop]
+        per_group[name] = {
+            'range': [start, stop],
+            'n_allocated': stop - start,
+            'n_effective': len(group),
+        }
+
+    return {
+        'n_allocated': int(len(max_abs)),
+        'n_syntactically_used': len(used),
+        'syntactically_used_slots': used,
+        'n_effective': len(effective),
+        'effective_slots': effective,
+        'n_effective_raw': len(effective_raw),
+        'effective_slots_raw': effective_raw,
+        'gradient_tolerance': EFFECTIVE_GRADIENT_TOL,
+        'zero_gradient_slots': dead,
+        'per_group': per_group,
+        'max_abs_gradient': [float(v) for v in max_abs],
+        'n_inputs': int(len(inputs)),
+        'input_seed': REGRESSION_INPUT_SEED,
+    }
+
+
 EXPECTATION_FIXTURE = os.path.join(FIXTURE_DIR, 'headline_expectations.npz')
 
 

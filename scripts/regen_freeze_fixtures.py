@@ -42,10 +42,20 @@ def regen_expectations(model):
     print('wrote {}'.format(freeze.EXPECTATION_FIXTURE))
 
 
+def regen_effective_params(model):
+    params = freeze.load_archived_params(model)
+    inputs = freeze.fixed_regression_inputs()
+    audit = freeze.effective_parameter_audit(model, params, inputs)
+    _write_json(freeze.EFFECTIVE_PARAMS_FIXTURE, audit)
+    print('  allocated={} syntactically used={} effective={}'.format(
+        audit['n_allocated'], audit['n_syntactically_used'], audit['n_effective']))
+
+
 def main():
     model = freeze.build_headline_model()
     regen_signature(model)
     regen_expectations(model)
+    regen_effective_params(model)
 
 
 if __name__ == '__main__':
