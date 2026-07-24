@@ -3,14 +3,14 @@
 
 This repository implements **FQCNN**, a **fully quantum-native convolutional neural network (QCNN)** that performs data encoding, local convolution, coherence-preserving unitary pooling, and classification **entirely using unitary quantum operations, with no intermediate measurements**. Unlike hybrid models, this architecture contains no classical convolutional layers at any stage.
 
-The project has evolved from a small 4x4 prototype to a robust framework capable of classifying **high-resolution images (e.g., 28x28 MNIST)** with over **95% accuracy** using advanced encoding strategies like **Amplitude Embedding** and **Patch-based Quanvolution**.
+The project has evolved from a small 4x4 prototype to a robust framework capable of classifying **high-resolution images (e.g., 28x28 MNIST)** with up to **98.86% accuracy** (and **99.30% ± 0.64%** in multi-seed evaluations) using advanced encoding strategies like **Amplitude Embedding** and **Patch-based Quanvolution**.
 
 ---
 
 ## Key Features
 
 - **100% Quantum-Native**: Convolution, Pooling, and Classification are all implemented as differentiable quantum circuits.
-- **High Performance**: Achieving **95.2% accuracy** on MNIST (0 vs 1) using only quantum operations.
+- **High Performance**: Achieving **98.86% accuracy** (F1: **98.86%**, ROC-AUC: **0.9991**) on MNIST (0 vs 1) using 100% quantum-native operations.
 - **Advanced Encoding**:
   - **Amplitude Encoding**: Maps full images into Hilbert space using only $\log_2(N)$ qubits.
   - **Patch-based Encoding**: Uses a sliding quantum filter (Quanvolution) to process large images efficiently.
@@ -67,15 +67,47 @@ python main.py --dataset mnist --classes 3 7 --encoding patch
 
 ## Performance Benchmarks
 
-Modern QCNN performance on MNIST (Binary Classification):
+### 1. Latest Verified Standard Run (MNIST 0 vs 1)
+Full evaluation metrics from the primary 50-epoch training run (`Results/metrics.json`):
 
-| Task | Encoding | Qubits | Accuracy | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **0 vs 1** | Amplitude | 8 | **95.2%** | Verified |
-| **3 vs 7** | Amplitude | 8 | **91.4%** | Verified |
-| **0 vs 1** | Patch | 16 | **94.8%** | Verified |
+| Metric | Score / Value | Details |
+| :--- | :---: | :--- |
+| **Accuracy** | **98.86%** | 10 Qubits, Amplitude Encoding, 50 Epochs |
+| **Precision** | **99.18%** | True Positives: 1,689 / False Positives: 14 |
+| **Recall** | **98.54%** | True Positives: 1,689 / False Negatives: 25 |
+| **F1 Score** | **98.86%** | Harmonic mean of Precision and Recall |
+| **ROC-AUC** | **0.9991** | Area Under Receiver Operating Characteristic Curve |
+| **PR-AUC** | **0.9992** | Area Under Precision-Recall Curve |
 
-*Results obtained using Adam optimizer with EMA and LR Warmup.*
+*Confusion Matrix: **TP: 1,689** \| **TN: 1,701** \| **FP: 14** \| **FN: 25** (3,429 test samples)*
+
+---
+
+### 2. Multi-Seed Study Across Hard MNIST Pairs
+Evaluated across 5 independent random seeds per pair (**Mean ± Std**, `Results/experiments/summary.csv`):
+
+| Digit Pair | Encoding | Qubits | Accuracy (Mean ± Std) | F1 Score (Mean ± Std) | ROC-AUC (Mean ± Std) | Status |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **MNIST 0 vs 1** | Amplitude | 10 | **99.30% ± 0.64%** | **99.31% ± 0.63%** | **0.9994 ± 0.0006** | Verified (5 Seeds) |
+| **MNIST 3 vs 5** | Amplitude | 10 | **93.37% ± 3.15%** | **93.12% ± 3.55%** | **0.9804 ± 0.0109** | Verified (5 Seeds) |
+| **MNIST 4 vs 9** | Amplitude | 10 | **90.81% ± 2.07%** | **91.09% ± 1.84%** | **0.9637 ± 0.0111** | Verified (5 Seeds) |
+| **MNIST 5 vs 8** | Amplitude | 10 | **90.58% ± 5.12%** | **90.88% ± 4.91%** | **0.9639 ± 0.0309** | Verified (5 Seeds) |
+
+---
+
+### 3. Architecture Comparison Against Published Quantum & Classical Baselines
+Trained on identical dataset splits, seeds, and optimization budget on MNIST (0 vs 1):
+
+| Model / Architecture | Type | Accuracy (Mean ± Std) | Reference / Description |
+| :--- | :--- | :---: | :--- |
+| **FQCNN (Proposed)** | Quantum-Native | **99.30% ± 0.64%** | Coherent Unitary Pooling & SU(2) Conv |
+| **Canonical QCNN** | Quantum Baseline | **98.26% ± 0.82%** | Cong, Choi & Lukin (*Nature Physics*, 2019) |
+| **Tree Tensor Network (TTN)** | Quantum Baseline | **98.14% ± 1.12%** | Grant et al. (*npj Quantum Info*, 2018) |
+| **Expressive QCNN** | Quantum Baseline | **94.88% ± 3.99%** | Hur, Kim & Park (*EPJ Quantum Tech*, 2022) |
+| **Logistic Regression** | Classical Baseline | **99.53% ± 0.26%** | Linear Baseline on Amplitude Features |
+| **MLP Classifier** | Classical Baseline | **99.07% ± 0.52%** | 2-Layer Neural Network |
+
+*All runs trained using Adam optimizer with EMA, LR Warmup, and Gradient Clipping.*
 
 ---
 
