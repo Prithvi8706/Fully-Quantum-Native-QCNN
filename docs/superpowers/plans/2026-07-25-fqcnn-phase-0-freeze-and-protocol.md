@@ -760,11 +760,14 @@ Expected: `3 passed` in roughly 60 s.
 Temporarily change the inert discard rotation in `QCNN/layers/QPool.py:80` from `qml.RY(0.02, wires=discard)` to `qml.RY(0.03, wires=discard)`.
 
 Run: `python -m pytest tests/test_freeze_expectations.py::test_expectations_match_archived_reference -v`
-Expected: FAIL with the "outputs drifted beyond 1e-10" message.
 
-> Note for the paper record: this failure is itself evidence that `RY(0.02)` is **not** inert as currently applied — the discarded wire still influences the readout through the CRY/CRZ pairing of *later* pooling stages. Record this observation in Task 11's reconciliation table; do not act on it here.
+**Executed 2026-07-25 — the test PASSED, contradicting this step's original prediction.** `RY(0.02)` is inert: perturbing the angle shifts `⟨Z⟩` by 9.44e-16 and deleting the gate by 8.33e-16, against §A2's 1e-12 bar. The reason is structural — the executed pooling schedule discards {1,3,5,7,9} → {2,6} → {4} and retires wire 8 unpaired, so no discarded wire is ever operated on again, and a local unitary on a traced-out subsystem cannot change any observable.
 
-**Revert the edit** (`git checkout QCNN/layers/QPool.py`) and re-run:
+Because it passed, this step does **not** demonstrate that the guard catches semantic drift. Use a slot-carrying angle instead — change the pooling consolidation `qml.RY(c, wires=keep)` on `QCNN/layers/QPool.py:83` to `qml.RY(c + 1e-6, wires=keep)`, confirm the regression fails, then revert.
+
+The inertness result was taken to the §18 decision gate and the user **declined removal** (2026-07-25): no architecture change. Record the disposition in Task 11 row 4; do not edit the circuit.
+
+**Revert any edit** (`git checkout QCNN/layers/QPool.py`) and re-run:
 
 Run: `python -m pytest tests/test_freeze_expectations.py -v`
 Expected: `3 passed`
@@ -2308,7 +2311,7 @@ manuscript; no `.tex` edit is made here.
 | 1 | Sec. III-B / VI-D: two-stage encoding (`Ry Rz H` then ring `CNOT·Rz·CNOT`), listed as contribution #4 | `AmplitudeEmbedding` only; the two-stage map is never executed on the amplitude path | **Delete** the two-stage map from the main-model description and **remove contribution #4**. Optionally re-scope as the `enc_augmented` ablation arm in Phase 6. |
 | 2 | Sec. III-C: a four-level convolutional hierarchy | One effective convolution stage at n=10; layers 1–3 never apply their kernels (5×1 grid yields no windows) | **Rewrite** as one convolution stage plus a two-stage pooling cascade. Scope "hierarchical" to the pooling cascade. The deeper hierarchy becomes the n=16 scaling-family instance in Phase 8. |
 | 3 | Sec. III-D pooling `CRY·CRZ·RY`; Sec. VI-B pooling `CRZ·CRY·CRZ` | `CRY(a)` then `CRZ(b)` from discard→keep, `RY(0.02)` on discard, `RY(c)` on keep | **One canonical definition** matching the code, stated once. The paper currently gives two conflicting definitions of its own contribution. |
-| 4 | Implied: `RY(0.02)` on the discarded wire is a harmless disentangling touch | Changing it to `RY(0.03)` moves `⟨Z⟩` beyond 1e-10 (verified in Task 4 Step 7) — the discarded wire is re-entangled by *later* pooling stages through the keep/discard pairing | **Document as an operative gate**, not an inert one. The §A2 inert-gate removal exception does **not** apply. Disclose the constant and its effect. |
+| 4 | Implied: `RY(0.02)` on the discarded wire is a harmless disentangling touch | **Proven inert.** The executed pooling schedule discards {1,3,5,7,9} → {2,6} → {4} and retires wire 8 unpaired; no discarded wire is ever operated on again, and readout is wire 0. A local unitary on a subsystem that is subsequently traced out leaves every observable invariant: `Tr_b[(I⊗U)ρ(I⊗U†)] = Tr_b[ρ]`. Measured in Task 4 Step 7: perturbing the angle shifts `⟨Z⟩` by 9.44e-16, deleting the gate by 8.33e-16 — both ~1000× inside §A2's 1e-12 bar | **Keep the gate; document it as a proven no-op.** `UPGRADE_PLAN.md` 0.5 permits either branch and recommends removal; **removal was put to the user at the §18 decision gate on 2026-07-25 and declined** in favour of zero architecture change (§A1). The paper states the constant is a no-op on already-discarded wires and cites the proof, rather than leaving it unexplained. |
 | 5 | Sec. III-E: classifier with `n_r + 1` parameters | 32-slot RX/RY/RZ block with modular index reuse (`% 32`), plus a ring of CNOTs and a final `RZ` on the readout wire | **Describe the executed block honestly**, including the modular reuse, with the effective counts from row 7. |
 | 6 | F2: pooling pairs all wires | `make_pairing` drops the last wire of an odd active set; at 5 active qubits one wire is retired with no information-transfer gate | **Disclose** in the pooling definition: an unpaired wire is retired by exclusion from subsequent operations. On a still-pure global state this is deferred bookkeeping, not an extra operation. |
 | 7 | "269 trainable parameters" | 269 allocated slots; `<measured:n_syntactically_used>` appear as gate arguments; `<measured:n_effective>` have a nonzero gradient on at least one fixed input | **Report both numbers**: "269 allocated / `<measured:n_effective>` effective", with one sentence of explanation and a pointer to the committed audit. The parameter *vector* keeps 269 slots so the archived run's seeded RNG stream reproduces. |
