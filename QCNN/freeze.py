@@ -116,3 +116,21 @@ def circuit_signature(model) -> dict:
 def signature_hash(signature: dict) -> str:
     blob = json.dumps(signature, sort_keys=True, separators=(',', ':'))
     return hashlib.sha256(blob.encode('utf-8')).hexdigest()
+
+
+def unitarity_violations(tape) -> list:
+    """Operations on the main path that break the A3 unitarity invariant.
+
+    An empty result means the tape is pure state preparation plus unitaries up
+    to a single terminal measurement: no mid-circuit measurement, no classical
+    feed-forward, no non-unitary channel.
+    """
+    violations = []
+    for op in tape.operations:
+        if isinstance(op, qml.measurements.MidMeasureMP):
+            violations.append('{}: mid-circuit measurement'.format(op.name))
+        elif isinstance(op, qml.ops.op_math.Conditional):
+            violations.append('{}: classical feed-forward'.format(op.name))
+        elif isinstance(op, qml.operation.Channel):
+            violations.append('{}: non-unitary channel'.format(op.name))
+    return violations

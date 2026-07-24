@@ -44,3 +44,37 @@ def test_only_hard_coded_angle_is_the_inert_discard_rotation(headline_model):
     # F4: the RY(0.02) on already-discarded wires is the sole magic constant.
     # Removing it is governed by the A2 inert-gate exception and is NOT Phase 0 work.
     assert constants == {"const0.02"}
+
+
+def test_main_path_contains_no_non_unitary_operation(headline_model, archived_params, regression_inputs):
+    tape = freeze.headline_tape(headline_model, regression_inputs[0], archived_params)
+    assert freeze.unitarity_violations(tape) == []
+
+
+def test_unitarity_audit_detects_measurement_pooling():
+    """Positive control: the audit must flag the measurement-pooling arm.
+
+    'measurement' is the labelled ablation arm from UPGRADE_PLAN.md A3, never
+    part of the headline model. If this test stops failing the audit, the audit
+    has stopped working.
+    """
+    from QCNN.config.Qconfig import QuantumNativeConfig
+    from QCNN.models.QCNNModel import PureQuantumNativeCNN
+
+    cfg = QuantumNativeConfig.from_image_size(
+        freeze.HEADLINE_IMAGE_SIZE, freeze.HEADLINE_ENCODING)
+    cfg.seed = freeze.HEADLINE_SEED
+    cfg.pooling_mode = 'measurement'
+    cfg.device = 'default.qubit'  # lightning.qubit rejects mid-circuit measurement
+    arm = PureQuantumNativeCNN(cfg)
+
+    params = arm._flatten_params(arm.quantum_params)
+    tape = freeze.headline_tape(arm, freeze.fixed_regression_inputs()[0], params)
+
+    violations = freeze.unitarity_violations(tape)
+    assert len(violations) == 16, violations  # 8 mid-circuit measurements + 8 conditionals
+
+
+def test_headline_has_exactly_one_terminal_measurement(headline_model, archived_params, regression_inputs):
+    tape = freeze.headline_tape(headline_model, regression_inputs[0], archived_params)
+    assert len(tape.measurements) == 1
