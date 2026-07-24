@@ -11,6 +11,11 @@
 # The original TensorFlow CNN is kept as an OPTIONAL path; its import is now lazy
 # so this module loads even when TensorFlow is not installed.
 
+# PEP 604 (`int | None`) annotations below require Python 3.10; the pinned
+# environment is 3.9.13, so defer annotation evaluation as the sibling baseline
+# and experiment modules already do.
+from __future__ import annotations
+
 import numpy as np
 
 from QCNN.utils.metrics import compute_classification_metrics

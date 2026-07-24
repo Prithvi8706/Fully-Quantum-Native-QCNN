@@ -33,9 +33,15 @@ import json
 import os
 import random
 
-import numpy as np
-from sklearn.model_selection import train_test_split
+import platform
 
+import numpy as np
+import pennylane as qml
+
+from QCNN.utils import run_artifacts
+from QCNN.utils import splits as split_service
+from QCNN.utils.run_artifacts import TestEvaluationGuard
+from QCNN.utils.seeding import seed_everything
 from QCNN.config.Qconfig import QuantumNativeConfig
 from QCNN.models.QCNNModel import PureQuantumNativeCNN
 from QCNN.training.Qtrainer import QuantumNativeTrainer
@@ -67,16 +73,6 @@ ABLATION_CONFIGS = {
 }
 
 
-def _seed_everything(seed: int):
-    np.random.seed(seed)
-    random.seed(seed)
-    try:
-        import pennylane as qml
-        qml.set_seed(seed)
-    except Exception:
-        pass
-
-
 def build_config(overrides: dict, seed: int) -> QuantumNativeConfig:
     """Build a config from per-config overrides + seed."""
     image_size = overrides.get("image_size", 16)
@@ -95,7 +91,7 @@ def prepare_split(cfg: QuantumNativeConfig, classes, dataset_dir, train_sample_s
     Load + preprocess the dataset and produce a deterministic train/test split.
     Mirrors main.py's pipeline so QCNN and baselines see the same representation.
     """
-    _seed_everything(cfg.seed)
+    seed_everything(cfg.seed)
     X, y = load_dataset(
         source=dataset_dir,
         dataset_type="idx",
@@ -121,35 +117,60 @@ def prepare_split(cfg: QuantumNativeConfig, classes, dataset_dir, train_sample_s
             np.random.shuffle(sel)
             X, y = X[sel], y[sel]
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, random_state=cfg.seed, stratify=y
+    manifest = split_service.make_split_manifest(
+        y,
+        seed=cfg.seed,
+        dataset_id="idx_{}v{}_n{}".format(classes[0], classes[1], len(y)),
+        class_mapping={str(classes[0]): 1, str(classes[1]): -1},
     )
+    split_service.save_manifest(manifest, os.path.join(
+        "Results", "manifests", "{}_seed{}.json".format(manifest["dataset_id"], cfg.seed)))
+
+    cfg.split_id = manifest["id"]
+    X_train, y_train, X_val, y_val, X_test, y_test = split_service.apply_manifest(manifest, X, y)
     if train_sample_size is not None and train_sample_size < len(X_train):
         X_train, y_train = X_train[:train_sample_size], y_train[:train_sample_size]
-    return X_train, y_train, X_test, y_test
+    return (X_train, y_train, X_val, y_val, X_test, y_test), manifest
 
 
-def run_qcnn(cfg: QuantumNativeConfig, split, use_bce: bool, log_path: str) -> dict:
+def run_qcnn(cfg: QuantumNativeConfig, split, use_bce: bool, log_path: str,
+             directory: str, test_sample_ids) -> dict:
     """Train the QCNN on a prepared split and return its metric dict."""
-    X_train, y_train, X_test, y_test = split
+    X_train, y_train, X_val, y_val, X_test, y_test = split
     model = PureQuantumNativeCNN(cfg)
     n_params = int(sum(np.prod(p.shape) for p in model.quantum_params.values()))
     trainer = QuantumNativeTrainer(learning_rate=cfg.learning_rate, use_bce=use_bce)
 
+    run_artifacts.start_run(
+        directory,
+        config={k: v for k, v in vars(cfg).items()
+                if isinstance(v, (int, float, str, bool, type(None)))},
+        split_id=cfg.split_id,
+        seed=cfg.seed,
+        environment={"python": platform.python_version(), "pennylane": qml.version()},
+    )
+
     # Trainer is very chatty; capture its output to a per-run log file.
     os.makedirs(os.path.dirname(log_path) or ".", exist_ok=True)
-    with open(log_path, "w") as fh, contextlib.redirect_stdout(fh):
-        trained = trainer.train_pure_quantum_cnn(
-            model, X_train, y_train, X_test, y_test,
-            log_filepath=log_path, summary_filepath=None,
-        )
-        X_eval = getattr(trained, "_quantum_preprocessed_test", X_test)
-        if len(X_eval) != len(y_test):
-            X_eval = X_test
-        raw = predict_raw_outputs(trained, X_eval, already_preprocessed=False)
+    guard = TestEvaluationGuard()
+    try:
+        with open(log_path, "w") as fh, contextlib.redirect_stdout(fh):
+            trained = trainer.train_pure_quantum_cnn(
+                model, X_train, y_train, X_val, y_val,
+                log_filepath=log_path, summary_filepath=None,
+                weights_path=run_artifacts.weights_path(directory),
+            )
+            raw = guard.evaluate(predict_raw_outputs, trained, X_test,
+                                 already_preprocessed=False)
+    except Exception as exc:
+        run_artifacts.fail_run(directory, error=repr(exc))
+        raise
 
+    run_artifacts.save_predictions(directory, test_sample_ids, y_test, raw)
     metrics = compute_classification_metrics(y_test, raw)
     metrics["n_params"] = n_params
+    run_artifacts.complete_run(directory, metrics={
+        k: v for k, v in metrics.items() if isinstance(v, (int, float))})
     return metrics
 
 
@@ -162,25 +183,34 @@ def run_single(config_name: str, classes, seed: int, dataset_dir: str,
     if epochs is not None:
         cfg.n_epochs = epochs
 
-    split = prepare_split(cfg, classes, dataset_dir, train_sample_size)
+    split, manifest = prepare_split(cfg, classes, dataset_dir, train_sample_size)
 
     run_dir = os.path.join(out_dir, config_name)
     os.makedirs(run_dir, exist_ok=True)
     log_path = os.path.join(run_dir, f"seed_{seed}.log")
 
-    metrics = run_qcnn(cfg, split, use_bce, log_path)
+    # Clean-protocol artifacts live under Results/runs/, kept separate from the
+    # historical Results/experiments/ tree produced under the leaked protocol.
+    directory = run_artifacts.run_dir(_fmt_pair(classes), config_name, seed)
+    test_ids = [manifest["sample_ids"][i] for i in manifest["test_idx"]]
+
+    metrics = run_qcnn(cfg, split, use_bce, log_path, directory, test_ids)
     save_metrics_json(metrics, os.path.join(run_dir, f"seed_{seed}.json"))
 
     # Baselines share the EXACT split → fair comparison. Only needed once per
     # (dataset, seed); the 'proposed' config is the natural place to run them.
     if with_baselines and config_name == "proposed":
-        base = run_classical_baselines(*split, seed=seed,
+        X_train, y_train, X_val, y_val, X_test, y_test = split
+        # NOTE (Phase 5 / M5.1): these baselines still select on the data passed
+        # as their test set. They must be given X_val before any baseline number
+        # enters the manuscript.
+        base = run_classical_baselines(X_train, y_train, X_test, y_test, seed=seed,
                                        target_params=metrics.get("n_params"))
         # Quantum-architecture baselines (#1): published QCNN/TTN models on the
         # IDENTICAL split / qubit count / optimiser budget as the proposed model.
         base.update(run_quantum_baselines(
-            *split, seed=seed, n_qubits=cfg.n_qubits, n_epochs=cfg.n_epochs,
-            learning_rate=cfg.learning_rate, use_bce=use_bce))
+            X_train, y_train, X_test, y_test, seed=seed, n_qubits=cfg.n_qubits,
+            n_epochs=cfg.n_epochs, learning_rate=cfg.learning_rate, use_bce=use_bce))
         for name, bm in base.items():
             bdir = os.path.join(out_dir, f"baseline_{name}")
             os.makedirs(bdir, exist_ok=True)

@@ -1,0 +1,52 @@
+{
+  "config": {
+    "batch_size": 32,
+    "binary_mode": "strict_binary",
+    "conv_entanglement": "full",
+    "device": "lightning.qubit",
+    "early_stopping_patience": 3,
+    "ema_decay": 0.99,
+    "encoding_type": "amplitude",
+    "image_size": 16,
+    "kernel_rotations": "su2",
+    "kernel_size": 2,
+    "learning_rate": 0.02,
+    "lr_plateau_factor": 0.5,
+    "n_classes": 2,
+    "n_conv_layers": 4,
+    "n_epochs": 2,
+    "n_features": 256,
+    "n_quanv_filters": 4,
+    "n_qubits": 8,
+    "patch_size": 4,
+    "patch_stride": 4,
+    "pooling_mode": "none",
+    "preprocessing_mode": "minmax",
+    "quanv_qubits": 16,
+    "seed": 0,
+    "shots": null,
+    "split_id": "e2a4414b731944d288db10c53abed15c06a9f9623ac85c70e74477f98570f608"
+  },
+  "environment": {
+    "pennylane": "0.38.0",
+    "python": "3.9.13"
+  },
+  "metrics": {
+    "accuracy": 0.5238095238095238,
+    "f1": 0.0,
+    "fn": 10,
+    "fp": 0,
+    "n_params": 260,
+    "pr_auc": 0.9228102453102452,
+    "precision": 0.0,
+    "prediction_bias": 0.1632980052056382,
+    "prediction_variance": 0.08681781684810527,
+    "recall": 0.0,
+    "roc_auc": 0.9363636363636363,
+    "tn": 11,
+    "tp": 0
+  },
+  "seed": 0,
+  "split_id": "e2a4414b731944d288db10c53abed15c06a9f9623ac85c70e74477f98570f608",
+  "state": "complete"
+}

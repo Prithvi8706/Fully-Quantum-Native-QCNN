@@ -1,15 +1,15 @@
 {
-  "accuracy": 0.5,
+  "accuracy": 0.5238095238095238,
   "precision": 0.0,
   "recall": 0.0,
   "f1": 0.0,
-  "roc_auc": 0.8994082840236686,
-  "pr_auc": 0.8813696358945227,
+  "roc_auc": 0.9363636363636363,
+  "pr_auc": 0.9228102453102452,
   "tp": 0,
-  "tn": 13,
+  "tn": 11,
   "fp": 0,
-  "fn": 13,
-  "prediction_bias": 0.15383401079506553,
-  "prediction_variance": 0.06877330205355779,
+  "fn": 10,
+  "prediction_bias": 0.1632980052056382,
+  "prediction_variance": 0.08681781684810527,
   "n_params": 260
 }
