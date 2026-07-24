@@ -118,6 +118,18 @@ def signature_hash(signature: dict) -> str:
     return hashlib.sha256(blob.encode('utf-8')).hexdigest()
 
 
+EXPECTATION_FIXTURE = os.path.join(FIXTURE_DIR, 'headline_expectations.npz')
+
+
+def headline_expectations(model, flat_params, inputs=None) -> np.ndarray:
+    """``<Z_readout>`` for each fixed regression input under the given parameters."""
+    if inputs is None:
+        inputs = fixed_regression_inputs()
+    return np.array([
+        float(model.quantum_circuit(np.asarray(x), flat_params)) for x in inputs
+    ])
+
+
 def unitarity_violations(tape) -> list:
     """Operations on the main path that break the A3 unitarity invariant.
 

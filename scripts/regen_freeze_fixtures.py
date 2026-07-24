@@ -33,9 +33,19 @@ def regen_signature(model):
     })
 
 
+def regen_expectations(model):
+    params = freeze.load_archived_params(model)
+    inputs = freeze.fixed_regression_inputs()
+    expectations = freeze.headline_expectations(model, params, inputs)
+    os.makedirs(os.path.dirname(freeze.EXPECTATION_FIXTURE), exist_ok=True)
+    np.savez(freeze.EXPECTATION_FIXTURE, inputs=inputs, expectations=expectations)
+    print('wrote {}'.format(freeze.EXPECTATION_FIXTURE))
+
+
 def main():
     model = freeze.build_headline_model()
     regen_signature(model)
+    regen_expectations(model)
 
 
 if __name__ == '__main__':
