@@ -69,7 +69,7 @@ Python 3.9.13 · PennyLane 0.38.0 · NumPy 1.26.4 · scikit-learn 1.6.1
 | Sub-milestone | State | Evidence |
 |---|---|---|
 | **1.1 Batched backpropagation** | **DONE 2026-07-25** | `tests/test_batched_execution.py` (6 tests); benchmark in §5 |
-| 1.2 Input and validation caching | not started | — |
+| **1.2 Input and validation caching** | **DONE 2026-07-25** (scope reduced on evidence, §3b) | `tests/test_encoded_cache.py` (7 tests) |
 | 1.3 Safe parallelism and resume | not started | — |
 | 1.4 Cost estimator and grid approval | not started | — |
 | 1.5 Conditional accelerators | not started | gated on 1.4 |
@@ -99,6 +99,54 @@ unchanged as the correctness oracle. No circuit change — the signature test pr
 **Not yet ported:** `QCNN/utils/metrics.py:55` still loops per-sample. It runs once per run
 (final test evaluation), not per epoch, so it is not on the hot path.
 
+## 3b. M1.2 — and why its speed premise is now dead
+
+### Measured epoch breakdown (headline n=10, 60/15/25 on 12,665 samples)
+
+Profiled 2026-07-25 *after* M1.1, at N_train=7,599 / N_val=1,900 / batch=32.
+
+| Component | Per epoch | Share |
+|---|---|---|
+| Gradient steps (237 batches × 0.580 s) | **137.5 s** | **94.0%** |
+| Full validation forward (1,900 samples) | 7.9 s | 5.4% |
+| Train-accuracy probe (200 samples) | 0.85 s | 0.6% |
+| `_preprocess_input` (both call sites, 237 batches) | **0.04 s** | **0.03%** |
+| **Total** | **~146.3 s** | |
+
+`UPGRADE_PLAN.md` 1.2 was written against the pre-M1.1 sequential path, where an epoch cost
+~2.7 h and input handling looked material. After 87.6×, **input caching saves 0.03% of an
+epoch.** The milestone's speed rationale no longer holds.
+
+### What was implemented
+
+The cache, for **provenance** rather than speed — roadmap M1.2 also requires cache identity in
+run metadata, and that requirement survives the measurement:
+
+- `PureQuantumEncoder.precompute_amplitudes(X, n_qubits)` — pad/truncate + L2-normalise once
+  per split, outside the training loop. Produces exactly the array `amplitude_encoding` hands
+  to `AmplitudeEmbedding`, so the state-prep op and the frozen fingerprint are unchanged.
+- `PureQuantumEncoder.amplitude_identity(encoded)` — sha256 + shape + dtype.
+- `Qtrainer` encodes train and val once before the epoch loop and exposes
+  `trainer.encoded_cache_identity`.
+
+**Exit check met.** Cached and uncached circuit outputs agree at 1e-10; a 2-epoch × 2-batch
+training run calls the encoder exactly twice — once per split — proving repeated epochs add no
+re-normalisation.
+
+### What was declined, and why
+
+**Validation subsetting is NOT implemented.** Roadmap M1.2 asks for a fixed validation subset
+for per-epoch monitoring. Measured: full val costs 7.9 s/epoch, a 500-sample subset 2.1 s — a
+**4% epoch saving in exchange for noisier model selection**, since val accuracy drives
+checkpointing, LR plateau, and early stopping (M0.4). That is a bad trade at the current
+throughput and it degrades a protocol property M0 was built to secure. Reopen only if M1.4
+projects past the 7-night gate; the mandated cut order (seeds → datasets → non-pooling
+ablations) should be exhausted first.
+
+**Open item for M8:** validation is evaluated in one batched call. At n=10 that is a 31 MB
+statevector block, which is fine; the n=14 scaling instances will need chunking to avoid
+running out of memory.
+
 ## 4. Run cells: required vs completed
 
 | Workstream | Required cells | Complete | Milestone |
@@ -124,6 +172,7 @@ Cell counts marked TBD are fixed by `estimate_cost.py` at the M1.4 gate.
 | Sequential gradient cost | **1.256 s/sample** (lightning.qubit, adjoint; linear in batch) |
 | Batched gradient cost @ batch 32 | **0.535 s/batch** = 0.017 s/sample (default.qubit, backprop) |
 | **Measured speedup @ batch 32** | **87.6×** — replaces the unverified 10–50× estimate |
+| **Measured epoch cost, headline** | **~146 s** (7,599 train / 1,900 val) — see §3b |
 | Projected grid wall-clock | not yet estimated (M1.4) |
 | Nights consumed | 0 of 7 |
 

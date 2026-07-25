@@ -4,6 +4,7 @@ import numpy as np
 import time
 import sys
 import os
+from QCNN.encoding import PureQuantumEncoder
 from QCNN.models import PureQuantumNativeCNN
 
 
@@ -87,6 +88,19 @@ class QuantumNativeTrainer:
                 print(f"  Cached to '{cache_path}' for future runs.")
             model.config.encoding_type = 'amplitude'
 
+        # UPGRADE_PLAN.md 1.2: amplitude vectors are parameter-independent, so
+        # pad and L2-normalise once per split instead of once per batch per
+        # epoch. Equivalence to the uncached path is pinned by
+        # tests/test_encoded_cache.py; the state-prep op is unchanged.
+        self.encoded_cache_identity = None
+        if model.config.encoding_type == 'amplitude':
+            X_train = PureQuantumEncoder.precompute_amplitudes(X_train, model.num_qubits)
+            X_val = PureQuantumEncoder.precompute_amplitudes(X_val, model.num_qubits)
+            self.encoded_cache_identity = {
+                'train': PureQuantumEncoder.amplitude_identity(X_train),
+                'val': PureQuantumEncoder.amplitude_identity(X_val),
+            }
+
         model._quantum_preprocessed_train = X_train
         model._quantum_preprocessed_val = X_val
 
@@ -130,11 +144,11 @@ class QuantumNativeTrainer:
 
                 def quantum_cost(params):
                     model.quantum_params = model._unflatten_params(params)
-                    X_processed = model._preprocess_input(X_quantum_batch)
                     # UPGRADE_PLAN.md 1.1: the whole batch is differentiated in
                     # one statevector pass. Equivalence to the sequential path is
-                    # pinned by tests/test_batched_execution.py.
-                    preds = model.batched_circuit(pnp.array(X_processed), params)
+                    # pinned by tests/test_batched_execution.py. The batch is
+                    # already encoded (1.2), so no per-batch preprocessing here.
+                    preds = model.batched_circuit(pnp.array(X_quantum_batch), params)
                     preds = pnp.atleast_1d(preds)
                     if self.use_bce:
                         loss = self._bce_loss(preds, y_quantum_batch)
@@ -152,11 +166,10 @@ class QuantumNativeTrainer:
                 epoch_quantum_loss += float(loss_val)
                 n_quantum_batches += 1
 
-                X_processed = model._preprocess_input(X_quantum_batch)
                 if i == 0:
                     quantum_outputs = np.asarray(
                         model.batched_circuit(
-                            pnp.array(X_processed[:5]), params_flat),
+                            pnp.array(X_quantum_batch[:5]), params_flat),
                         dtype=float).reshape(-1)
                     print(
                         f"Epoch {epoch+1} Batch {i//model.config.batch_size+1} | "

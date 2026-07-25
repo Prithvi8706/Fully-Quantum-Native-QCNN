@@ -1,3 +1,5 @@
+import hashlib
+
 import pennylane as qml
 import pennylane.numpy as pnp
 import numpy as np
@@ -83,6 +85,68 @@ class PureQuantumEncoder:
         # Pure quantum encoding - natively supports batched input
         qml.AmplitudeEmbedding(features=data_norm, wires=wires, normalize=True)
     
+    @staticmethod
+    def precompute_amplitudes(data: np.ndarray, n_qubits: int) -> np.ndarray:
+        """Pad/truncate and L2-normalise once, outside the circuit (UPGRADE_PLAN.md 1.2).
+
+        Amplitude vectors do not depend on the parameters, so this work does not
+        belong in the per-batch training loop. The result is exactly the array
+        ``amplitude_encoding`` would hand to ``AmplitudeEmbedding``, so feeding it
+        back through the encoder is numerically an identity and the emitted
+        state-preparation op -- hence the frozen fingerprint -- is unchanged.
+
+        Args:
+            data: 1D (features,), 2D (batch, features), or higher (flattened).
+            n_qubits: encoded length is ``2 ** n_qubits``.
+
+        Returns:
+            float64 array, L2-normalised along the feature axis. 1D in, 1D out.
+        """
+        x = np.asarray(data, dtype=float)
+        if x.ndim > 2:
+            x = x.reshape(x.shape[0], -1)
+        single = x.ndim == 1
+        if single:
+            x = x[None, :]
+
+        max_size = 2 ** n_qubits
+        feat_size = x.shape[1]
+        if feat_size > max_size:
+            x = x[:, :max_size].copy()
+        elif feat_size < max_size:
+            padded = np.zeros((x.shape[0], max_size))
+            padded[:, :feat_size] = x
+            x = padded
+        else:
+            x = x.copy()
+
+        # Same all-zero fallback as amplitude_encoding: a zero vector is not a
+        # valid state, so it becomes |0...0> rather than a NaN gradient.
+        eps = 1e-15
+        norms = np.linalg.norm(x, axis=1, keepdims=True)
+        degenerate = (norms < eps).ravel()
+        if degenerate.any():
+            x[degenerate] = 0.0
+            x[degenerate, 0] = 1.0
+            norms = np.linalg.norm(x, axis=1, keepdims=True)
+        x = x / norms
+
+        return x[0] if single else x
+
+    @staticmethod
+    def amplitude_identity(encoded: np.ndarray) -> dict:
+        """Content hash of a precomputed amplitude cache, for run metadata.
+
+        UPGRADE_PLAN.md 1.2 requires the cache identity to be recorded, so a run
+        can be traced to the exact vectors that entered the circuit.
+        """
+        arr = np.ascontiguousarray(np.asarray(encoded, dtype=float))
+        return {
+            'sha256': hashlib.sha256(arr.tobytes()).hexdigest(),
+            'shape': [int(d) for d in arr.shape],
+            'dtype': str(arr.dtype),
+        }
+
     @staticmethod
     def quantum_feature_map(data: np.ndarray, wires: list[int]) -> None:
         """
