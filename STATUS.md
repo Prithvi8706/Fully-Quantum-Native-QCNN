@@ -17,7 +17,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 |---|---|---|---|
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
 | **M1 — Phase 1: affordable execution** | **IN PROGRESS** · 1.1–1.4 done, 1.5 not required | **grid fits ≤7 nights: PASSED** (2.2 h of 70 h) | §§3a–3d; 100 tests |
-| M2 — Phase 2: pooling theory (E1–E5) | not started | E1 agrees to ~1e-12 | — |
+| M2 — Phase 2: pooling theory (E1–E5) | **E1 PASSED**; E2–E5 not started | **E1 agrees to ~1e-12: PASSED** (1.7e-16) | `Results/evidence/e1_pooling_equivalence.json`; §7 |
 | M3 — Phase 3: model analysis | not started | — | — |
 | M4 — Phase 4: harder datasets | not started | — | — |
 | M5 — Phase 5: baselines + statistics | not started | — | — |
@@ -35,7 +35,7 @@ item is the clean headline retrain, which replaces 98.86% everywhere.
 
 | # | Blocker | Severity | Owner milestone | Status |
 |---|---|---|---|---|
-| B1 | `pool_measurement` does not implement the theorem's channel — E1 **cannot pass** as written (see §7) | **High** | M2.1 | Open, documented |
+| B1 | `pool_measurement` did not implement the theorem's channel — E1 could not pass | **High** | M2.1 | **Closed 2026-07-25** — fixed; **E1 PASSES** (§7) |
 | B2 | Batched path must be proven equivalent before any grid runs | High | M1.1 | **Closed 2026-07-25** (§3a) |
 | B3 | Ablation grid runs n=8 while the frozen headline is n=10, so T4 would describe a different model | **High** | M5/M6 | Open, documented (§3d) |
 
@@ -301,9 +301,9 @@ extrapolated rows are sound. Batch 32 is measured end to end, not extrapolated.
 | T2 | Resource table, prep vs model, transpiled | M8.1 | not started |
 | T3 | Baselines, CIs, paired tests, cost columns | M5 | not started |
 | T4 | Ablation Δacc ± CI | M6 | not started |
-| T5 | Pooling arms + SU(4) ceiling + measurement tie | M2 | not started |
+| T5 | Pooling arms + SU(4) ceiling + measurement tie | M2 | measurement-tie row available |
 | T6 | DLA, effective dim, expressibility, gen. bound | M3 | not started |
-| F-A | E1 exact tie + E2 dephasing | M2.2–2.3 | **blocked by B1** |
+| F-A | E1 exact tie + E2 dephasing | M2.2–2.3 | **E1 data generated**; E2 pending |
 | F-B | Coherence / purity / entropy / MI per stage | M2.5 | not started |
 | F-C | Noise ladder ideal → fake → real + threshold | M7 | not started |
 | F-D | Scaling family | M8.2 | not started |
@@ -342,12 +342,40 @@ narrative is F6, the claim the upgrade exists to delete.
 current (false) claim. Roadmap M2.2 is explicit that an E1 miss is an implementation or
 theorem-mapping defect, never an experimental result to average away.
 
-**Resolution:** M2.1 rewrites `pool_measurement` to the exact channel above, *then* E1 runs.
-Secondary risk to check at that point: `qml.measure` / `qml.cond` behaviour on `default.mixed`
-under PennyLane 0.38 (flagged in the `UPGRADE_PLAN.md` risk register).
-
 Note the same argument proves `RY(0.02)` inert: it acts only on `b`, and partial trace over `b`
 is invariant under a unitary on `b` alone. That is why M0 measured 8.33e-16 for its removal.
+
+### Resolution and E1 result (2026-07-25)
+
+`quantum_conditional_pooling` now applies `U_0` on outcome 0 and `U_1` on outcome 1, reading all
+three angles through a `pair_angles` mapping shared with the frozen arm so the arms cannot drift.
+
+A second arm, `measurement_channel`, implements the same map as an explicit CPTP channel with
+Kraus operators `K_m = U_m ⊗ |m⟩⟨m|`. **E1 compares against this one deliberately.** A simulator
+may legitimately implement mid-circuit measurement *by deferring it back into the very controlled
+gates under test, which would make the tie a tautology about PennyLane rather than a result about
+the circuit.* The Kraus channel is genuinely non-unitary, so the agreement is real. (This also
+sidesteps the `UPGRADE_PLAN.md` risk-register concern about `qml.measure`/`qml.cond` on
+`default.mixed` under PennyLane 0.38.)
+
+**E1 PASSES.** `python -m experiments.pooling_analysis`, on `default.mixed`, fixed parameters:
+
+| n | inputs | max \|difference\| | tolerance | verdict |
+|---|---|---|---|---|
+| 8 | 4 | **1.665e-16** | 1e-12 | **PASS** |
+| 6 | 2 | machine precision | 1e-12 | **PASS** (`tests/test_pooling_equivalence.py`) |
+
+Four orders of magnitude inside tolerance — the difference is float64 round-off, not physics.
+Theorem 1's a-priori prediction of an *exact* tie is confirmed.
+
+Three controls make the result meaningful rather than vacuous:
+
+- **`pool_none` does differ** (>1e-6), so the readout is not simply insensitive to pooling.
+- **The mid-circuit arm matches the channel arm**, so the trainable arm E3 will use is the same
+  map E1 validated.
+- **Every angle slot demonstrably moves the channel**, a direct regression guard on B1.
+
+Evidence: `Results/evidence/e1_pooling_equivalence.json`. This is the F-A exact-tie data.
 
 ## 8. Architecture sign-off decisions (roadmap §18)
 

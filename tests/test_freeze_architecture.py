@@ -72,7 +72,14 @@ def test_unitarity_audit_detects_measurement_pooling():
     tape = freeze.headline_tape(arm, freeze.fixed_regression_inputs()[0], params)
 
     violations = freeze.unitarity_violations(tape)
-    assert len(violations) == 16, violations  # 8 mid-circuit measurements + 8 conditionals
+    # 8 pooling pairs at n=10, each contributing one mid-circuit measurement and
+    # the two conditionals Theorem 1's U_1 = RY(gamma).RZ(beta).RY(alpha) requires
+    # (the shared RY(gamma) is unconditional). Before the B1 fix on 2026-07-25 the
+    # arm emitted a single conditional per pair, which is why it could not tie.
+    measurements = [v for v in violations if 'mid-circuit measurement' in v]
+    feed_forward = [v for v in violations if 'classical feed-forward' in v]
+    assert len(measurements) == 8, violations
+    assert len(feed_forward) == 16, violations
 
 
 def test_headline_has_exactly_one_terminal_measurement(headline_model, archived_params, regression_inputs):

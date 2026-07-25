@@ -1,0 +1,31 @@
+{
+  "abs_differences": [
+    5.551115123125783e-17,
+    1.6653345369377348e-16,
+    5.551115123125783e-17,
+    1.6653345369377348e-16
+  ],
+  "claim": "unitary pooling exactly reproduces measure-and-condition pooling",
+  "device": "default.mixed",
+  "experiment": "E1",
+  "image_size": 16,
+  "max_abs_difference": 1.6653345369377348e-16,
+  "mean_abs_difference": 1.1102230246251565e-16,
+  "measurement_readouts": [
+    0.047108575386920426,
+    0.08548279444852741,
+    0.07997132528766054,
+    0.09268967442039722
+  ],
+  "n_inputs": 4,
+  "n_qubits": 8,
+  "passes": true,
+  "tolerance": 1e-12,
+  "unitary_readouts": [
+    0.04710857538692048,
+    0.08548279444852724,
+    0.07997132528766049,
+    0.09268967442039705
+  ],
+  "weights": "seeded initial weights"
+}
