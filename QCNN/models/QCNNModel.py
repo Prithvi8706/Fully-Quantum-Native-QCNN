@@ -1,12 +1,10 @@
-import math
 import numpy as np
 import pennylane as qml
 import pennylane.numpy as pnp
+from QCNN import circuits
 from QCNN.config import QuantumNativeConfig
 from QCNN.layers import QuantumNativeConvolution
-from QCNN.layers import QuantumNativePooling
 from QCNN.layers import QuanvolutionalLayer
-from QCNN.encoding import PureQuantumEncoder
 
 
 class PureQuantumNativeCNN:
@@ -105,78 +103,7 @@ class PureQuantumNativeCNN:
         return params
 
     def _pure_quantum_forward(self, x: np.ndarray, params: dict) -> float:
-        all_qubits = list(range(self.config.n_qubits))
-
-        if self.config.encoding_type in ('amplitude', 'patch'):
-            PureQuantumEncoder.amplitude_encoding(x, all_qubits)
-        else:
-            PureQuantumEncoder.quantum_feature_map(x, all_qubits)
-
-        active_qubits = all_qubits.copy()
-        current_image_size = self.config.image_size
-
-        for layer in range(self.config.n_conv_layers):
-            n_current = len(active_qubits)
-            if n_current >= 4:
-                width = int(math.sqrt(n_current))
-                while n_current % width != 0:
-                    width -= 1
-                height = n_current // width
-                w, h = max(width, height), min(width, height)
-                base_windows = QuantumNativeConvolution.get_conv_windows(w, h)
-                kernel = params[f'quantum_conv_kernel_{layer}']
-                rotations = getattr(self.config, 'kernel_rotations', 'su2')
-                entanglement = getattr(self.config, 'conv_entanglement', 'full')
-                for rel_window in base_windows:
-                    if max(rel_window) < n_current:
-                        window_qubits = [active_qubits[i] for i in rel_window]
-                        QuantumNativeConvolution.quantum_conv2d_kernel(
-                            kernel, window_qubits,
-                            rotations=rotations, entanglement=entanglement)
-
-            if layer < self.config.n_conv_layers - 1:
-                n_qubits_current = len(active_qubits)
-                if n_qubits_current < 2:
-                    break
-                pairs = QuantumNativePooling.make_pairing(active_qubits)
-                if len(pairs) == 0:
-                    break
-                keep = [k for (k, _) in pairs]
-                discard = [d for (_, d) in pairs]
-                pool_key = f'quantum_pooling_{layer}'
-                QuantumNativePooling.apply_pooling(
-                    getattr(self.config, 'pooling_mode', 'unitary'),
-                    params[pool_key],
-                    input_qubits=keep,
-                    output_qubits=discard
-                )
-                active_qubits = keep
-                if current_image_size > 2:
-                    current_image_size = max(2, current_image_size // 2)
-
-        classifier_params = params['quantum_classifier']
-        n_active = len(active_qubits)
-        readout = active_qubits[0]
-
-        for i, q in enumerate(active_qubits[:min(n_active, 4)]):
-            qml.RX(classifier_params[i * 2 % 32], wires=q)
-            qml.RY(classifier_params[(i * 2 + 1) % 32], wires=q)
-            qml.RZ(classifier_params[(i * 2 + 8) % 32], wires=q)
-
-        for i in range(n_active - 1):
-            qml.CNOT(wires=[active_qubits[i], active_qubits[i+1]])
-        if n_active >= 2:
-            qml.CNOT(wires=[active_qubits[n_active-1], active_qubits[0]])
-
-        for i, q in enumerate(active_qubits[:min(n_active, 4)]):
-            qml.RX(classifier_params[(i * 2 + 16) % 32], wires=q)
-            qml.RY(classifier_params[(i * 2 + 17) % 32], wires=q)
-
-        if n_active >= 2:
-            qml.CNOT(wires=[active_qubits[0], active_qubits[min(n_active-1, 1)]])
-        qml.RZ(classifier_params[31], wires=readout)
-
-        return qml.expval(qml.PauliZ(readout))
+        return circuits.build_circuit(x, params, self.config)
 
     def _preprocess_input(self, x: np.ndarray) -> np.ndarray:
         if self.config.encoding_type == 'patch' and self.quanv_layer is not None:

@@ -68,6 +68,28 @@ def test_final_readout_rz_receives_no_gradient(committed_audit):
     assert committed_audit["max_abs_gradient"][268] == 0.0
 
 
+def test_dead_pooling_angles_are_the_retired_unpaired_wire(committed_audit):
+    """F2 made concrete: the odd-wire retirement costs exactly 3 parameters.
+
+    Layer 0 pools 5 pairs; its pair index 4 is (keep=8, discard=9). At layer 1
+    only 5 wires are active, so wire 8 is retired unpaired and never reaches the
+    readout. Its three pooling angles (slots 204-206) therefore carry no
+    gradient beyond round-off -- which is exactly the round-off population the
+    tolerance excludes.
+    """
+    raw = set(committed_audit["effective_slots_raw"])
+    effective = set(committed_audit["effective_slots"])
+    pooling_0_start = committed_audit["per_group"]["quantum_pooling_0"]["range"][0]
+
+    round_off = sorted(raw - effective)
+    assert round_off == [204, 205, 206]
+
+    # Three consecutive angles, i.e. one whole (CRY, CRZ, RY-on-keep) triple.
+    local = [slot - pooling_0_start for slot in round_off]
+    assert local == [12, 13, 14]
+    assert {index // 3 for index in local} == {4}
+
+
 def test_only_the_first_convolution_stage_is_effective(committed_audit):
     """F1: layers 1-3 never apply their kernels at n=10 (144 dead slots)."""
     per_group = committed_audit["per_group"]

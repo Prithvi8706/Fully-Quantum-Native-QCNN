@@ -123,10 +123,20 @@ def _reconstruct_training_split(image_size, classes, n_samples, mnist_path=None,
         X_pp, y_pp = X_pp[indices], y_pp[indices]
         print(f"  Stratified downsample to {len(X_pp)} samples ({n_pos} pos, {n_neg} neg)")
 
+    # NOTE (Phase 7 / M7): this replays an assumed RNG sequence to rebuild the
+    # historical 70/30 split, which the clean protocol forbids -- a run must load
+    # recorded indices from a split manifest (QCNN/utils/splits.py). It is left in
+    # place because it pairs with the archived weights, which were themselves
+    # trained under that historical split; switching only the split would evaluate
+    # those weights on samples they were trained on. Both move together at the
+    # Phase 1 clean retrain, and noise results produced here are historical-protocol
+    # evidence only.
     _, X_test, _, y_test = train_test_split(
         X_pp, y_pp, test_size=0.3, random_state=42, stratify=y_pp
     )
     print(f"  Reconstructed test split: {len(X_test)} samples")
+    print("  [PROTOCOL] Historical 70/30 split replayed from RNG state; this run is "
+          "not clean-protocol evidence (UPGRADE_PLAN.md 0.3, Phase 7).")
     return X_test, y_test
 
 
@@ -242,88 +252,59 @@ def _apply_2q_noise(a, b, spec):
         qml.DepolarizingChannel(spec['depol_2q'], wires=b)
 
 
-def _make_noisy_circuit(n_qubits, n_conv, n_pool, flat_params, spec):
-    from QCNN.layers.QConv import QuantumNativeConvolution
-    from QCNN.layers.QPool import QuantumNativePooling
+def _noise_config(n_qubits, n_conv, image_size):
+    """A config describing the frozen topology for the shared circuit builder."""
+    from QCNN.config.Qconfig import QuantumNativeConfig
+
+    cfg = QuantumNativeConfig()
+    cfg.n_qubits = n_qubits
+    cfg.n_conv_layers = n_conv
+    cfg.image_size = image_size
+    cfg.encoding_type = 'amplitude'
+    cfg.pooling_mode = 'unitary'
+    return cfg
+
+
+def _make_noisy_circuit(n_qubits, n_conv, n_pool, flat_params, spec, image_size):
+    """The frozen circuit from QCNN/circuits.py with noise injected at hook points.
+
+    UPGRADE_PLAN.md 0.4 / F7: this file used to re-implement the forward pass by
+    hand, so the noise study could drift away from the model it claimed to
+    measure. The topology now comes from the single shared builder; only the
+    evaluation-layer noise lives here.
+    """
+    from QCNN import circuits
 
     dev = qml.device('default.mixed', wires=n_qubits)
 
     # Hoisted out of the QNode: these are identical on every execution, so computing
     # them once (instead of per sample / per broadcasted batch) removes redundant work.
     params = _unflatten_params(flat_params, n_conv, n_pool, n_qubits)
-    all_qubits = list(range(n_qubits))
+    cfg = _noise_config(n_qubits, n_conv, image_size)
 
-    def _cnot(a, b):
+    def noisy_cnot(a, b):
         qml.CNOT(wires=[a, b])
         _apply_2q_noise(a, b, spec)
+
+    def readout_error(readout):
+        if spec.get('readout', 0) > 0:
+            qml.BitFlip(spec['readout'], wires=readout)
+
+    hooks = circuits.CircuitHooks(
+        after_encoding=lambda wires: _apply_1q_noise(wires, spec),
+        after_conv_window=lambda wires: _apply_1q_noise(wires, spec),
+        after_pool=lambda keep, discard: _apply_1q_noise(keep + discard, spec),
+        after_classifier=lambda wires: _apply_1q_noise(wires, spec),
+        cnot=noisy_cnot,
+        before_readout=readout_error,
+    )
 
     @qml.qnode(dev, interface='numpy')
     def circuit(x):
         # ``x`` may be a single amplitude vector (2**n_qubits,) or a batch
         # (batch, 2**n_qubits); AmplitudeEmbedding broadcasts over the leading
         # batch dim and expval then returns a (batch,) array.
-        qml.AmplitudeEmbedding(features=x, wires=all_qubits, normalize=True)
-        _apply_1q_noise(all_qubits, spec)
-
-        active = all_qubits.copy()
-        for layer in range(n_conv):
-            n_cur = len(active)
-            if n_cur >= 4:
-                w = int(math.sqrt(n_cur))
-                while n_cur % w != 0:
-                    w -= 1
-                h = n_cur // w
-                W, H = max(w, h), min(w, h)
-                kernel = params[f'quantum_conv_kernel_{layer}']
-                for win in QuantumNativeConvolution.get_conv_windows(W, H):
-                    if max(win) < n_cur:
-                        wires = [active[i] for i in win]
-                        QuantumNativeConvolution.quantum_conv2d_kernel(kernel, wires)
-                        _apply_1q_noise(wires, spec)
-
-            if layer < n_conv - 1:
-                if len(active) < 2:
-                    break
-                pairs = QuantumNativePooling.make_pairing(active)
-                if not pairs:
-                    break
-                keep    = [k for k, _ in pairs]
-                discard = [d for _, d in pairs]
-                QuantumNativePooling.quantum_unitary_pooling(
-                    params[f'quantum_pooling_{layer}'],
-                    input_qubits=keep, output_qubits=discard
-                )
-                _apply_1q_noise(keep + discard, spec)
-                active = keep
-
-        cp = params['quantum_classifier']
-        n_a = len(active)
-        readout = active[0]
-
-        for i, q in enumerate(active[:min(n_a, 4)]):
-            qml.RX(cp[i * 2 % 32], wires=q)
-            qml.RY(cp[(i * 2 + 1) % 32], wires=q)
-            qml.RZ(cp[(i * 2 + 8) % 32], wires=q)
-
-        for i in range(n_a - 1):
-            _cnot(active[i], active[i + 1])
-        if n_a >= 2:
-            _cnot(active[n_a - 1], active[0])
-
-        for i, q in enumerate(active[:min(n_a, 4)]):
-            qml.RX(cp[(i * 2 + 16) % 32], wires=q)
-            qml.RY(cp[(i * 2 + 17) % 32], wires=q)
-
-        if n_a >= 2:
-            _cnot(active[0], active[min(n_a - 1, 1)])
-        qml.RZ(cp[31], wires=readout)
-
-        _apply_1q_noise(active, spec)
-        # Readout (measurement) error on the readout qubit.
-        if spec.get('readout', 0) > 0:
-            qml.BitFlip(spec['readout'], wires=readout)
-
-        return qml.expval(qml.PauliZ(readout))
+        return circuits.build_circuit(x, params, cfg, hooks=hooks)
 
     return circuit
 
@@ -446,7 +427,7 @@ def run_noise_simulation(
     cs = max(1, int(chunk_size))
     for p in levels:
         spec = _build_noise_spec(noise_model, p)
-        circuit = _make_noisy_circuit(n_qubits, n_conv, n_pool, flat_params, spec)
+        circuit = _make_noisy_circuit(n_qubits, n_conv, n_pool, flat_params, spec, image_size)
         # Broadcast the amplitude embedding over a batch of samples in a single
         # traced execution instead of one QNode call per image. Chunked to bound the
         # broadcasted density-matrix memory; results are identical to the per-sample
