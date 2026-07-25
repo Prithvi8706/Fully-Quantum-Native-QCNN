@@ -7,6 +7,14 @@ from QCNN.layers import QuantumNativeConvolution
 from QCNN.layers import QuanvolutionalLayer
 
 
+# Device for the batched training path (UPGRADE_PLAN.md 1.1). default.qubit
+# broadcasts AmplitudeEmbedding over a leading batch axis and supports backprop,
+# so one statevector pass differentiates a whole batch. lightning.qubit does
+# neither, which is why the sequential path below remains the correctness oracle
+# (tests/test_batched_execution.py pins the two together).
+BATCHED_DEVICE = 'default.qubit'
+
+
 class PureQuantumNativeCNN:
     """
     Fully quantum-native convolutional neural network.
@@ -41,6 +49,17 @@ class PureQuantumNativeCNN:
             return self._pure_quantum_forward(x, params)
 
         self.quantum_circuit = quantum_circuit
+
+        # Same circuit, batched execution strategy. Accepts a (batch, features)
+        # input and returns one <Z> per sample; also accepts a single 1D input.
+        self.batched_device = qml.device(BATCHED_DEVICE, wires=config.n_qubits)
+
+        @qml.qnode(self.batched_device, interface='autograd', diff_method='backprop')
+        def batched_circuit(x, flat_params):
+            params = self._unflatten_params(flat_params)
+            return self._pure_quantum_forward(x, params)
+
+        self.batched_circuit = batched_circuit
         self.training_history = {'loss': [], 'accuracy': [], 'epoch_times': []}
 
     def _initialize_quantum_parameters(self) -> dict[str, pnp.ndarray]:
@@ -143,12 +162,9 @@ class PureQuantumNativeCNN:
         return float(self.quantum_circuit(x_processed, flat_params))
 
     def quantum_predict_batch(self, X: np.ndarray) -> np.ndarray:
-        # FIX: loop sample-by-sample — AmplitudeEmbedding doesn't support
-        # batched input with MottonenStatePreparation in PennyLane 0.38
         X_processed = self._preprocess_input(X)
         flat_params = self._flatten_params(self.quantum_params)
-        outputs = np.array([
-            float(self.quantum_circuit(X_processed[i], flat_params))
-            for i in range(len(X_processed))
-        ])
+        outputs = np.asarray(
+            self.batched_circuit(np.asarray(X_processed), flat_params),
+            dtype=float).reshape(-1)
         return np.where(outputs > 0, 1, -1)

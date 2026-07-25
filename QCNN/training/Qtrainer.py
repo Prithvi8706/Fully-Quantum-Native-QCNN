@@ -131,13 +131,10 @@ class QuantumNativeTrainer:
                 def quantum_cost(params):
                     model.quantum_params = model._unflatten_params(params)
                     X_processed = model._preprocess_input(X_quantum_batch)
-                    # FIX: loop sample-by-sample — AmplitudeEmbedding with
-                    # MottonenStatePreparation does not support batched input
-                    # in PennyLane 0.38 without broadcast_expand
-                    preds = pnp.array([
-                        model.quantum_circuit(pnp.array(X_processed[j]), params)
-                        for j in range(len(X_processed))
-                    ])
+                    # UPGRADE_PLAN.md 1.1: the whole batch is differentiated in
+                    # one statevector pass. Equivalence to the sequential path is
+                    # pinned by tests/test_batched_execution.py.
+                    preds = model.batched_circuit(pnp.array(X_processed), params)
                     preds = pnp.atleast_1d(preds)
                     if self.use_bce:
                         loss = self._bce_loss(preds, y_quantum_batch)
@@ -157,10 +154,10 @@ class QuantumNativeTrainer:
 
                 X_processed = model._preprocess_input(X_quantum_batch)
                 if i == 0:
-                    quantum_outputs = pnp.array([
-                        float(model.quantum_circuit(pnp.array(X_processed[j]), params_flat))
-                        for j in range(min(5, len(X_processed)))  # only first 5 for speed
-                    ])
+                    quantum_outputs = np.asarray(
+                        model.batched_circuit(
+                            pnp.array(X_processed[:5]), params_flat),
+                        dtype=float).reshape(-1)
                     print(
                         f"Epoch {epoch+1} Batch {i//model.config.batch_size+1} | "
                         f"Loss: {float(loss_val):.6f} | "

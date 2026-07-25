@@ -75,10 +75,15 @@ SIGNATURE_FIXTURE = os.path.join(FIXTURE_DIR, 'headline_signature.json')
 _STATE_PREP_OPS = ('AmplitudeEmbedding', 'StatePrep', 'MottonenStatePreparation')
 
 
+def qnode_tape(qnode, x, flat_params):
+    """Construct and return any QNode's tape for one (input, parameter) pair."""
+    qnode.construct((x, flat_params), {})
+    return qnode.tape
+
+
 def headline_tape(model, x, flat_params):
     """Construct and return the QNode's tape for one (input, parameter) pair."""
-    model.quantum_circuit.construct((x, flat_params), {})
-    return model.quantum_circuit.tape
+    return qnode_tape(model.quantum_circuit, x, flat_params)
 
 
 def _marker_vector(n_slots: int) -> pnp.ndarray:
@@ -93,12 +98,14 @@ def _describe_param(value, lookup) -> str:
     return 'const{:.12g}'.format(float(value))
 
 
-def circuit_signature(model) -> dict:
-    """Serialise the frozen topology: gate name, wires, and parameter slot."""
-    n_slots = len(model._flatten_params(model.quantum_params))
-    marker = _marker_vector(n_slots)
+def tape_signature(tape, n_slots: int) -> dict:
+    """Serialise a tape's topology: gate name, wires, and parameter slot.
+
+    Split out from ``circuit_signature`` so the same committed hash can be
+    checked against any execution path's tape, not just the sequential QNode's
+    (UPGRADE_PLAN.md 1.1 ports the circuit to a batched device).
+    """
     lookup = {round(float(i + 1), 9): i for i in range(n_slots)}
-    tape = headline_tape(model, fixed_regression_inputs()[0], marker)
 
     operations = []
     for op in tape.operations:
@@ -116,6 +123,13 @@ def circuit_signature(model) -> dict:
         'operations': operations,
         'measurements': [str(m) for m in tape.measurements],
     }
+
+
+def circuit_signature(model) -> dict:
+    """Serialise the frozen topology of the sequential headline QNode."""
+    n_slots = len(model._flatten_params(model.quantum_params))
+    tape = headline_tape(model, fixed_regression_inputs()[0], _marker_vector(n_slots))
+    return tape_signature(tape, n_slots)
 
 
 def signature_hash(signature: dict) -> str:
