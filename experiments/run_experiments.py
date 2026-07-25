@@ -32,6 +32,9 @@ import io
 import json
 import os
 import random
+import sys
+import traceback
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import platform
 
@@ -57,6 +60,14 @@ from baselines.quantum_baselines import run_quantum_baselines
 
 DEFAULT_MNIST_DIR = os.path.join("datasets", "MNIST")
 EXP_ROOT = os.path.join("Results", "experiments")
+FAILURE_MANIFEST = os.path.join(EXP_ROOT, "failures.json")
+MANIFEST_ROOT = os.path.join("Results", "manifests")
+
+# Each worker gets one CPU thread. Set in the parent before the pool is created
+# so spawned children inherit it at interpreter start -- BLAS reads these at
+# import time, so an initializer would run too late to have any effect.
+_THREAD_LIMIT_VARS = (
+    "OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "NUMEXPR_NUM_THREADS")
 
 # Ablation configurations. Each toggles ONE component off/variant relative to the
 # proposed architecture so the contribution of each piece is measurable (#4).
@@ -124,7 +135,7 @@ def prepare_split(cfg: QuantumNativeConfig, classes, dataset_dir, train_sample_s
         class_mapping={str(classes[0]): 1, str(classes[1]): -1},
     )
     split_service.save_manifest(manifest, os.path.join(
-        "Results", "manifests", "{}_seed{}.json".format(manifest["dataset_id"], cfg.seed)))
+        MANIFEST_ROOT, "{}_seed{}.json".format(manifest["dataset_id"], cfg.seed)))
 
     cfg.split_id = manifest["id"]
     X_train, y_train, X_val, y_val, X_test, y_test = split_service.apply_manifest(manifest, X, y)
@@ -222,6 +233,56 @@ def _fmt_pair(pair) -> str:
     return f"{pair[0]}v{pair[1]}"
 
 
+# ---------------------------------------------------------------------------
+# Cells: one (dataset, config, seed) unit of work. Independent by construction,
+# which is what makes both the parallelism and the resume safe (M1.3).
+# ---------------------------------------------------------------------------
+def _metrics_path(pair, config_name: str, seed: int) -> str:
+    return os.path.join(EXP_ROOT, _fmt_pair(pair), config_name, f"seed_{seed}.json")
+
+
+def _expected_config(config_name: str, seed: int, epochs) -> dict:
+    """The config dict run_qcnn would record, computed without loading data."""
+    cfg = build_config(ABLATION_CONFIGS[config_name], seed)
+    if epochs is not None:
+        cfg.n_epochs = epochs
+    return {k: v for k, v in vars(cfg).items()
+            if isinstance(v, (int, float, str, bool, type(None)))}
+
+
+def _is_reusable_cell(pair, config_name: str, seed: int, epochs) -> bool:
+    """Skip only a cell this invocation would otherwise reproduce exactly."""
+    if not os.path.exists(_metrics_path(pair, config_name, seed)):
+        return False
+    directory = run_artifacts.run_dir(
+        _fmt_pair(pair), config_name, seed, create=False)
+    return run_artifacts.is_reusable(
+        directory, config=_expected_config(config_name, seed, epochs), seed=seed)
+
+
+def _execute_cell(payload):
+    """Run one cell in this process. Returns (pair, config, seed, error|None).
+
+    Metrics are not returned: every cell's numbers are read back from its saved
+    JSON so a fresh run and a resumed run aggregate from byte-identical input.
+    """
+    pair, config_name, seed, dataset_dir, samples, epochs, use_bce, with_baselines = payload
+    try:
+        run_single(config_name, pair, seed, dataset_dir, samples, epochs,
+                   use_bce=use_bce, out_dir=os.path.join(EXP_ROOT, _fmt_pair(pair)),
+                   with_baselines=with_baselines)
+        return pair, config_name, seed, None
+    except Exception:
+        return pair, config_name, seed, traceback.format_exc()
+
+
+def _write_failure_manifest(failures) -> None:
+    """Always written, empty list included, so a stale manifest cannot mislead."""
+    os.makedirs(EXP_ROOT, exist_ok=True)
+    with open(FAILURE_MANIFEST, "w") as fh:
+        json.dump({"n_failed": len(failures), "failures": failures}, fh, indent=2)
+
+
 def main():
     ap = argparse.ArgumentParser(description="FQCNN ablation / multi-seed study")
     ap.add_argument("--datasets", nargs="+", default=["0,1", "3,5", "4,9", "5,8"],
@@ -236,6 +297,11 @@ def main():
     ap.add_argument("--no-baselines", action="store_true")
     ap.add_argument("--quick", action="store_true",
                     help="Tiny smoke run: 1 pair, proposed+pool_none, 2 seeds, 60 samples")
+    ap.add_argument("--jobs", type=int, default=1,
+                    help="Parallel worker processes over (dataset, config, seed) cells. "
+                         "0 = physical cores - 2. Each worker is pinned to one CPU thread.")
+    ap.add_argument("--force", action="store_true",
+                    help="Re-run every cell, including complete ones (default: resume)")
     args = ap.parse_args()
 
     if args.quick:
@@ -245,36 +311,68 @@ def main():
         args.samples = 60
         args.epochs = 2
 
+    unknown = [c for c in args.configs if c not in ABLATION_CONFIGS]
+    if unknown:
+        ap.error("unknown config(s) {}; choose from {}".format(
+            ", ".join(unknown), ", ".join(sorted(ABLATION_CONFIGS))))
+
     pairs = [tuple(int(c) for c in d.split(",")) for d in args.datasets]
     os.makedirs(EXP_ROOT, exist_ok=True)
 
+    jobs = args.jobs if args.jobs > 0 else max(1, (os.cpu_count() or 3) - 2)
+
+    # Schedule: enumerate every cell, then split into reusable and pending.
+    pending, n_reused = [], 0
+    for pair in pairs:
+        for config_name in args.configs:
+            for seed in args.seeds:
+                if not args.force and _is_reusable_cell(pair, config_name, seed, args.epochs):
+                    n_reused += 1
+                    print(f"  [{_fmt_pair(pair)}] {config_name} seed={seed} "
+                          f"-> reusing complete run", flush=True)
+                    continue
+                pending.append((pair, config_name, seed, args.mnist_dir, args.samples,
+                                args.epochs, not args.use_mse, not args.no_baselines))
+
+    print(f"\n{len(pending)} cells to run, {n_reused} reused, {jobs} worker(s)\n")
+
+    failures = []
+
+    def record(pair, config_name, seed, error):
+        label = f"[{_fmt_pair(pair)}] {config_name} seed={seed}"
+        if error is None:
+            print(f"  {label} -> done", flush=True)
+            return
+        print(f"  {label} -> FAILED\n{error}", flush=True)
+        failures.append({"dataset": _fmt_pair(pair), "config": config_name,
+                         "seed": int(seed), "error": error})
+
+    if jobs > 1 and pending:
+        for var in _THREAD_LIMIT_VARS:
+            os.environ[var] = "1"
+        with ProcessPoolExecutor(max_workers=jobs) as pool:
+            futures = [pool.submit(_execute_cell, payload) for payload in pending]
+            for future in as_completed(futures):
+                record(*future.result())
+    else:
+        for payload in pending:
+            record(*_execute_cell(payload))
+
+    # Aggregate in schedule order, from disk, so a resumed sweep and a fresh one
+    # produce the same summary regardless of completion order (M1.3 exit check).
     summary_rows = []
     for pair in pairs:
         ds_name = _fmt_pair(pair)
-        ds_dir = os.path.join(EXP_ROOT, ds_name)
-        print(f"\n{'='*70}\nDATASET {ds_name}\n{'='*70}")
-
         for config_name in args.configs:
             per_seed = []
             for seed in args.seeds:
-                print(f"  [{ds_name}] {config_name} seed={seed} ...", flush=True)
-                try:
-                    m = run_single(
-                        config_name, pair, seed, args.mnist_dir, args.samples, args.epochs,
-                        use_bce=not args.use_mse, out_dir=ds_dir,
-                        with_baselines=not args.no_baselines,
-                    )
-                    per_seed.append(m)
-                    print(f"      acc={m['accuracy']:.3f} f1={m['f1']:.3f} "
-                          f"auc={m['roc_auc']:.3f}", flush=True)
-                except Exception as e:
-                    import traceback
-                    traceback.print_exc()
-                    print(f"      FAILED: {e}", flush=True)
-
+                path = _metrics_path(pair, config_name, seed)
+                if os.path.exists(path):
+                    with open(path) as fh:
+                        per_seed.append(json.load(fh))
             if per_seed:
                 agg = aggregate_metrics(per_seed)
-                cfg_dir = os.path.join(ds_dir, config_name)
+                cfg_dir = os.path.join(EXP_ROOT, ds_name, config_name)
                 os.makedirs(cfg_dir, exist_ok=True)
                 with open(os.path.join(cfg_dir, "aggregate.json"), "w") as f:
                     json.dump(agg, f, indent=2)
@@ -285,6 +383,11 @@ def main():
 
     _write_summary_csv(summary_rows, os.path.join(EXP_ROOT, "summary.csv"))
     print(f"\nWrote summary to {os.path.join(EXP_ROOT, 'summary.csv')}")
+
+    _write_failure_manifest(failures)
+    if failures:
+        print(f"\n{len(failures)} cell(s) failed; see {FAILURE_MANIFEST}", flush=True)
+        sys.exit(1)
 
 
 def _append_baseline_rows(pairs, seeds, summary_rows):

@@ -16,10 +16,18 @@ _PREDICTIONS = 'predictions.npz'
 _WEIGHTS = 'weights.npz'
 
 
-def run_dir(dataset_id: str, config_name: str, seed: int, root: str = RUN_ROOT) -> str:
-    """Directory owned exclusively by this run. Created if absent."""
+def run_dir(dataset_id: str, config_name: str, seed: int, root: str = None,
+            create: bool = True) -> str:
+    """Directory owned exclusively by this run.
+
+    ``create=False`` returns the path without touching the filesystem, so a
+    resume check cannot leave empty directories behind for cells it skips.
+    ``root`` resolves at call time so tests can redirect the whole tree.
+    """
+    root = RUN_ROOT if root is None else root
     directory = os.path.join(root, str(dataset_id), str(config_name), 'seed_{}'.format(seed))
-    os.makedirs(directory, exist_ok=True)
+    if create:
+        os.makedirs(directory, exist_ok=True)
     return directory
 
 
@@ -67,6 +75,47 @@ def fail_run(directory: str, error: str) -> None:
 def is_complete(directory: str) -> bool:
     """True only for a run that finished. Partial output never counts."""
     return _read_status(directory).get('state') == 'complete'
+
+
+# Every key start_run/complete_run is contracted to write. A status file missing
+# any of them predates the current schema and cannot be trusted for resume.
+_REQUIRED_STATUS_KEYS = ('state', 'config', 'split_id', 'seed', 'environment', 'metrics')
+
+
+def _comparable_config(config: dict) -> dict:
+    """Config identity for resume, minus fields that are recorded separately.
+
+    ``split_id`` is stamped onto the config object by the runner *during* the
+    run, so a pre-run preview of the same cell cannot carry it; the status file
+    records it as a top-level field regardless.
+    """
+    return {k: v for k, v in config.items() if k != 'split_id'}
+
+
+def is_reusable(directory: str, config: dict = None, seed: int = None) -> bool:
+    """True only for a complete, schema-valid, identity-matching run.
+
+    UPGRADE_PLAN.md 1.3 / roadmap M1.3: a resumed sweep must skip *only* cells
+    it would otherwise reproduce exactly. Anything partial, anything written by
+    an older schema, and anything whose config or seed has since changed is
+    re-run rather than silently reused.
+    """
+    status = _read_status(directory)
+    if status.get('state') != 'complete':
+        return False
+    if any(key not in status for key in _REQUIRED_STATUS_KEYS):
+        return False
+    if not isinstance(status.get('metrics'), dict) or not status['metrics']:
+        return False
+    for artifact in (_WEIGHTS, _PREDICTIONS):
+        if not os.path.exists(os.path.join(directory, artifact)):
+            return False
+    if seed is not None and int(status['seed']) != int(seed):
+        return False
+    if config is not None:
+        if _comparable_config(status['config']) != _comparable_config(config):
+            return False
+    return True
 
 
 def save_predictions(directory: str, sample_ids, y_true, raw_outputs) -> str:

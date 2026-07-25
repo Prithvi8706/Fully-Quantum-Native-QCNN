@@ -70,7 +70,7 @@ Python 3.9.13 · PennyLane 0.38.0 · NumPy 1.26.4 · scikit-learn 1.6.1
 |---|---|---|
 | **1.1 Batched backpropagation** | **DONE 2026-07-25** | `tests/test_batched_execution.py` (6 tests); benchmark in §5 |
 | **1.2 Input and validation caching** | **DONE 2026-07-25** (scope reduced on evidence, §3b) | `tests/test_encoded_cache.py` (7 tests) |
-| 1.3 Safe parallelism and resume | not started | — |
+| **1.3 Safe parallelism and resume** | **DONE 2026-07-25** | `tests/test_resume_and_parallelism.py` (15 tests) |
 | 1.4 Cost estimator and grid approval | not started | — |
 | 1.5 Conditional accelerators | not started | gated on 1.4 |
 | Clean headline retrain | not started | gated on 1.1–1.4 |
@@ -146,6 +146,39 @@ ablations) should be exhausted first.
 **Open item for M8:** validation is evaluated in one batched call. At n=10 that is a 31 MB
 statevector block, which is fine; the n=14 scaling instances will need chunking to avoid
 running out of memory.
+
+## 3c. M1.3 — parallelism and resume
+
+`python -m experiments.run_experiments --jobs N [--force]`
+
+The sweep now enumerates every `(dataset, config, seed)` cell up front, splits it into
+reusable and pending, and runs the pending set across worker processes. Resume is the
+default; `--force` re-runs everything.
+
+| Requirement | Implementation | Verified |
+|---|---|---|
+| Process-level jobs over independent cells | `ProcessPoolExecutor`, `--jobs N`; `0` = cores − 2 | 4 cells / 2 workers completed out of order, exit 0 |
+| Worker thread limits | `OMP/MKL/OPENBLAS/NUMEXPR_NUM_THREADS=1`, set in the parent *before* the pool so spawned children inherit at import | BLAS reads these at import, so an initializer would be too late |
+| Skip only complete, schema-valid, identity-matching runs | `run_artifacts.is_reusable()` | 11 rejection-path tests |
+| Failure manifest + nonzero exit | `Results/experiments/failures.json`, `sys.exit(1)` | forced failure → `EXIT=1`, manifest records dataset/config/seed/traceback |
+
+**Exit check met.** A repeated smoke command reports `0 cells to run, 4 reused` and writes a
+byte-identical `summary.csv`. Aggregation reads every cell's metrics back from disk in
+schedule order, so a fresh sweep and a resumed one aggregate from identical input regardless
+of completion order.
+
+`is_reusable` rejects: unfinished or failed state, missing `weights.npz` or
+`predictions.npz`, empty metrics, a status file predating the current schema, a different
+seed, and any config difference — including an ablation switch, the case that would
+otherwise put unitary-pooling numbers in a `pool_none` row. `split_id` is exempt because the
+runner stamps it during the run, so a pre-run preview cannot carry it.
+
+**Also fixed:** `--configs bogus` now exits 2 with the valid list instead of raising a bare
+`KeyError` during scheduling.
+
+**Pre-existing footgun, not fixed:** `--quick` overwrites `--epochs`, `--samples`,
+`--seeds`, `--datasets` and `--configs` *after* parsing, so `--quick --epochs 30` silently
+runs 2 epochs. Left alone as out of scope; worth a guard before the real grid.
 
 ## 4. Run cells: required vs completed
 
