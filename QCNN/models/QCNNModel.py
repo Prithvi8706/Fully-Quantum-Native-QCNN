@@ -4,6 +4,7 @@ import pennylane.numpy as pnp
 from QCNN import circuits
 from QCNN.config import QuantumNativeConfig
 from QCNN.layers import QuantumNativeConvolution
+from QCNN.layers import QuantumNativePooling
 from QCNN.layers import QuanvolutionalLayer
 
 
@@ -88,7 +89,11 @@ class PureQuantumNativeCNN:
             params[f'quantum_conv_kernel_{layer}'] = kernel_tensor
 
         max_pairs = self.num_qubits // 2
-        pool_angles_per_layer = 3 * max_pairs
+        # Per-arm width: the frozen 'unitary' arm keeps 3/pair, so its layout and
+        # its position in the seeded RNG stream are unchanged (the freeze tests
+        # prove it). su4 needs 15/pair and 'none' needs none.
+        pool_angles_per_layer = max_pairs * QuantumNativePooling.angles_per_pair(
+            getattr(self.config, 'pooling_mode', 'unitary'))
         n_pool_layers = max(1, self.config.n_conv_layers - 1)
         for pl in range(n_pool_layers):
             params[f'quantum_pooling_{pl}'] = pnp.array(
@@ -118,7 +123,8 @@ class PureQuantumNativeCNN:
             idx += kernel_size
 
         max_pairs = self.num_qubits // 2
-        pool_angles_per_layer = 3 * max_pairs
+        pool_angles_per_layer = max_pairs * QuantumNativePooling.angles_per_pair(
+            getattr(self.config, 'pooling_mode', 'unitary'))
         n_pool_layers = max(1, self.config.n_conv_layers - 1)
         for pl in range(n_pool_layers):
             params[f'quantum_pooling_{pl}'] = flat_params[idx:idx + pool_angles_per_layer]

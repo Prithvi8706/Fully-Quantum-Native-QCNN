@@ -83,6 +83,23 @@ ABLATION_CONFIGS = {
     "enc_feature_map": dict(image_size=4, encoding="feature_map"),
 }
 
+# E3 pooling arms (UPGRADE_PLAN.md 2.2, roadmap M2.4). These run at the HEADLINE
+# geometry -- image_size=28 -> n=10 -- so every row of T5 describes the model the
+# paper is about. The entries above use image_size=16 -> n=8 and are blocker B3;
+# they are left alone here because widening them is M6's call, not E3's.
+#
+# 'coherent' is [ARCH -- opt-in] and ran only after the roadmap 18.2 sign-off
+# (given 2026-07-25). It is an ablation arm; promotion to headline would need a
+# second sign-off (A5).
+E3_POOLING_ARMS = {
+    "e3_pool_none":        dict(image_size=28, encoding="amplitude", pooling_mode="none"),
+    "e3_pool_measurement": dict(image_size=28, encoding="amplitude", pooling_mode="measurement"),
+    "e3_pool_unitary":     dict(image_size=28, encoding="amplitude", pooling_mode="unitary"),
+    "e3_pool_coherent":    dict(image_size=28, encoding="amplitude", pooling_mode="coherent"),
+    "e3_pool_su4":         dict(image_size=28, encoding="amplitude", pooling_mode="su4"),
+}
+ABLATION_CONFIGS.update(E3_POOLING_ARMS)
+
 
 def build_config(overrides: dict, seed: int) -> QuantumNativeConfig:
     """Build a config from per-config overrides + seed."""

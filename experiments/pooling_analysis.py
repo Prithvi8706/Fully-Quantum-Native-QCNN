@@ -36,7 +36,8 @@ from QCNN import circuits, freeze
 from QCNN.config.Qconfig import QuantumNativeConfig
 from QCNN.encoding import PureQuantumEncoder
 from QCNN.models.QCNNModel import PureQuantumNativeCNN
-from QCNN.utils import state_metrics
+from QCNN.utils import run_artifacts, state_metrics
+from experiments import statistics
 
 # Theorem 1 predicts exact equality; this is the numerical-noise allowance for a
 # density-matrix simulation, and the threshold UPGRADE_PLAN.md 2.3 sets for E1.
@@ -360,6 +361,126 @@ def _report_e4(result: dict) -> None:
             mi_text))
 
 
+# ---------------------------------------------------------------------------
+# E3 -- retrained head-to-head, assembled into T5 (roadmap M2.4)
+#
+# Reads the run artifacts the grid produced and turns them into the pooling-arm
+# table: mean +/- std and a 95% bootstrap CI per arm, plus paired tests against
+# the frozen block.
+#
+# McNemar is pooled across (dataset, seed) splits by summing discordant counts.
+# That is legitimate because the splits are disjoint, so each discordant pair is
+# an independent Bernoulli trial under the null; per-split counts are retained
+# so the pooling can be checked. Wilcoxon runs across the 15 (dataset, seed)
+# scores. Holm-Bonferroni then corrects over the four arms compared.
+# ---------------------------------------------------------------------------
+
+E3_REFERENCE = 'e3_pool_unitary'
+E3_ARMS = ('e3_pool_none', 'e3_pool_measurement', 'e3_pool_unitary',
+           'e3_pool_coherent', 'e3_pool_su4')
+
+
+def _load_cell(dataset: str, arm: str, seed: int):
+    """Accuracy and per-example correctness for one completed run cell."""
+    directory = run_artifacts.run_dir(dataset, arm, seed, create=False)
+    if not run_artifacts.is_reusable(directory):
+        return None
+    with open(os.path.join(directory, 'status.json')) as fh:
+        status = json.load(fh)
+    predictions = np.load(os.path.join(directory, 'predictions.npz'))
+    y_true = np.asarray(predictions['y_true']).reshape(-1)
+    raw = np.asarray(predictions['raw_outputs'], dtype=float).reshape(-1)
+    predicted = np.where(raw > 0, 1, -1)
+    return {
+        'accuracy': float(status['metrics']['accuracy']),
+        'correct': predicted == y_true,
+        'n_test': int(y_true.size),
+    }
+
+
+def collect_e3(datasets, arms=E3_ARMS, seeds=(0, 1, 2, 3, 4)) -> dict:
+    """Gather every arm's per-cell results; report any missing cell."""
+    collected, missing = {}, []
+    for arm in arms:
+        accuracies, correctness, cells = [], [], []
+        for dataset in datasets:
+            for seed in seeds:
+                cell = _load_cell(dataset, arm, seed)
+                if cell is None:
+                    missing.append({'dataset': dataset, 'arm': arm, 'seed': seed})
+                    continue
+                accuracies.append(cell['accuracy'])
+                correctness.append(cell['correct'])
+                cells.append({'dataset': dataset, 'seed': seed,
+                              'accuracy': cell['accuracy'], 'n_test': cell['n_test']})
+        if accuracies:
+            collected[arm] = {
+                'accuracies': accuracies,
+                'correct': np.concatenate(correctness),
+                'cells': cells,
+            }
+    return {'arms': collected, 'missing': missing}
+
+
+def run_e3(datasets=('0v1', '3v5', '4v9'), seeds=(0, 1, 2, 3, 4),
+           reference: str = E3_REFERENCE) -> dict:
+    """Assemble T5 from the grid's run artifacts."""
+    gathered = collect_e3(datasets, seeds=seeds)
+    arms = gathered['arms']
+    if reference not in arms:
+        raise RuntimeError(
+            'reference arm {} has no completed cells; run the E3 grid first'.format(reference))
+
+    comparison = statistics.compare_arms(reference, arms)
+    comparison.update({
+        'experiment': 'E3',
+        'claim': 'retrained head-to-head comparison of the pooling arms',
+        'datasets': list(datasets),
+        'seeds': list(seeds),
+        'n_cells_per_arm': {name: len(data['accuracies']) for name, data in arms.items()},
+        'missing_cells': gathered['missing'],
+        'cells': {name: data['cells'] for name, data in arms.items()},
+    })
+    return comparison
+
+
+def _report_e3(result: dict) -> None:
+    print('E3 -- retrained head-to-head (T5)')
+    print('  reference          : {}'.format(result['reference']))
+    print('  datasets           : {}'.format(', '.join(result['datasets'])))
+    print('  seeds              : {}'.format(', '.join(str(s) for s in result['seeds'])))
+    if result['missing_cells']:
+        print('  MISSING CELLS      : {}'.format(len(result['missing_cells'])))
+    print()
+    header = '  {:<22s} {:>5s} {:>17s} {:>18s} {:>10s} {:>12s} {:>12s}'.format(
+        'arm', 'cells', 'accuracy', '95% CI', 'delta', 'McNemar p', 'Wilcoxon p')
+    print(header)
+    print('  ' + '-' * (len(header) - 2))
+    for arm in E3_ARMS:
+        if arm not in result['arms']:
+            continue
+        entry = result['arms'][arm]
+        acc, ci = entry['accuracy'], entry['ci95']
+        row = '  {:<22s} {:>5d} {:>8.4f}+/-{:.4f} [{:>7.4f},{:>7.4f}]'.format(
+            arm, acc['n'], acc['mean'], acc['std'], ci['low'], ci['high'])
+        against = entry.get('vs_reference')
+        if against is None:
+            row += ' {:>10s} {:>12s} {:>12s}'.format('(ref)', '-', '-')
+        else:
+            def fmt(test):
+                p = against[test]['p_holm']
+                if p is None:
+                    return '{:>12s}'.format('n/a')
+                mark = '*' if against[test]['significant'] else ' '
+                return '{:>11.4f}{}'.format(p, mark)
+            row += ' {:>+10.4f} {} {}'.format(
+                against['delta_accuracy'], fmt('mcnemar'), fmt('wilcoxon'))
+        print(row)
+    print()
+    print('  p-values are Holm-Bonferroni adjusted across the four compared arms;')
+    print('  * marks significance at alpha = {}.'.format(result['alpha']))
+
+
 def _report_e2(result: dict) -> None:
     print('E2 -- dephasing the discarded wires before pooling (Prop 3)')
     print('  n_qubits           : {}'.format(result['n_qubits']))
@@ -389,11 +510,21 @@ def _report_e2(result: dict) -> None:
 
 def main():
     ap = argparse.ArgumentParser(description='E1/E2 pooling validation')
-    ap.add_argument('--experiment', choices=['e1', 'e2', 'e4', 'both'], default='both')
+    ap.add_argument('--experiment', choices=['e1', 'e2', 'e3', 'e4', 'both'], default='both')
     ap.add_argument('--image-size', type=int, default=freeze.HEADLINE_IMAGE_SIZE)
     ap.add_argument('--n-inputs', type=int, default=8)
     ap.add_argument('--out', default=EVIDENCE_PATH)
     args = ap.parse_args()
+
+    if args.experiment == 'e3':
+        result = run_e3()
+        _report_e3(result)
+        out = args.out.replace('e1_pooling_equivalence', 't5_pooling_arms')
+        os.makedirs(os.path.dirname(out) or '.', exist_ok=True)
+        with open(out, 'w') as fh:
+            json.dump(result, fh, indent=2, sort_keys=True)
+        print('\n  evidence -> {}'.format(out))
+        return 0 if not result['missing_cells'] else 1
 
     if args.experiment == 'e4':
         result = run_e4(image_size=args.image_size, n_inputs=args.n_inputs)

@@ -30,3 +30,7 @@ datasets/images/*
 datasets/*.*
 datasets/MNIST/
 graphify-out/
+# Per-run trainer transcripts from the experiment grid: chatty, large, and
+# regenerable. The per-seed metric JSONs and split manifests beside them ARE
+# evidence and stay tracked.
+Results/experiments/**/*.log

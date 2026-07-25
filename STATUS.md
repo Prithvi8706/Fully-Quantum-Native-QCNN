@@ -7,7 +7,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Design:** `docs/superpowers/specs/2026-07-23-fqcnn-q1-upgrade-design.md`
 **Month plan:** `docs/superpowers/plans/2026-07-25-fqcnn-remaining-work-month-plan.md`
 
-**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 130 passing
+**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 162 passing
 
 ---
 
@@ -17,7 +17,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 |---|---|---|---|
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
 | **M1 — Phase 1: affordable execution** | **IN PROGRESS** · 1.1–1.4 done, 1.5 not required | **grid fits ≤7 nights: PASSED** (2.2 h of 70 h) | §§3a–3d; 110 tests |
-| M2 — Phase 2: pooling theory (E1–E5) | **2.1, E1, E2, E4, 2.7 done**; E3, E5 not started | **E1 agrees to ~1e-12: PASSED** (2.2e-16 at headline n=10) | `Results/evidence/`; §§7, 7a, 7b |
+| M2 — Phase 2: pooling theory (E1–E5) | **2.1, E1, E2, E3, E4, 2.7 done**; E5 blocked | **E1 agrees to ~1e-12: PASSED** (2.2e-16 at headline n=10) | `Results/evidence/`; §§7, 7a–7c |
 | M3 — Phase 3: model analysis | not started | — | — |
 | M4 — Phase 4: harder datasets | not started | — | — |
 | M5 — Phase 5: baselines + statistics | not started | — | — |
@@ -301,7 +301,7 @@ extrapolated rows are sound. Batch 32 is measured end to end, not extrapolated.
 | T2 | Resource table, prep vs model, transpiled | M8.1 | not started |
 | T3 | Baselines, CIs, paired tests, cost columns | M5 | not started |
 | T4 | Ablation Δacc ± CI | M6 | not started |
-| T5 | Pooling arms + SU(4) ceiling + measurement tie | M2 | measurement-tie row available |
+| T5 | Pooling arms + SU(4) ceiling + measurement tie | M2 | **generated** (§7c) |
 | T6 | DLA, effective dim, expressibility, gen. bound | M3 | not started |
 | F-A | E1 exact tie + E2 dephasing | M2.2–2.3 | **both generated** |
 | F-B | Coherence / purity / entropy / MI per stage | M2.5 | **generated** (§7b) |
@@ -519,12 +519,71 @@ number, not a property of the state. Clamped, with a regression test.
 Evidence: `Results/evidence/e4_information_dynamics.json` (per-stage aggregates plus per-input
 detail). This is the F-B source data.
 
+## 7c. E3 -- retrained head-to-head, T5 (2026-07-26)
+
+75 cells: 5 arms x 5 seeds x 3 datasets (0v1, 3v5, 4v9), headline n=10 geometry, 400 samples,
+30 epochs, matched budgets. 2,130 pooled test items. Reference arm is the frozen block.
+
+| Arm | Slots | Accuracy | 95% CI | delta | McNemar p | Wilcoxon p |
+|---|---|---|---|---|---|---|
+| `pool_none` | 224 | 0.8507 +/- 0.0811 | [0.811, 0.892] | **-0.0272** | **0.0006 \*** | **0.0024 \*** |
+| `pool_measurement` | 269 | 0.8779 +/- 0.0723 | [0.843, 0.915] | **+0.0000** | 1.000 | 1.000 |
+| **`pool_unitary`** (frozen) | **269** | **0.8779 +/- 0.0723** | [0.843, 0.915] | (ref) | -- | -- |
+| `pool_coherent` | 284 | 0.8798 +/- 0.0695 | [0.847, 0.916] | +0.0019 | 1.000 | 1.000 |
+| `pool_su4` | 449 | 0.9019 +/- 0.0659 | [0.869, 0.935] | +0.0239 | **0.0020 \*** | 0.500 |
+
+Holm-Bonferroni adjusted across the four compared arms; \* significant at alpha = 0.05.
+
+Per dataset: 0v1 / 3v5 / 4v9 -- none 0.951/0.762/0.839 - frozen 0.966/0.807/0.861 -
+coherent 0.963/0.810/0.866 - su4 0.972/**0.863**/0.870.
+
+### Readings
+
+1. **The measurement arm ties exactly** -- **zero discordant pairs out of 2,130**, not merely a
+   non-significant difference. Theorem 1 holds in a *trained* setting, not only at fixed
+   parameters. **But this row is a consistency check, not independent evidence:** on a
+   statevector device PennyLane realises mid-circuit measurement by deferring it back into
+   controlled gates, so the two arms execute the same thing. E1's Kraus channel on
+   `default.mixed` remains the independent confirmation.
+2. **Pooling earns its place.** `pool_none` is 2.7pp worse, significant on both tests
+   (143 vs 85 discordant favouring the frozen block).
+3. **Proposition 2's headroom is empty at one gate.** `pool_coherent` gains +0.19pp with
+   near-symmetric discordance (107 vs 111) and p = 1.0 on both tests. It leaves the
+   measurement-simulable class mathematically and gains nothing operationally.
+4. **The frozen block is NOT the best arm.** `pool_su4` is +2.4pp overall and +5.6pp on 3v5,
+   the hardest pair. Anticipated by the risk register: report family headroom, retain the
+   frozen headline. The paper therefore cannot claim the frozen block is optimal -- only that
+   it is minimal-cost within the simulable class and within 2.4pp of the unconstrained ceiling
+   at one fifth of the pooling parameters.
+5. **The two tests disagree about SU(4).** McNemar p = 0.002, Wilcoxon p = 0.50. McNemar treats
+   2,130 items as observations; Wilcoxon has 15 seed-level scores and far less power, but is
+   arguably the more appropriate unit for a generalisation claim. Honest wording: a consistent
+   per-example advantage that seed-level variation does not confirm.
+
+### Caveats attached to T5
+
+- **~0.88 is not the headline accuracy.** These are 343-sample, 30-epoch matched-budget runs;
+  T5 is an arm comparison. The clean headline retrain uses ~7,600 training samples.
+- **Watch 0v1.** The frozen arm reaches 0.966 there, while logistic regression on 0v1 is
+  ~99.9% and would likely clear 99% even at this budget. T3 may show the quantum model losing
+  to a linear baseline on the easy pair -- which is exactly why Phase 4 moves to hard pairs.
+
+### Method note
+
+McNemar is pooled across the 15 (dataset, seed) splits by summing discordant counts. The splits
+are disjoint, so each discordant pair is an independent Bernoulli trial under the null; per-split
+counts are retained in the artifact so the pooling can be checked. `experiments/statistics.py`
+uses the **exact** binomial test rather than the chi-square approximation, because discordance
+is often zero here -- Theorem 1 guarantees it for one arm -- and chi-square is unreliable there.
+
+Evidence: `Results/evidence/t5_pooling_arms.json`.
+
 ## 8. Architecture sign-off decisions (roadmap §18)
 
 | # | Decision | State | Outcome |
 |---|---|---|---|
 | 1 | Inert `RY(0.02)` removal | **Closed 2026-07-25** | **Retained.** Proven inert (9.44e-16 angle change, 8.33e-16 removal). Removal-with-proof branch was available and **declined** in favour of zero architecture change; documented as a no-op. See `docs/paper_code_reconciliation.md` row 4. |
-| 2 | `pool_coherent` implementation | Open | Due Month 1, before M2.1. Default: do not run. |
+| 2 | `pool_coherent` implementation | **Closed 2026-07-26** | **Approved as an ablation arm.** Ran in E3; gains +0.19pp, not significant. Never headline; promotion would need a second sign-off (A5). |
 | 3 | Multi-class head | Open | Due Month 2, before M4.5. Default: off; binary breadth instead. |
 | 4 | JAX / GPU path | **Closed 2026-07-25** | **Off.** M1.4 projects 2.2 h against a 70 h budget; `UPGRADE_PLAN.md` 1.5 activates only on a miss. |
 | 5 | Venue | Open | Due end of Month 3. Default: IEEE TQE. |

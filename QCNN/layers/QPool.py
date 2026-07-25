@@ -28,18 +28,40 @@ class QuantumNativePooling:
             measurements.append(qml.expval(qml.PauliZ(qubit)))
         return measurements
     
+    # Trainable angles each arm consumes per pooling pair. The model allocates
+    # its pooling blocks from this, so an arm's reported parameter count is the
+    # count it actually uses (UPGRADE_PLAN.md 2.2, A6).
+    ANGLES_PER_PAIR = {
+        'none': 0,
+        'unitary': 3,
+        'measurement': 3,
+        'measurement_channel': 3,
+        'coherent': 4,
+        'su4': 15,
+    }
+
+    @staticmethod
+    def angles_per_pair(mode: str) -> int:
+        if mode not in QuantumNativePooling.ANGLES_PER_PAIR:
+            raise ValueError("Unknown pooling_mode '{}'. Use one of {}.".format(
+                mode, ', '.join(sorted(QuantumNativePooling.ANGLES_PER_PAIR))))
+        return QuantumNativePooling.ANGLES_PER_PAIR[mode]
+
+    @staticmethod
+    def angles_for_pair(angles, idx: int, width: int):
+        """The ``width`` angles pair ``idx`` consumes, with modular reuse."""
+        size = angles.size
+        return [angles[(width * idx + k) % size] for k in range(width)]
+
     @staticmethod
     def pair_angles(angles, idx: int):
         """The three angles pair ``idx`` consumes: ``(cry, crz, post_ry_keep)``.
 
-        Shared by every pooling arm. If the arms disagreed about which angle is
-        which, E1's exact-tie prediction would fail for a bookkeeping reason and
-        look like a physics result (UPGRADE_PLAN.md 2.3).
+        Shared by the frozen arm and both measurement arms. If they disagreed
+        about which angle is which, E1's exact-tie prediction would fail for a
+        bookkeeping reason and look like a physics result (UPGRADE_PLAN.md 2.3).
         """
-        size = angles.size
-        return (angles[(3 * idx) % size],
-                angles[(3 * idx + 1) % size],
-                angles[(3 * idx + 2) % size])
+        return tuple(QuantumNativePooling.angles_for_pair(angles, idx, 3))
 
     @staticmethod
     def quantum_unitary_pooling(params: np.ndarray, input_qubits: list[int],
@@ -130,9 +152,14 @@ class QuantumNativePooling:
         elif mode == 'measurement_channel':
             QuantumNativePooling.quantum_measurement_channel_pooling(
                 params, input_qubits, output_qubits)
+        elif mode == 'coherent':
+            QuantumNativePooling.quantum_coherent_pooling(
+                params, input_qubits, output_qubits)
+        elif mode == 'su4':
+            QuantumNativePooling.quantum_su4_pooling(params, input_qubits, output_qubits)
         else:
-            raise ValueError(f"Unknown pooling_mode '{mode}'. Use 'unitary', 'none', "
-                             "'measurement', or 'measurement_channel'.")
+            raise ValueError("Unknown pooling_mode '{}'. Use one of {}.".format(
+                mode, ', '.join(sorted(QuantumNativePooling.ANGLES_PER_PAIR))))
 
     @staticmethod
     def quantum_conditional_pooling(params: np.ndarray, input_qubits: list[int],
@@ -225,6 +252,61 @@ class QuantumNativePooling:
             qml.QubitChannel(
                 QuantumNativePooling.measurement_channel_kraus(angles, i),
                 wires=[keep, discard])
+
+    @staticmethod
+    def quantum_coherent_pooling(params: np.ndarray, input_qubits: list[int],
+                                 output_qubits: list[int]) -> None:
+        """``[ARCH -- opt-in]`` Frozen block plus one CRY from keep to discard.
+
+        The extra gate acts *on* the compressed qubit conditioned on the retained
+        one, so the block is no longer diagonal in the compressed qubit's basis
+        and leaves the measurement-simulable class. It is the minimal departure
+        into Proposition 2's strict extension, and it is the arm that measures
+        whether that extension buys anything. Four angles per pair.
+
+        At ``delta = 0`` the extra CRY is the identity and this reduces exactly
+        to the frozen block, which ``tests/test_pooling_arms.py`` asserts. The
+        frozen arm's inert ``RY(0.02)`` is deliberately omitted: with a
+        non-diagonal gate present it would no longer be inert, and including a
+        magic constant in a new arm serves no purpose.
+
+        Ablation arm only. Promotion to headline needs a second sign-off (A4/A5).
+        """
+        angles = pnp.asarray(params).reshape(-1)
+        if angles.size == 0:
+            return
+        n_pairs = min(len(input_qubits), len(output_qubits))
+        for i in range(n_pairs):
+            keep = input_qubits[i]
+            discard = output_qubits[i]
+            if keep == discard:
+                continue
+            a, b, c, d = QuantumNativePooling.angles_for_pair(angles, i, 4)
+            qml.CRY(a, wires=[discard, keep])
+            qml.CRZ(b, wires=[discard, keep])
+            qml.RY(c, wires=keep)
+            qml.CRY(d, wires=[keep, discard])   # the strict-extension gate
+
+    @staticmethod
+    def quantum_su4_pooling(params: np.ndarray, input_qubits: list[int],
+                            output_qubits: list[int]) -> None:
+        """General two-qubit unitary per pair: the expressivity ceiling.
+
+        Fifteen angles per pair -- the dimension of SU(4) -- so this arm bounds
+        how much any unitary pooling block could achieve, at 5x the frozen
+        block's parameter cost (UPGRADE_PLAN.md 2.2).
+        """
+        angles = pnp.asarray(params).reshape(-1)
+        if angles.size == 0:
+            return
+        n_pairs = min(len(input_qubits), len(output_qubits))
+        for i in range(n_pairs):
+            keep = input_qubits[i]
+            discard = output_qubits[i]
+            if keep == discard:
+                continue
+            weights = pnp.stack(QuantumNativePooling.angles_for_pair(angles, i, 15))
+            qml.ArbitraryUnitary(weights, wires=[keep, discard])
 
     @staticmethod
     def make_pairing(active_wires: list[int]) -> list[tuple[int, int]]:
