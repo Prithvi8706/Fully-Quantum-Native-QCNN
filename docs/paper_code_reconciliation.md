@@ -41,8 +41,45 @@ by `tests/test_freeze_architecture.py`, `tests/test_freeze_expectations.py`, and
 confirms the executed headline tape contains no mid-circuit measurement, no classical
 feed-forward, and no non-unitary channel, and terminates in exactly one expectation
 value. The measurement-pooling arm is detected by the same audit as a positive
-control (8 mid-circuit measurements + 8 conditionals), so the guard cannot pass
-vacuously. These are the defensible claims that replace row 12's deleted assertion.
+control (8 mid-circuit measurements + 16 conditionals — two per pair, as Theorem 1's
+`U_1 = RY(γ)·RZ(β)·RY(α)` requires), so the guard cannot pass vacuously. These are the
+defensible claims that replace row 12's deleted assertion.
+
+## Dispositions already applied to `fqcnn.tex` (M2.7, 2026-07-25)
+
+The header rule above defers `.tex` edits to M10.3. Roadmap M2.7 is the stated exception:
+it requires the theory section to be written and the information-loss claim deleted as
+part of Phase 2, because the rest of Phase 2 is evidence *for* that section. Rows applied
+early, all others still pending M10.3:
+
+| Row | Applied | Where |
+|---|---|---|
+| 3 | Single canonical pooling definition, `eq:poolblock`, matching the code including control on the compressed qubit and `RY(0.02)`. The conflicting Sec. VI-B equation (`CRZ·CRY·CRZ`) is deleted and now cross-references `eq:poolblock`. | Sec. III-D, Sec. VI-B |
+| 4 | `RY(0.02)` documented as a proven no-op, with the partial-trace argument and the measured 8.33e-16 | Sec. III-D, Sec. III-E |
+| 12 | Information-loss claim deleted in all six places it appeared; replaced by Theorem 1's claims | Abstract, Sec. I (×2), Sec. II (×2), Sec. V analysis, Sec. V comparison, Sec. VI-A |
+
+A defect found while applying row 3: the Fig. 4 caption stated the controlled rotations were
+**"controlled on $q_a$"** — the *retained* qubit. The code controls on $q_b$, the compressed
+qubit. This is not cosmetic: Theorem 1 holds precisely *because* the controls are diagonal in
+the compressed qubit's basis. Had the caption been correct, the theorem would not apply to the
+circuit the caption describes. Corrected, and the control assignment is now stated explicitly
+in `eq:poolblock` with a sentence explaining why it is load-bearing.
+
+## Theory section (M2.7, verified)
+
+Sec. III-E states Theorem 1 (exact simulation), Proposition 2 (strict containment, SWAP
+witness) and Proposition 3 (coherence-transfer functional), each with a proof, and each
+backed by a test in `tests/test_pooling_equivalence.py`:
+
+| Statement | Test | Result |
+|---|---|---|
+| Theorem 1 | `test_e1_unitary_and_measurement_pooling_agree_exactly` | E1: 2.2e-16 at headline n=10 with archived weights |
+| Proposition 2 | `test_swap_witnesses_strict_containment` | trace distance 1/2 for the SWAP witness |
+| Proposition 3 | `test_e2_dephasing_discarded_wires_changes_nothing` | E2: 1.3e-14 readout, 0.0 exact Δaccuracy |
+
+Controls that keep the null results falsifiable: `test_pool_none_actually_differs` (>1e-6) and
+`test_e2_control_dephasing_kept_wires_does_change_things` (1.1e-01, twelve orders above the
+effect on compressed wires).
 
 ## Single-circuit statement (verified)
 

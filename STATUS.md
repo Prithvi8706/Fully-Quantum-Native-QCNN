@@ -7,7 +7,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Design:** `docs/superpowers/specs/2026-07-23-fqcnn-q1-upgrade-design.md`
 **Month plan:** `docs/superpowers/plans/2026-07-25-fqcnn-remaining-work-month-plan.md`
 
-**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 110 passing
+**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 111 passing
 
 ---
 
@@ -17,7 +17,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 |---|---|---|---|
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
 | **M1 — Phase 1: affordable execution** | **IN PROGRESS** · 1.1–1.4 done, 1.5 not required | **grid fits ≤7 nights: PASSED** (2.2 h of 70 h) | §§3a–3d; 110 tests |
-| M2 — Phase 2: pooling theory (E1–E5) | **E1 + E2 PASSED**; E3–E5 not started | **E1 agrees to ~1e-12: PASSED** (1.7e-16) | `Results/evidence/`; §7 |
+| M2 — Phase 2: pooling theory (E1–E5) | **E1, E2, 2.1, 2.7 done**; E3–E5 not started | **E1 agrees to ~1e-12: PASSED** (2.2e-16 at headline n=10) | `Results/evidence/`; §§7, 7a |
 | M3 — Phase 3: model analysis | not started | — | — |
 | M4 — Phase 4: harder datasets | not started | — | — |
 | M5 — Phase 5: baselines + statistics | not started | — | — |
@@ -360,10 +360,15 @@ sidesteps the `UPGRADE_PLAN.md` risk-register concern about `qml.measure`/`qml.c
 
 **E1 PASSES.** `python -m experiments.pooling_analysis`, on `default.mixed`, fixed parameters:
 
-| n | inputs | max \|difference\| | tolerance | verdict |
-|---|---|---|---|---|
-| 8 | 4 | **1.665e-16** | 1e-12 | **PASS** |
-| 6 | 2 | machine precision | 1e-12 | **PASS** (`tests/test_pooling_equivalence.py`) |
+| n | weights | inputs | max \|difference\| | tolerance | verdict |
+|---|---|---|---|---|---|
+| **10 (headline)** | **archived** | 8 | **2.220e-16** | 1e-12 | **PASS** |
+| 8 | seeded | 4 | 1.665e-16 | 1e-12 | PASS |
+| 6 | seeded | 2 | machine precision | 1e-12 | PASS (`tests/test_pooling_equivalence.py`) |
+
+The headline run took 4 h 45 min: on `default.mixed`, `AmplitudeEmbedding` decomposes into the
+full ~2,026-CNOT Mottonen sequence against a 16 MB density matrix, which dominates. One of the
+eight inputs agreed to **0.000e+00** — bit-identical.
 
 Four orders of magnitude inside tolerance — the difference is float64 round-off, not physics.
 Theorem 1's a-priori prediction of an *exact* tie is confirmed.
@@ -408,6 +413,52 @@ on). Both default to `None`, so the headline path is unchanged -- A3 permits cha
 evaluation-time studies only.
 
 Evidence: `Results/evidence/e2_dephasing.json`.
+
+## 7a. M2.7 — the tested theory section (2026-07-25)
+
+`fqcnn.tex` now carries **Sec. III-E, "Unitary Versus Measurement-Based Pooling"**: Theorem 1
+(exact simulation), Proposition 2 (strict containment via the SWAP witness), Proposition 3
+(coherence-transfer functional), each with a proof and each backed by a test.
+
+| Statement | Test | Result |
+|---|---|---|
+| Theorem 1 | `test_e1_unitary_and_measurement_pooling_agree_exactly` | E1: **2.2e-16** at headline n=10 |
+| Proposition 2 | `test_swap_witnesses_strict_containment` | trace distance **1/2** |
+| Proposition 3 | `test_e2_dephasing_discarded_wires_changes_nothing` | E2: **1.3e-14**, ΔAcc **0.0 exactly** |
+
+### The information-loss claim is deleted
+
+It appeared in **six** places. All replaced with Theorem 1's defensible claims — exact
+simulation at zero overhead, no mid-circuit measurement/reset/feed-forward, a globally pure
+state, end-to-end adjoint differentiability:
+
+Abstract · Sec. I (×2) · Sec. II (×2) · Sec. V analysis · Sec. V comparison · Sec. VI-A
+
+Verified absent: no occurrence of *irrevocable*, *irreversible loss*, *information loss*,
+*measurement-induced*, or *destructive projective* remains in the manuscript.
+
+### A defect found while writing it
+
+**Fig. 4's caption said the controlled rotations were "controlled on $q_a$"** — the *retained*
+qubit. The code controls on $q_b$, the **compressed** qubit. That is not cosmetic: Theorem 1
+holds precisely *because* the controls are diagonal in the compressed qubit's basis. Had the
+caption been right, the theorem would not apply to the circuit it describes. Corrected, and the
+control assignment is now explicit in `eq:poolblock` with a sentence saying why it is
+load-bearing.
+
+Also resolved: **Sec. VI-B carried a third, conflicting pooling equation** (`CRZ·CRY·CRZ`),
+part of F4's "three different definitions of the paper's own contribution." Deleted; it now
+cross-references the single canonical `eq:poolblock`.
+
+### Build status
+
+`pdflatex` × 3 passes → **11 pages, zero errors, zero undefined references or citations.**
+Nielsen & Chuang added as `ref51` for the deferred-measurement principle (a Phase 9 item,
+pulled forward because Theorem 1 needs it).
+
+**Not done here:** the `approx 98\%` accuracy claims remain in the abstract, intro, and
+conclusion. They cannot be replaced until the clean headline retrain exists (M1). Tracked as
+reconciliation row 10.
 
 ## 8. Architecture sign-off decisions (roadmap §18)
 

@@ -21,6 +21,7 @@ from experiments.pooling_analysis import (
     E1_TOLERANCE,
     _hooks_dephasing,
     _readouts_with_hooks,
+    _trace_distance,
     readouts,
 )
 
@@ -174,6 +175,36 @@ def test_e2_control_dephasing_kept_wires_does_change_things(small_setup):
     control = _readouts_with_hooks(cfg, params, inputs, _hooks_dephasing('keep'))
 
     assert np.abs(clean - control).max() > 1e-6
+
+
+def test_swap_witnesses_strict_containment():
+    """Proposition 2: unitary pooling strictly contains measure-and-condition.
+
+    Witness V = SWAP. It carries rho_b onto the retained register *including*
+    off-diagonal coherences. No measure-and-condition map can do that -- such a
+    map sees rho_b only through its diagonal. So dephasing b before the block is
+    detectable for SWAP and undetectable for the frozen block, which is exactly
+    the contrast E1/E2 measured.
+
+    This is what makes the frozen block's tie a statement about *where it sits*
+    in the family, not a limitation of the family.
+    """
+    dev = qml.device('default.mixed', wires=2)
+
+    @qml.qnode(dev)
+    def swap_pool(dephase_b):
+        qml.Hadamard(wires=1)              # b = |+>: coherence, no population bias
+        if dephase_b:
+            qml.PhaseFlip(0.5, wires=1)
+        qml.SWAP(wires=[0, 1])
+        return qml.density_matrix(wires=0)  # the retained register
+
+    coherent = np.asarray(swap_pool(False))
+    dephased = np.asarray(swap_pool(True))
+
+    assert abs(coherent[0, 1]) == pytest.approx(0.5, abs=1e-12)
+    assert abs(dephased[0, 1]) < 1e-14
+    assert _trace_distance(coherent, dephased) > 0.4
 
 
 def test_unknown_pooling_mode_is_rejected():
