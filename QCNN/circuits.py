@@ -19,16 +19,27 @@ from QCNN.layers import QuantumNativePooling
 
 
 class CircuitHooks:
-    """Optional evaluation-only callbacks. Never part of the model definition."""
+    """Optional evaluation-only callbacks. Never part of the model definition.
+
+    ``before_pool`` and ``terminal`` are the dephasing and state-observation
+    hooks roadmap M2.1 requires: E2 needs to dephase discarded wires immediately
+    before pooling, and Proposition 3 is a statement about the retained
+    register's reduced state rather than about one observable of it. Both are
+    ``None`` on the headline path, so the frozen circuit is unaffected (A3
+    permits channels in evaluation-time studies only).
+    """
 
     def __init__(self, after_encoding=None, after_conv_window=None, after_pool=None,
-                 after_classifier=None, cnot=None, before_readout=None):
+                 after_classifier=None, cnot=None, before_readout=None,
+                 before_pool=None, terminal=None):
         self.after_encoding = after_encoding
         self.after_conv_window = after_conv_window
+        self.before_pool = before_pool
         self.after_pool = after_pool
         self.after_classifier = after_classifier
         self.cnot = cnot
         self.before_readout = before_readout
+        self.terminal = terminal
 
 
 _NO_HOOKS = CircuitHooks()
@@ -89,6 +100,8 @@ def build_circuit(x, params, cfg, hooks=None):
             keep = [k for (k, _) in pairs]
             discard = [d for (_, d) in pairs]
             pool_key = f'quantum_pooling_{layer}'
+            if hooks.before_pool:
+                hooks.before_pool(keep, discard)
             QuantumNativePooling.apply_pooling(
                 getattr(cfg, 'pooling_mode', 'unitary'),
                 params[pool_key],
@@ -128,4 +141,6 @@ def build_circuit(x, params, cfg, hooks=None):
     if hooks.before_readout:
         hooks.before_readout(readout)
 
+    if hooks.terminal:
+        return hooks.terminal(readout, active_qubits)
     return qml.expval(qml.PauliZ(readout))

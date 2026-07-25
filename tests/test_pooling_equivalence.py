@@ -17,7 +17,12 @@ from QCNN import freeze
 from QCNN.config.Qconfig import QuantumNativeConfig
 from QCNN.layers import QuantumNativePooling
 from QCNN.models.QCNNModel import PureQuantumNativeCNN
-from experiments.pooling_analysis import E1_TOLERANCE, readouts, run_e1
+from experiments.pooling_analysis import (
+    E1_TOLERANCE,
+    _hooks_dephasing,
+    _readouts_with_hooks,
+    readouts,
+)
 
 SMALL_IMAGE = 8          # -> 6 qubits, a 64x64 density matrix
 ANGLES = pnp.array([0.31, -0.72, 1.14, 0.05, 0.88, -1.31])
@@ -125,6 +130,50 @@ def test_pool_none_actually_differs():
     none = readouts(_small('none'), params, x)
 
     assert np.abs(unitary - none).max() > 1e-6
+
+
+def test_dephasing_really_dephases():
+    """PhaseFlip(0.5) must send rho -> diag(rho), or E2 measures nothing."""
+    dev = qml.device('default.mixed', wires=1)
+
+    @qml.qnode(dev)
+    def circuit(dephase):
+        qml.Hadamard(wires=0)          # |+>, maximal off-diagonal coherence
+        if dephase:
+            qml.PhaseFlip(0.5, wires=0)
+        return qml.density_matrix(wires=0)
+
+    coherent = np.asarray(circuit(False))
+    dephased = np.asarray(circuit(True))
+
+    assert abs(coherent[0, 1]) == pytest.approx(0.5, abs=1e-12)
+    assert abs(dephased[0, 1]) < 1e-14
+    np.testing.assert_allclose(np.diag(dephased), np.diag(coherent), atol=1e-14)
+
+
+@pytest.mark.slow
+def test_e2_dephasing_discarded_wires_changes_nothing(small_setup):
+    """Proposition 3 at reduced size: Delta_coh == 0 for the frozen block."""
+    params, inputs = small_setup
+    cfg = _small('unitary')
+
+    clean = _readouts_with_hooks(cfg, params, inputs, None)
+    dephased = _readouts_with_hooks(cfg, params, inputs, _hooks_dephasing('discard'))
+
+    np.testing.assert_allclose(dephased, clean, atol=E1_TOLERANCE, rtol=0.0)
+    assert np.all(np.sign(clean) == np.sign(dephased))
+
+
+@pytest.mark.slow
+def test_e2_control_dephasing_kept_wires_does_change_things(small_setup):
+    """Without this the E2 null result could just mean the channel never fired."""
+    params, inputs = small_setup
+    cfg = _small('unitary')
+
+    clean = _readouts_with_hooks(cfg, params, inputs, None)
+    control = _readouts_with_hooks(cfg, params, inputs, _hooks_dephasing('keep'))
+
+    assert np.abs(clean - control).max() > 1e-6
 
 
 def test_unknown_pooling_mode_is_rejected():

@@ -7,7 +7,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Design:** `docs/superpowers/specs/2026-07-23-fqcnn-q1-upgrade-design.md`
 **Month plan:** `docs/superpowers/plans/2026-07-25-fqcnn-remaining-work-month-plan.md`
 
-**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 100 passing
+**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 110 passing
 
 ---
 
@@ -16,8 +16,8 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 | Milestone | State | Gate | Evidence |
 |---|---|---|---|
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
-| **M1 — Phase 1: affordable execution** | **IN PROGRESS** · 1.1–1.4 done, 1.5 not required | **grid fits ≤7 nights: PASSED** (2.2 h of 70 h) | §§3a–3d; 100 tests |
-| M2 — Phase 2: pooling theory (E1–E5) | **E1 PASSED**; E2–E5 not started | **E1 agrees to ~1e-12: PASSED** (1.7e-16) | `Results/evidence/e1_pooling_equivalence.json`; §7 |
+| **M1 — Phase 1: affordable execution** | **IN PROGRESS** · 1.1–1.4 done, 1.5 not required | **grid fits ≤7 nights: PASSED** (2.2 h of 70 h) | §§3a–3d; 110 tests |
+| M2 — Phase 2: pooling theory (E1–E5) | **E1 + E2 PASSED**; E3–E5 not started | **E1 agrees to ~1e-12: PASSED** (1.7e-16) | `Results/evidence/`; §7 |
 | M3 — Phase 3: model analysis | not started | — | — |
 | M4 — Phase 4: harder datasets | not started | — | — |
 | M5 — Phase 5: baselines + statistics | not started | — | — |
@@ -303,7 +303,7 @@ extrapolated rows are sound. Batch 32 is measured end to end, not extrapolated.
 | T4 | Ablation Δacc ± CI | M6 | not started |
 | T5 | Pooling arms + SU(4) ceiling + measurement tie | M2 | measurement-tie row available |
 | T6 | DLA, effective dim, expressibility, gen. bound | M3 | not started |
-| F-A | E1 exact tie + E2 dephasing | M2.2–2.3 | **E1 data generated**; E2 pending |
+| F-A | E1 exact tie + E2 dephasing | M2.2–2.3 | **both generated** |
 | F-B | Coherence / purity / entropy / MI per stage | M2.5 | not started |
 | F-C | Noise ladder ideal → fake → real + threshold | M7 | not started |
 | F-D | Scaling family | M8.2 | not started |
@@ -376,6 +376,38 @@ Three controls make the result meaningful rather than vacuous:
 - **Every angle slot demonstrably moves the channel**, a direct regression guard on B1.
 
 Evidence: `Results/evidence/e1_pooling_equivalence.json`. This is the F-A exact-tie data.
+
+### E2 -- fixed-parameter dephasing (Proposition 3): **PASSES**
+
+`python -m experiments.pooling_analysis --experiment e2`. Full computational-basis dephasing
+(`PhaseFlip(0.5)`) is injected on every discarded wire *immediately before* pooling, at
+unchanged parameters -- no retraining, so there is no optimisation confound.
+
+| Quantity | Predicted | Measured | Tolerance |
+|---|---|---|---|
+| max \|delta readout\| | 0 | **1.293e-14** | 1e-12 |
+| max trace distance (Prop 3's Delta_coh) | 0 | **6.978e-14** | 1e-12 |
+| delta accuracy | 0 | **0.0 exactly** (every decision unchanged) | -- |
+| **control:** dephase *kept* wires instead | > 0 | **1.129e-01** | -- |
+
+The control is what makes this a result rather than a null. Dephasing the **kept** wires moves
+the readout by 0.113; dephasing the **discarded** wires moves it by 1e-14. Twelve orders of
+magnitude apart, with the same channel, in the same circuit. The channel is unambiguously live
+-- the frozen block simply does not read the discarded wire's coherences, exactly as Theorem 1
+says it cannot.
+
+Delta accuracy is 0 *exactly*, not approximately: the sign of the readout is unchanged for every
+input, so the predicted class is identical against any labelling whatsoever.
+
+E2's residuals (1e-14) sit two orders above E1's (1e-16) because `default.mixed` accumulates more
+round-off once explicit channels are in the tape. Both are far inside tolerance.
+
+Two evaluation-only hooks were added to `CircuitHooks` for this: `before_pool` (dephasing
+injection) and `terminal` (state observation, for the reduced density matrix Prop 3 is defined
+on). Both default to `None`, so the headline path is unchanged -- A3 permits channels in
+evaluation-time studies only.
+
+Evidence: `Results/evidence/e2_dephasing.json`.
 
 ## 8. Architecture sign-off decisions (roadmap §18)
 

@@ -103,12 +103,165 @@ def run_e1(image_size: int = freeze.HEADLINE_IMAGE_SIZE, n_inputs: int = 8,
     }
 
 
+# ---------------------------------------------------------------------------
+# E2 -- fixed-parameter dephasing (Proposition 3)
+#
+# Delta_coh(block) = || rho_a^V - rho_a^{deph_b -> V} ||_1, the trace-distance
+# effect of fully dephasing the discarded qubit immediately before pooling, at
+# identical parameters. Theorem 1 implies Delta_coh == 0 for the frozen block:
+# its controls read only b's populations, so erasing b's coherences changes
+# nothing on the retained register. That is an a-priori prediction, made before
+# the measurement, which is what makes confirming it worth reporting.
+# ---------------------------------------------------------------------------
+
+def _dephase(wires):
+    """Full computational-basis dephasing: rho -> (rho + Z rho Z)/2 = diag(rho)."""
+    for wire in wires:
+        qml.PhaseFlip(0.5, wires=wire)
+
+
+def _hooks_dephasing(target: str) -> circuits.CircuitHooks:
+    """Dephase the discarded wires ('discard') or, as a control, the kept ones."""
+    if target == 'discard':
+        return circuits.CircuitHooks(before_pool=lambda keep, discard: _dephase(discard))
+    if target == 'keep':
+        return circuits.CircuitHooks(before_pool=lambda keep, discard: _dephase(keep))
+    raise ValueError("target must be 'discard' or 'keep'")
+
+
+def _readouts_with_hooks(cfg, params, inputs, hooks, device='default.mixed'):
+    dev = qml.device(device, wires=cfg.n_qubits)
+
+    @qml.qnode(dev)
+    def circuit(x):
+        return circuits.build_circuit(x, params, cfg, hooks=hooks)
+
+    return np.array([float(circuit(x)) for x in inputs])
+
+
+def _readout_states(cfg, params, inputs, hooks, device='default.mixed'):
+    """Reduced density matrix of the readout qubit, for the Prop 3 functional."""
+    base = hooks or circuits.CircuitHooks()
+    probe = circuits.CircuitHooks(
+        before_pool=base.before_pool,
+        terminal=lambda readout, active: qml.density_matrix(wires=readout))
+    dev = qml.device(device, wires=cfg.n_qubits)
+
+    @qml.qnode(dev)
+    def circuit(x):
+        return circuits.build_circuit(x, params, cfg, hooks=probe)
+
+    return [np.asarray(circuit(x)) for x in inputs]
+
+
+def _trace_distance(rho, sigma) -> float:
+    """(1/2) * sum of singular values of (rho - sigma)."""
+    return float(0.5 * np.abs(np.linalg.eigvalsh(rho - sigma)).sum())
+
+
+def run_e2(image_size: int = freeze.HEADLINE_IMAGE_SIZE, n_inputs: int = 8,
+           use_archived_weights: bool = True) -> dict:
+    """Dephase discarded wires before pooling; the frozen block must not notice."""
+    cfg = _config(image_size, 'unitary')
+
+    model = PureQuantumNativeCNN(cfg)
+    if use_archived_weights and cfg.n_qubits == freeze.HEADLINE_N_QUBITS:
+        flat = freeze.load_archived_params(model)
+        weights = 'archived headline weights'
+    else:
+        flat = model._flatten_params(model.quantum_params)
+        weights = 'seeded initial weights'
+    params = model._unflatten_params(flat)
+
+    rng = np.random.default_rng(freeze.REGRESSION_INPUT_SEED)
+    inputs = PureQuantumEncoder.precompute_amplitudes(
+        rng.random((n_inputs, 2 ** cfg.n_qubits)), cfg.n_qubits)
+
+    clean = _readouts_with_hooks(cfg, params, inputs, None)
+    dephased = _readouts_with_hooks(cfg, params, inputs, _hooks_dephasing('discard'))
+    control = _readouts_with_hooks(cfg, params, inputs, _hooks_dephasing('keep'))
+
+    delta = np.abs(clean - dephased)
+    control_delta = np.abs(clean - control)
+
+    rho_clean = _readout_states(cfg, params, inputs, None)
+    rho_dephased = _readout_states(cfg, params, inputs, _hooks_dephasing('discard'))
+    coh = [_trace_distance(a, b) for a, b in zip(rho_clean, rho_dephased)]
+
+    # The operational statement: the decision for every input is unchanged, so
+    # accuracy is unchanged against any labelling whatsoever.
+    same_decision = bool(np.all(np.sign(clean) == np.sign(dephased)))
+
+    return {
+        'experiment': 'E2',
+        'claim': 'dephasing the discarded wires before pooling has no operational effect',
+        'proposition': 'Prop 3: Delta_coh == 0 for the frozen block',
+        'n_qubits': int(cfg.n_qubits),
+        'image_size': int(image_size),
+        'weights': weights,
+        'device': 'default.mixed',
+        'n_inputs': int(n_inputs),
+        'tolerance': E1_TOLERANCE,
+        'max_abs_readout_delta': float(delta.max()),
+        'max_trace_distance': float(max(coh)),
+        'decisions_unchanged': same_decision,
+        'delta_accuracy': 0.0 if same_decision else None,
+        'control_dephase_kept_max_delta': float(control_delta.max()),
+        'passes': bool(delta.max() <= E1_TOLERANCE
+                       and max(coh) <= E1_TOLERANCE
+                       and same_decision),
+        'control_is_live': bool(control_delta.max() > 1e-6),
+        'clean_readouts': [float(v) for v in clean],
+        'dephased_readouts': [float(v) for v in dephased],
+        'abs_readout_deltas': [float(v) for v in delta],
+        'trace_distances': [float(v) for v in coh],
+    }
+
+
+def _report_e2(result: dict) -> None:
+    print('E2 -- dephasing the discarded wires before pooling (Prop 3)')
+    print('  n_qubits           : {}'.format(result['n_qubits']))
+    print('  weights            : {}'.format(result['weights']))
+    print('  inputs             : {}'.format(result['n_inputs']))
+    print()
+    print('  {:>3s}  {:>22s}  {:>22s}  {:>12s}  {:>12s}'.format(
+        'i', 'clean <Z>', 'dephased <Z>', '|delta|', 'trace dist'))
+    for i, (c, d, delta, td) in enumerate(zip(result['clean_readouts'],
+                                              result['dephased_readouts'],
+                                              result['abs_readout_deltas'],
+                                              result['trace_distances'])):
+        print('  {:>3d}  {:>22.16f}  {:>22.16f}  {:>12.3e}  {:>12.3e}'.format(
+            i, c, d, delta, td))
+    print()
+    print('  max |readout delta|: {:.3e}'.format(result['max_abs_readout_delta']))
+    print('  max trace distance : {:.3e}   (Prop 3 predicts 0)'.format(
+        result['max_trace_distance']))
+    print('  decisions unchanged: {}  -> delta accuracy = {}'.format(
+        result['decisions_unchanged'], result['delta_accuracy']))
+    print('  control (dephase kept wires instead): {:.3e}  {}'.format(
+        result['control_dephase_kept_max_delta'],
+        'channel is live' if result['control_is_live'] else 'CONTROL FAILED'))
+    print('  tolerance          : {:.0e}'.format(result['tolerance']))
+    print('  VERDICT            : {}'.format('PASS' if result['passes'] else 'FAIL'))
+
+
 def main():
-    ap = argparse.ArgumentParser(description='E1 pooling-equivalence validation')
+    ap = argparse.ArgumentParser(description='E1/E2 pooling validation')
+    ap.add_argument('--experiment', choices=['e1', 'e2', 'both'], default='both')
     ap.add_argument('--image-size', type=int, default=freeze.HEADLINE_IMAGE_SIZE)
     ap.add_argument('--n-inputs', type=int, default=8)
     ap.add_argument('--out', default=EVIDENCE_PATH)
     args = ap.parse_args()
+
+    if args.experiment == 'e2':
+        result = run_e2(image_size=args.image_size, n_inputs=args.n_inputs)
+        _report_e2(result)
+        out = args.out.replace('e1_pooling_equivalence', 'e2_dephasing')
+        os.makedirs(os.path.dirname(out) or '.', exist_ok=True)
+        with open(out, 'w') as fh:
+            json.dump(result, fh, indent=2, sort_keys=True)
+        print('\n  evidence -> {}'.format(out))
+        return 0 if result['passes'] else 1
 
     result = run_e1(image_size=args.image_size, n_inputs=args.n_inputs)
 
@@ -133,8 +286,19 @@ def main():
     with open(args.out, 'w') as fh:
         json.dump(result, fh, indent=2, sort_keys=True)
     print('\n  evidence -> {}'.format(args.out))
+    ok = result['passes']
 
-    return 0 if result['passes'] else 1
+    if args.experiment == 'both':
+        print()
+        e2 = run_e2(image_size=args.image_size, n_inputs=args.n_inputs)
+        _report_e2(e2)
+        out = args.out.replace('e1_pooling_equivalence', 'e2_dephasing')
+        with open(out, 'w') as fh:
+            json.dump(e2, fh, indent=2, sort_keys=True)
+        print('\n  evidence -> {}'.format(out))
+        ok = ok and e2['passes']
+
+    return 0 if ok else 1
 
 
 if __name__ == '__main__':

@@ -31,9 +31,11 @@ def test_hooks_are_off_by_default():
     hooks = circuits.CircuitHooks()
     assert hooks.after_encoding is None
     assert hooks.after_conv_window is None
+    assert hooks.before_pool is None
     assert hooks.after_pool is None
     assert hooks.after_classifier is None
     assert hooks.before_readout is None
+    assert hooks.terminal is None
 
 
 def test_signature_survives_the_consolidation(headline_model):
