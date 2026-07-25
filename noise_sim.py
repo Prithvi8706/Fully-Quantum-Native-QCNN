@@ -57,7 +57,11 @@ def _find_mnist_idx(mnist_dir):
     """Locate the MNIST train IDX image/label files in a directory."""
     if not os.path.isdir(mnist_dir):
         return None, None
-    files = os.listdir(mnist_dir)
+    # Filter to regular files, as dataset_loader.load_dataset already does: some
+    # MNIST archives unpack to empty `train-labels-idx1-ubyte/` directories that
+    # shadow the real `train-labels.idx1-ubyte` files and make the open() fail.
+    files = [f for f in os.listdir(mnist_dir)
+             if os.path.isfile(os.path.join(mnist_dir, f))]
     images_f = next((f for f in files if 'train' in f and 'images' in f and 'idx3' in f), None)
     labels_f = next((f for f in files if 'train' in f and 'labels' in f and 'idx1' in f), None)
     if not images_f or not labels_f:

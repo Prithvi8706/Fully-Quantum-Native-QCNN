@@ -152,14 +152,3 @@ class PureQuantumNativeCNN:
             for i in range(len(X_processed))
         ])
         return np.where(outputs > 0, 1, -1)
-
-    def quantum_loss_function(self, X_batch: np.ndarray, y_batch: np.ndarray) -> float:
-        # FIX: loop sample-by-sample for same reason as predict_batch
-        X_processed = self._preprocess_input(X_batch)
-        flat_params = self._flatten_params(self.quantum_params)
-        preds = pnp.array([
-            self.quantum_circuit(pnp.array(X_processed[i]), flat_params)
-            for i in range(len(X_processed))
-        ])
-        y_batch = pnp.array(y_batch)
-        return pnp.mean((preds - y_batch) ** 2)

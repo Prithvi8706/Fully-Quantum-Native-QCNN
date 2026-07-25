@@ -23,23 +23,19 @@ REM Upgrade pip
 echo Upgrading pip...
 python -m pip install --upgrade pip
 
-REM --- CORE PYTHON LIBRARIES ---
-echo Installing core libraries...
-pip install numpy scipy matplotlib scikit-learn
-
-REM --- PENNYLANE AND FAST SIMULATORS ---
-echo Installing PennyLane...
-pip install pennylane
-pip install pennylane-lightning
-pip install "autoray<0.8.0"
-
-REM --- OTHER DEPENDENCIES ---
-REM (Add more as needed for your project)
-REM pip install jupyter
+REM --- PINNED DEPENDENCIES ---
+REM Install from the lock, not from unpinned latest: the reported results were
+REM produced on PennyLane 0.38 / NumPy 1.26, and installing whatever is current
+REM gives a different simulator (UPGRADE_PLAN.md 0.6 / F9).
+echo Installing pinned dependencies from requirements-lock.txt...
+pip install -r requirements-lock.txt
 
 REM --- VERIFY INSTALLATION ---
 echo --- Installed PennyLane devices ---
 python -c "import pennylane as qml; print(qml.list_available_devices())"
+
+echo --- Verifying the pinned stack ---
+python -c "import platform, pennylane, numpy, sklearn; print('python', platform.python_version()); print('pennylane', pennylane.__version__); print('numpy', numpy.__version__); print('scikit-learn', sklearn.__version__)"
 
 echo === QCNN Setup Complete! ===
 echo To activate the environment next time, run: .venv\Scripts\activate
