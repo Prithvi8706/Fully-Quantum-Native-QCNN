@@ -7,7 +7,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Design:** `docs/superpowers/specs/2026-07-23-fqcnn-q1-upgrade-design.md`
 **Month plan:** `docs/superpowers/plans/2026-07-25-fqcnn-remaining-work-month-plan.md`
 
-**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **HEAD:** `3cdb292`
+**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 100 passing
 
 ---
 
@@ -16,7 +16,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 | Milestone | State | Gate | Evidence |
 |---|---|---|---|
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
-| **M1 — Phase 1: affordable execution** | **IN PROGRESS** (started 2026-07-25) · 1.1 done | grid fits ≤7 unattended nights | §3a below; 69 tests |
+| **M1 — Phase 1: affordable execution** | **IN PROGRESS** · 1.1–1.4 done, 1.5 not required | **grid fits ≤7 nights: PASSED** (2.2 h of 70 h) | §§3a–3d; 100 tests |
 | M2 — Phase 2: pooling theory (E1–E5) | not started | E1 agrees to ~1e-12 | — |
 | M3 — Phase 3: model analysis | not started | — | — |
 | M4 — Phase 4: harder datasets | not started | — | — |
@@ -30,12 +30,14 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 
 ## 2. Active gate and blockers
 
-**Active gate:** M1 — the grid must fit ≤7 unattended nights (`experiments/estimate_cost.py`).
+**Active gate:** M1 — the seven-night budget gate **passed** 2026-07-25 (§3d). The remaining M1
+item is the clean headline retrain, which replaces 98.86% everywhere.
 
 | # | Blocker | Severity | Owner milestone | Status |
 |---|---|---|---|---|
 | B1 | `pool_measurement` does not implement the theorem's channel — E1 **cannot pass** as written (see §7) | **High** | M2.1 | Open, documented |
 | B2 | Batched path must be proven equivalent before any grid runs | High | M1.1 | **Closed 2026-07-25** (§3a) |
+| B3 | Ablation grid runs n=8 while the frozen headline is n=10, so T4 would describe a different model | **High** | M5/M6 | Open, documented (§3d) |
 
 ## 3. M0 outcome (2026-07-25)
 
@@ -71,8 +73,8 @@ Python 3.9.13 · PennyLane 0.38.0 · NumPy 1.26.4 · scikit-learn 1.6.1
 | **1.1 Batched backpropagation** | **DONE 2026-07-25** | `tests/test_batched_execution.py` (6 tests); benchmark in §5 |
 | **1.2 Input and validation caching** | **DONE 2026-07-25** (scope reduced on evidence, §3b) | `tests/test_encoded_cache.py` (7 tests) |
 | **1.3 Safe parallelism and resume** | **DONE 2026-07-25** | `tests/test_resume_and_parallelism.py` (15 tests) |
-| 1.4 Cost estimator and grid approval | not started | — |
-| 1.5 Conditional accelerators | not started | gated on 1.4 |
+| **1.4 Cost estimator and grid approval** | **DONE 2026-07-25 — GATE PASSES** | `experiments/estimate_cost.py`; `tests/test_cost_estimator.py` (9 tests); §3d |
+| 1.5 Conditional accelerators | **not required** | 1.4 uses 3% of budget; §18.4 stays off |
 | Clean headline retrain | not started | gated on 1.1–1.4 |
 
 ### M1.1 exit check (roadmap: outputs, loss, *every* gradient, one optimizer update)
@@ -180,6 +182,68 @@ runner stamps it during the run, so a pre-run preview cannot carry it.
 `--seeds`, `--datasets` and `--configs` *after* parsing, so `--quick --epochs 30` silently
 runs 2 epochs. Left alone as out of scope; worth a guard before the real grid.
 
+## 3d. M1.4 — the seven-night gate: **PASSES**
+
+`python -m experiments.estimate_cost --jobs 0`
+
+Default grid: 4 MNIST pairs × 7 configs × 5 seeds = **140 cells**, 30 epochs, 400 samples.
+
+| | |
+|---|---|
+| Serial | **43.5 h** |
+| Wall-clock at 20 workers (22 cores − 2) | **2.2 h** |
+| Budget (7 nights × 10 h) | 70 h |
+| **Verdict** | **FITS — 3% of budget, 0.2 nights** |
+
+An "unattended night" is not defined in the plan; this repo uses **10 h**, overridable with
+`--hours-per-night`.
+
+### Measured calibration (this machine)
+
+| Config | n | grad/batch | fwd/sample | seq-fwd/sample | path |
+|---|---|---|---|---|---|
+| proposed | 8 | 0.247 s | 0.0037 s | 0.132 s | batched |
+| pool_none | 8 | 0.202 s | 0.0056 s | 0.136 s | batched |
+| pool_measurement | 8 | 0.236 s | 0.0034 s | 0.183 s | batched |
+| ent_one_diagonal | 8 | 0.223 s | 0.0036 s | 0.132 s | batched |
+| ent_none | 8 | 0.195 s | 0.0027 s | 0.127 s | batched |
+| kernel_ry | 8 | 0.143 s | 0.0021 s | 0.129 s | batched |
+| **enc_feature_map** | **16** | **12.538 s** | 0.334 s | 0.333 s | **sequential (memory cap)** |
+
+Baselines add **76 s** to each `proposed` cell (classical + cong/hur/ttn).
+
+### Consequences
+
+- **No cuts.** The mandated reduction order is not triggered.
+- **Ten seeds are affordable** — 4.4 h wall-clock, still 6% of budget. M5.3 prefers 10 over 5.
+- **Decision §18.4 (JAX/GPU) resolves to OFF.** The verified default path clears the budget by
+  more than an order of magnitude; `UPGRADE_PLAN.md` 1.5 activates only if it misses.
+
+### Three findings this surfaced
+
+1. **A regression I introduced in M1.1.** `enc_feature_map` is a 16-qubit config; batched
+   backprop needs 32 × 2¹⁶ complex128 per retained intermediate and exhausts memory. The old
+   per-sample path handled it. Fixed by a memory cap (`MAX_BATCHED_AMPLITUDES = 2¹⁸`):
+   `batch_expectations()` falls back to the sequential path above it, and
+   `quantum_predict_batch` chunks. Chunking is *not* used for gradients — under backprop every
+   chunk's tape is retained until the backward pass, so it would not lower peak memory.
+
+2. **`enc_feature_map` is 90% of the grid** (39.2 h of 43.5 h serial), because 16 qubits on the
+   sequential path costs 12.5 s per batch against 0.25 s for the rest. It still fits, so it
+   stays; but it is the first thing to cut if anything else grows.
+
+3. **The ablation grid does not run the headline architecture.** Every `ABLATION_CONFIGS` entry
+   uses `image_size=16` → **n=8 qubits**, while the frozen headline is `image_size=28` → **n=10**
+   (`freeze.HEADLINE_N_QUBITS`). So T4's ablation rows would describe a different model than the
+   headline row. This is an M5/M6 correctness issue, not a cost issue — flagged here because it
+   also means the projection above understates the real grid. At n=10 the non-`enc` configs cost
+   roughly 2.3× more (0.580 s vs 0.247 s per batch, measured), which still fits comfortably.
+
+**Also worth porting now:** sequential forward is 0.132 s/sample against 0.0037 s batched — a
+**35× gap**. The single final test evaluation still runs per-sample through
+`QCNN/utils/metrics.py:55`, costing 18.7 s of each 133 s cell (14%). Deferred in M1.1 as
+off-the-hot-path; the measurement now says otherwise.
+
 ## 4. Run cells: required vs completed
 
 | Workstream | Required cells | Complete | Milestone |
@@ -206,7 +270,8 @@ Cell counts marked TBD are fixed by `estimate_cost.py` at the M1.4 gate.
 | Batched gradient cost @ batch 32 | **0.535 s/batch** = 0.017 s/sample (default.qubit, backprop) |
 | **Measured speedup @ batch 32** | **87.6×** — replaces the unverified 10–50× estimate |
 | **Measured epoch cost, headline** | **~146 s** (7,599 train / 1,900 val) — see §3b |
-| Projected grid wall-clock | not yet estimated (M1.4) |
+| **Projected grid wall-clock** | **2.2 h at 20 workers** (43.5 h serial) -- see 3d |
+| **Budget verdict** | **FITS: 3% of 7 nights** |
 | Nights consumed | 0 of 7 |
 
 ### M1.1 benchmark (2026-07-25, headline n=10 config)
@@ -291,7 +356,7 @@ is invariant under a unitary on `b` alone. That is why M0 measured 8.33e-16 for 
 | 1 | Inert `RY(0.02)` removal | **Closed 2026-07-25** | **Retained.** Proven inert (9.44e-16 angle change, 8.33e-16 removal). Removal-with-proof branch was available and **declined** in favour of zero architecture change; documented as a no-op. See `docs/paper_code_reconciliation.md` row 4. |
 | 2 | `pool_coherent` implementation | Open | Due Month 1, before M2.1. Default: do not run. |
 | 3 | Multi-class head | Open | Due Month 2, before M4.5. Default: off; binary breadth instead. |
-| 4 | JAX / GPU path | Open | Due at the M1.4 cost gate. Default: off unless ≤7 nights is missed. |
+| 4 | JAX / GPU path | **Closed 2026-07-25** | **Off.** M1.4 projects 2.2 h against a 70 h budget; `UPGRADE_PLAN.md` 1.5 activates only on a miss. |
 | 5 | Venue | Open | Due end of Month 3. Default: IEEE TQE. |
 | 6 | Real-QPU submission | Open | Due Month 3, after fake-backend rehearsal. |
 

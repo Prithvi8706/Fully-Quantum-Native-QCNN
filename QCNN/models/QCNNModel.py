@@ -14,6 +14,13 @@ from QCNN.layers import QuanvolutionalLayer
 # (tests/test_batched_execution.py pins the two together).
 BATCHED_DEVICE = 'default.qubit'
 
+# Backprop retains every intermediate statevector, so peak memory scales with
+# batch_size x 2**n_qubits. Measured: the n=16 enc_feature_map ablation at batch
+# 32 (2.1M amplitudes per block) exhausts memory, while the n=10 headline at
+# batch 32 (32k) is comfortable. Blocks above this cap use the sequential path
+# instead -- slower, but it is the same circuit and it completes.
+MAX_BATCHED_AMPLITUDES = 1 << 18
+
 
 class PureQuantumNativeCNN:
     """
@@ -161,10 +168,33 @@ class PureQuantumNativeCNN:
         flat_params = self._flatten_params(self.quantum_params)
         return float(self.quantum_circuit(x_processed, flat_params))
 
+    def max_batch(self) -> int:
+        """Largest batch whose statevector block fits the memory cap."""
+        return max(1, MAX_BATCHED_AMPLITUDES // (2 ** self.num_qubits))
+
+    def supports_batched(self, batch_size: int) -> bool:
+        return batch_size <= self.max_batch()
+
+    def batch_expectations(self, X, flat_params):
+        """Differentiable ``<Z>`` for a batch, batched where it fits in memory.
+
+        Falls back to the sequential path rather than chunking: under backprop
+        every chunk's tape is retained until the backward pass, so chunking
+        would not lower peak memory for a gradient.
+        """
+        if self.supports_batched(len(X)):
+            return self.batched_circuit(X, flat_params)
+        return pnp.array([self.quantum_circuit(X[i], flat_params) for i in range(len(X))])
+
     def quantum_predict_batch(self, X: np.ndarray) -> np.ndarray:
-        X_processed = self._preprocess_input(X)
+        X_processed = np.asarray(self._preprocess_input(X))
         flat_params = self._flatten_params(self.quantum_params)
-        outputs = np.asarray(
-            self.batched_circuit(np.asarray(X_processed), flat_params),
-            dtype=float).reshape(-1)
+        # Inference is not differentiated, so chunking really does bound memory.
+        step = self.max_batch()
+        chunks = [
+            np.asarray(self.batched_circuit(X_processed[i:i + step], flat_params),
+                       dtype=float).reshape(-1)
+            for i in range(0, len(X_processed), step)
+        ]
+        outputs = np.concatenate(chunks) if chunks else np.empty(0)
         return np.where(outputs > 0, 1, -1)

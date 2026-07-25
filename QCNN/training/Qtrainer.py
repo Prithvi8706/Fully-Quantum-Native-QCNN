@@ -148,7 +148,7 @@ class QuantumNativeTrainer:
                     # one statevector pass. Equivalence to the sequential path is
                     # pinned by tests/test_batched_execution.py. The batch is
                     # already encoded (1.2), so no per-batch preprocessing here.
-                    preds = model.batched_circuit(pnp.array(X_quantum_batch), params)
+                    preds = model.batch_expectations(pnp.array(X_quantum_batch), params)
                     preds = pnp.atleast_1d(preds)
                     if self.use_bce:
                         loss = self._bce_loss(preds, y_quantum_batch)
@@ -168,7 +168,7 @@ class QuantumNativeTrainer:
 
                 if i == 0:
                     quantum_outputs = np.asarray(
-                        model.batched_circuit(
+                        model.batch_expectations(
                             pnp.array(X_quantum_batch[:5]), params_flat),
                         dtype=float).reshape(-1)
                     print(
