@@ -36,6 +36,7 @@ from QCNN import circuits, freeze
 from QCNN.config.Qconfig import QuantumNativeConfig
 from QCNN.encoding import PureQuantumEncoder
 from QCNN.models.QCNNModel import PureQuantumNativeCNN
+from QCNN.utils import state_metrics
 
 # Theorem 1 predicts exact equality; this is the numerical-noise allowance for a
 # density-matrix simulation, and the threshold UPGRADE_PLAN.md 2.3 sets for E1.
@@ -218,6 +219,147 @@ def run_e2(image_size: int = freeze.HEADLINE_IMAGE_SIZE, n_inputs: int = 8,
     }
 
 
+# ---------------------------------------------------------------------------
+# E4 -- information dynamics (roadmap M2.5)
+#
+# Per stage: l1-coherence, purity and von Neumann entropy of the retained
+# register, plus the mutual information between the kept and discarded
+# sub-registers. Mechanism data for F-B. The measures themselves are validated
+# against analytically known states in tests/test_state_metrics.py.
+#
+# The main path is unitary and the global state stays pure, so a statevector
+# device suffices and the retained register's entropy *is* its entanglement
+# entropy with the rest of the register.
+# ---------------------------------------------------------------------------
+
+def _instrumented_circuit(cfg, params):
+    """A QNode carrying a Snapshot at every stage boundary, plus the stage map."""
+    stages = []
+    pool_index = {'k': 0}
+
+    def on_encoding(wires):
+        # Fires first on every construction, so it owns resetting the map.
+        stages.clear()
+        pool_index['k'] = 0
+        qml.Snapshot('encoded')
+        stages.append(('encoded', list(wires), []))
+
+    def on_before_pool(keep, discard):
+        tag = 'before_pool_{}'.format(pool_index['k'])
+        qml.Snapshot(tag)
+        stages.append((tag, list(keep), list(discard)))
+
+    def on_after_pool(keep, discard):
+        tag = 'after_pool_{}'.format(pool_index['k'])
+        qml.Snapshot(tag)
+        stages.append((tag, list(keep), list(discard)))
+        pool_index['k'] += 1
+
+    def on_classifier(active):
+        qml.Snapshot('after_classifier')
+        stages.append(('after_classifier', list(active), []))
+
+    hooks = circuits.CircuitHooks(
+        after_encoding=on_encoding,
+        before_pool=on_before_pool,
+        after_pool=on_after_pool,
+        after_classifier=on_classifier)
+
+    dev = qml.device('default.qubit', wires=cfg.n_qubits)
+
+    @qml.qnode(dev)
+    def circuit(x):
+        return circuits.build_circuit(x, params, cfg, hooks=hooks)
+
+    return circuit, stages
+
+
+def _aggregate(per_input, tags):
+    """Mean and standard deviation of each metric at each stage."""
+    summary = {}
+    for tag in tags:
+        metrics = {}
+        for key in per_input[0][tag]:
+            if key == 'n_kept':
+                metrics[key] = per_input[0][tag][key]
+                continue
+            values = np.array([record[tag][key] for record in per_input], dtype=float)
+            metrics[key] = {'mean': float(values.mean()), 'std': float(values.std(ddof=0))}
+        summary[tag] = metrics
+    return summary
+
+
+def run_e4(image_size: int = freeze.HEADLINE_IMAGE_SIZE, n_inputs: int = 8,
+           use_archived_weights: bool = True) -> dict:
+    """Trace coherence, purity, entropy and mutual information stage by stage."""
+    cfg = _config(image_size, 'unitary')
+
+    model = PureQuantumNativeCNN(cfg)
+    if use_archived_weights and cfg.n_qubits == freeze.HEADLINE_N_QUBITS:
+        flat = freeze.load_archived_params(model)
+        weights = 'archived headline weights'
+    else:
+        flat = model._flatten_params(model.quantum_params)
+        weights = 'seeded initial weights'
+    params = model._unflatten_params(flat)
+
+    rng = np.random.default_rng(freeze.REGRESSION_INPUT_SEED)
+    inputs = PureQuantumEncoder.precompute_amplitudes(
+        rng.random((n_inputs, 2 ** cfg.n_qubits)), cfg.n_qubits)
+
+    circuit, stages = _instrumented_circuit(cfg, params)
+
+    per_input, schedule = [], None
+    for x in inputs:
+        snapshots = qml.snapshots(circuit)(x)
+        record = {}
+        for tag, keep, discard in stages:
+            state = np.asarray(snapshots[tag]).reshape(-1)
+            record[tag] = state_metrics.describe(state, cfg.n_qubits, keep, discard)
+        per_input.append(record)
+        if schedule is None:
+            schedule = [{'stage': tag, 'keep': keep, 'discard': discard}
+                        for tag, keep, discard in stages]
+
+    tags = [entry['stage'] for entry in schedule]
+    return {
+        'experiment': 'E4',
+        'claim': 'per-stage information dynamics of the frozen circuit',
+        'n_qubits': int(cfg.n_qubits),
+        'image_size': int(image_size),
+        'weights': weights,
+        'device': 'default.qubit',
+        'n_inputs': int(n_inputs),
+        'units': 'entropy and mutual information in bits',
+        'schedule': schedule,
+        'stage_order': tags,
+        'summary': _aggregate(per_input, tags),
+        'per_input': per_input,
+    }
+
+
+def _report_e4(result: dict) -> None:
+    print('E4 -- per-stage information dynamics')
+    print('  n_qubits           : {}'.format(result['n_qubits']))
+    print('  weights            : {}'.format(result['weights']))
+    print('  inputs             : {}   (mean +/- std over inputs, bits)'.format(
+        result['n_inputs']))
+    print()
+    print('  {:<18s} {:>5s} {:>16s} {:>16s} {:>16s} {:>16s}'.format(
+        'stage', 'kept', 'l1-coherence', 'purity', 'entropy', 'I(keep:disc)'))
+    print('  ' + '-' * 92)
+    for tag in result['stage_order']:
+        m = result['summary'][tag]
+        mi = m.get('mutual_information')
+        mi_text = '{:>7.4f}+/-{:.4f}'.format(mi['mean'], mi['std']) if mi else '{:>16s}'.format('-')
+        print('  {:<18s} {:>5d} {:>7.4f}+/-{:.4f} {:>7.4f}+/-{:.4f} {:>7.4f}+/-{:.4f} {}'.format(
+            tag, m['n_kept'],
+            m['l1_coherence']['mean'], m['l1_coherence']['std'],
+            m['purity']['mean'], m['purity']['std'],
+            m['von_neumann_entropy']['mean'], m['von_neumann_entropy']['std'],
+            mi_text))
+
+
 def _report_e2(result: dict) -> None:
     print('E2 -- dephasing the discarded wires before pooling (Prop 3)')
     print('  n_qubits           : {}'.format(result['n_qubits']))
@@ -247,11 +389,21 @@ def _report_e2(result: dict) -> None:
 
 def main():
     ap = argparse.ArgumentParser(description='E1/E2 pooling validation')
-    ap.add_argument('--experiment', choices=['e1', 'e2', 'both'], default='both')
+    ap.add_argument('--experiment', choices=['e1', 'e2', 'e4', 'both'], default='both')
     ap.add_argument('--image-size', type=int, default=freeze.HEADLINE_IMAGE_SIZE)
     ap.add_argument('--n-inputs', type=int, default=8)
     ap.add_argument('--out', default=EVIDENCE_PATH)
     args = ap.parse_args()
+
+    if args.experiment == 'e4':
+        result = run_e4(image_size=args.image_size, n_inputs=args.n_inputs)
+        _report_e4(result)
+        out = args.out.replace('e1_pooling_equivalence', 'e4_information_dynamics')
+        os.makedirs(os.path.dirname(out) or '.', exist_ok=True)
+        with open(out, 'w') as fh:
+            json.dump(result, fh, indent=2, sort_keys=True)
+        print('\n  evidence -> {}'.format(out))
+        return 0
 
     if args.experiment == 'e2':
         result = run_e2(image_size=args.image_size, n_inputs=args.n_inputs)

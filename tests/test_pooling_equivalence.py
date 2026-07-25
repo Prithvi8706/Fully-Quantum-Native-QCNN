@@ -23,6 +23,7 @@ from experiments.pooling_analysis import (
     _readouts_with_hooks,
     _trace_distance,
     readouts,
+    run_e4,
 )
 
 SMALL_IMAGE = 8          # -> 6 qubits, a 64x64 density matrix
@@ -205,6 +206,52 @@ def test_swap_witnesses_strict_containment():
     assert abs(coherent[0, 1]) == pytest.approx(0.5, abs=1e-12)
     assert abs(dephased[0, 1]) < 1e-14
     assert _trace_distance(coherent, dephased) > 0.4
+
+
+@pytest.mark.slow
+def test_e4_reports_physically_admissible_quantities():
+    """E4's numbers must obey the bounds their definitions impose."""
+    result = run_e4(image_size=SMALL_IMAGE, n_inputs=2, use_archived_weights=False)
+
+    for tag in result['stage_order']:
+        m = result['summary'][tag]
+        d = 2 ** m['n_kept']
+        assert 0.0 <= m['von_neumann_entropy']['mean'] <= m['n_kept'] + 1e-9, tag
+        assert 1.0 / d - 1e-9 <= m['purity']['mean'] <= 1.0 + 1e-9, tag
+        assert m['l1_coherence']['mean'] >= -1e-12, tag
+        if 'mutual_information' in m:
+            assert m['mutual_information']['mean'] >= -1e-9, tag
+
+
+@pytest.mark.slow
+def test_e4_confirms_the_global_state_is_pure_after_encoding():
+    """A3's purity invariant, measured rather than asserted."""
+    result = run_e4(image_size=SMALL_IMAGE, n_inputs=2, use_archived_weights=False)
+    encoded = result['summary']['encoded']
+
+    assert encoded['n_kept'] == result['n_qubits']
+    assert encoded['purity']['mean'] == pytest.approx(1.0, abs=1e-10)
+    assert abs(encoded['von_neumann_entropy']['mean']) < 1e-9
+
+
+@pytest.mark.slow
+def test_e4_classifier_cannot_change_the_readout_spectrum():
+    """Internal consistency: with one active wire the head is a local unitary.
+
+    Local unitaries leave the spectrum of a reduced state alone, so purity and
+    entropy must be unchanged across the classifier while coherence -- which is
+    basis dependent -- may move. If this ever fails, the stage instrumentation
+    is mislabelling states.
+    """
+    result = run_e4(image_size=SMALL_IMAGE, n_inputs=2, use_archived_weights=False)
+    last_pool = [t for t in result['stage_order'] if t.startswith('after_pool_')][-1]
+    before, after = result['summary'][last_pool], result['summary']['after_classifier']
+
+    if after['n_kept'] != 1:
+        pytest.skip('classifier acts on more than one wire at this size')
+    assert after['purity']['mean'] == pytest.approx(before['purity']['mean'], abs=1e-10)
+    assert after['von_neumann_entropy']['mean'] == pytest.approx(
+        before['von_neumann_entropy']['mean'], abs=1e-10)
 
 
 def test_unknown_pooling_mode_is_rejected():

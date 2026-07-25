@@ -7,7 +7,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Design:** `docs/superpowers/specs/2026-07-23-fqcnn-q1-upgrade-design.md`
 **Month plan:** `docs/superpowers/plans/2026-07-25-fqcnn-remaining-work-month-plan.md`
 
-**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 111 passing
+**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 130 passing
 
 ---
 
@@ -17,7 +17,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 |---|---|---|---|
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
 | **M1 — Phase 1: affordable execution** | **IN PROGRESS** · 1.1–1.4 done, 1.5 not required | **grid fits ≤7 nights: PASSED** (2.2 h of 70 h) | §§3a–3d; 110 tests |
-| M2 — Phase 2: pooling theory (E1–E5) | **E1, E2, 2.1, 2.7 done**; E3–E5 not started | **E1 agrees to ~1e-12: PASSED** (2.2e-16 at headline n=10) | `Results/evidence/`; §§7, 7a |
+| M2 — Phase 2: pooling theory (E1–E5) | **2.1, E1, E2, E4, 2.7 done**; E3, E5 not started | **E1 agrees to ~1e-12: PASSED** (2.2e-16 at headline n=10) | `Results/evidence/`; §§7, 7a, 7b |
 | M3 — Phase 3: model analysis | not started | — | — |
 | M4 — Phase 4: harder datasets | not started | — | — |
 | M5 — Phase 5: baselines + statistics | not started | — | — |
@@ -304,7 +304,7 @@ extrapolated rows are sound. Batch 32 is measured end to end, not extrapolated.
 | T5 | Pooling arms + SU(4) ceiling + measurement tie | M2 | measurement-tie row available |
 | T6 | DLA, effective dim, expressibility, gen. bound | M3 | not started |
 | F-A | E1 exact tie + E2 dephasing | M2.2–2.3 | **both generated** |
-| F-B | Coherence / purity / entropy / MI per stage | M2.5 | not started |
+| F-B | Coherence / purity / entropy / MI per stage | M2.5 | **generated** (§7b) |
 | F-C | Noise ladder ideal → fake → real + threshold | M7 | not started |
 | F-D | Scaling family | M8.2 | not started |
 | F-E | Gradient variance + DLA certificate | M3.1–3.2 | not started |
@@ -459,6 +459,65 @@ pulled forward because Theorem 1 needs it).
 **Not done here:** the `approx 98\%` accuracy claims remain in the abstract, intro, and
 conclusion. They cannot be replaced until the clean headline retrain exists (M1). Tracked as
 reconciliation row 10.
+
+## 7b. E4 — information dynamics (2026-07-25)
+
+`python -m experiments.pooling_analysis --experiment e4`. Headline n=10, archived weights,
+8 inputs, mean ± std, entropies in bits. Snapshots at each stage boundary on `default.qubit`;
+the main path is unitary so a statevector device suffices and the retained register's entropy
+*is* its entanglement entropy with the rest.
+
+| Stage | kept | ℓ1-coherence | purity | entropy | I(keep:disc) |
+|---|---|---|---|---|---|
+| encoded | 10 | 767.26 ± 7.23 | **1.0000 ± 0.0000** | **0.0000 ± 0.0000** | — |
+| before_pool_0 | 5 | 5.906 ± 0.206 | 0.0919 ± 0.0037 | 3.9070 ± 0.0321 | **7.814 ± 0.064** |
+| after_pool_0 | 5 | 6.567 ± 0.170 | 0.0942 ± 0.0030 | 3.8901 ± 0.0309 | 7.780 ± 0.062 |
+| before_pool_1 | 2 | 0.819 ± 0.051 | 0.3356 ± 0.0051 | 1.7565 ± 0.0120 | 0.204 ± 0.009 |
+| after_pool_1 | 2 | 0.697 ± 0.038 | 0.3134 ± 0.0044 | 1.8214 ± 0.0111 | 0.358 ± 0.013 |
+| before_pool_2 | 1 | 0.403 ± 0.017 | 0.5923 ± 0.0072 | 0.8624 ± 0.0111 | **0.005 ± 0.002** |
+| after_pool_2 | 1 | 0.332 ± 0.022 | 0.5879 ± 0.0074 | 0.8691 ± 0.0114 | 0.016 ± 0.004 |
+| after_classifier | 1 | 0.253 ± 0.016 | 0.5879 ± 0.0074 | 0.8691 ± 0.0114 | — |
+
+The measures are validated against analytically known states before any circuit output is
+believed — `tests/test_state_metrics.py`, 16 tests over $|0\rangle$, $|+\rangle$, $I/2$, Bell
+and GHZ.
+
+### What the data says — descriptive, not causal
+
+1. **A3's purity invariant is now measured, not asserted.** After encoding, the 10-wire state
+   has purity 1.0000 and entropy 0.0000. The global state is pure, exactly as the revised
+   claims require.
+
+2. **But the readout qubit is nearly maximally mixed** — purity 0.588 against 0.5 for a
+   maximally mixed qubit, entropy 0.869 of a possible 1 bit. "Fully coherent" is true
+   *globally* and false *locally*. This supports the M2.7 rewrite, which claims global purity,
+   and would have contradicted a naive reading of the old wording.
+
+3. **Pooling barely moves the retained register's entropy** — by ≤ 0.07 bits at every stage,
+   and at pools 1 and 2 it *increases* slightly. There is no entropic evidence that pooling
+   concentrates information into the kept wire. The paper's "transfers information from $q_b$
+   into $q_a$" should stay a description of the gate pattern, not an information-theoretic
+   claim.
+
+4. **The pooling cascade runs out of correlation to act on.** I(keep:discard) falls
+   **7.81 → 0.20 → 0.005 bits** across the three stages. At pool 2 the two subsystems are
+   essentially uncorrelated, so the last pooling stage has almost nothing left to transfer.
+   Read alongside F1 — convolution layers 1–3 contribute zero effective parameters — this says
+   the deep end of the "hierarchy" does very little work at n=10. Relevant to M8's scaling
+   argument and to how Sec. III-C describes the architecture.
+
+5. **Instrumentation self-check.** Across the classifier, purity and entropy are unchanged to
+   1e-10 while coherence moves (0.332 → 0.253). With one active wire the head is a local
+   unitary, which cannot change a reduced state's spectrum but can change a basis-dependent
+   coherence measure. This is asserted as a test, so mislabelled stage states would fail.
+
+**Defect fixed while writing this:** `von_neumann_entropy` returned −8.0e-16 for a pure state,
+because the surviving eigenvalue is $1+O(\epsilon)$ and $-p\log_2 p$ then goes slightly
+negative. Entropy is non-negative by definition, so a negative is a defect in the reported
+number, not a property of the state. Clamped, with a regression test.
+
+Evidence: `Results/evidence/e4_information_dynamics.json` (per-stage aggregates plus per-input
+detail). This is the F-B source data.
 
 ## 8. Architecture sign-off decisions (roadmap §18)
 
