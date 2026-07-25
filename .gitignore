@@ -14,6 +14,13 @@ implementationTests/*
 #Results
 # Results/*
 Results/Cache/
+# Rewritten by main.py on every run. The immutable headline identity lives in
+# Results/headline_manifest.json, which IS tracked.
+Results/metadata.json
+# Per-run outputs (UPGRADE_PLAN.md M0.5): isolated, regenerable, not evidence
+# until a phase promotes them.
+Results/runs/
+Results/Weights/run_seed*.npz
 training_log.txt
 training_summary.txt
 

@@ -24,6 +24,11 @@ HEADLINE_N_QUBITS = 10
 HEADLINE_N_PARAM_SLOTS = 269
 HEADLINE_WEIGHTS = os.path.join('Results', 'Weights', 'quantum_model_params.npz')
 
+# The archived headline config, snapshotted as immutable evidence. NOT
+# Results/metadata.json: main.py rewrites that file on every run, so it is a
+# mutable run output and cannot define model identity (UPGRADE_PLAN.md M0.1/M0.5).
+HEADLINE_MANIFEST = os.path.join('Results', 'headline_manifest.json')
+
 FIXTURE_DIR = os.path.join('tests', 'fixtures')
 
 # Regression inputs are drawn once, from a fixed seed, and never re-drawn.

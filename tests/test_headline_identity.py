@@ -13,7 +13,7 @@ from QCNN import freeze
 
 
 def test_headline_config_matches_archived_metadata():
-    with open(os.path.join("Results", "metadata.json")) as fh:
+    with open(freeze.HEADLINE_MANIFEST) as fh:
         archived = json.load(fh)["config"]
 
     model = freeze.build_headline_model()
@@ -26,6 +26,23 @@ def test_headline_config_matches_archived_metadata():
     assert cfg.n_conv_layers == archived["n_conv_layers"]
     assert cfg.device == archived["device"]
     assert cfg.shots is archived["shots"] is None
+
+
+def test_headline_manifest_is_never_a_run_output():
+    """Model identity must live in a file no run writes.
+
+    Results/metadata.json looked like the natural home, but main.py rewrites it
+    on every run via save_metadata(), so a single smoke run silently replaced the
+    28x28/10-qubit headline config with a 16x16/8-qubit one. Identity therefore
+    lives in its own snapshot (UPGRADE_PLAN.md M0.1, and the M0.5 rule that
+    archived inputs are never worker output destinations).
+    """
+    for path in ("main.py", "experiments/run_experiments.py", "noise_sim.py"):
+        with open(path, encoding="utf-8") as fh:
+            source = fh.read()
+        assert "headline_manifest" not in source, (
+            "{} references the headline manifest; it must stay read-only "
+            "evidence, never a write target".format(path))
 
 
 def test_headline_allocates_269_parameter_slots():
