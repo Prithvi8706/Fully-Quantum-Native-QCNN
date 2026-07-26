@@ -24,7 +24,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 | M6 — Phase 6: ablation grid | not started | — | — |
 | M7 — Phase 7: noise + real QPU | not started | one real-QPU point | — |
 | M8 — Phase 8: resources + scaling | not started | — | — |
-| M9 — Phase 9: references | not started | — | — |
+| M9 — Phase 9: references | **first pass done** 2026-07-26; DOIs + 2 author decisions remain | no author-less entry remains | `docs/paper_code_reconciliation.md`; §9 |
 | M10 — Phase 10: manuscript + venue | not started | — | — |
 | M11 — final reproduction + red team | not started | — | — |
 
@@ -577,6 +577,58 @@ uses the **exact** binomial test rather than the chi-square approximation, becau
 is often zero here -- Theorem 1 guarantees it for one arm -- and chi-square is unreliable there.
 
 Evidence: `Results/evidence/t5_pooling_arms.json`.
+
+## 9. M9 bibliography audit (2026-07-26)
+
+| Metric | Before | After |
+|---|---|---|
+| Entries with **no author list** | **22 of 51 (43%)** | **1** (ref27, flagged) |
+| arXiv-only, no DOI | 21 (41%) | 17 (33%) |
+| Missing DOI | 51 (100%) | 37 (73%) |
+| Preprints upgraded to published versions | -- | **5** |
+
+21 entries rewritten with metadata verified against the publisher record or the arXiv listing.
+Nothing was filled in that could not be checked. `pdflatex` x3: 12 pages, 0 undefined.
+
+### The audit found errors, not just gaps
+
+**ref1 cites the wrong paper entirely.** `arXiv:2006.12763` is *"Method of fundamental solutions
+for the problem of doubly-periodic potential flow"* by H. Ogata -- computational fluid dynamics,
+unrelated to the "tutorial on quantum machine learning" it is cited as. Every other arXiv
+identifier (ref2--ref13, ref23, ref28--ref36) was fetched and confirmed against its cited title
+and first author; ref1 is the only bad one.
+
+Three entries had the **wrong venue**, one also the wrong year:
+
+| Entry | Cited as | Actually |
+|---|---|---|
+| ref15 | Nat. Commun. 2022 | npj Quantum Information 8, 90 (2022) |
+| ref16 | Nat. Commun. 2025 | npj Quantum Information 11, 8 (2025) |
+| ref20 | IEEE TNNLS 2022 | **IEEE Access 8, 188853--188860, 2020** |
+
+Four had truncated or altered titles (ref15, ref16, ref17, ref31).
+
+### Blocking author decisions
+
+1. **ref1** -- wrong identifier, never cited.
+2. **ref27** -- "Quantum reservoir computing implementation on superconducting circuits" matches
+   no findable paper. Closest by topic/venue/year is Dudas et al., npj Quantum Inf. 9, 64
+   (2023), but substituting would be guessing at intent, so it was **not** done.
+
+Both carry `% M9 AUDIT` comments in `fqcnn.tex` so they cannot ship unnoticed.
+
+### Uncited entries
+
+**12 of 51 (24%) are never cited:** ref1, ref5, ref9, ref12, ref24, ref27, ref28, ref30, ref32,
+ref33, ref34, ref35. IEEE style does not permit uncited references, so each must be cited or
+removed -- an editorial call for the authors. Both problem entries above fall in this set,
+which is consistent with them being padding added without verification.
+
+### Remaining
+
+DOIs for 37 entries; the two decisions above; the 12 uncited entries; and the sentence-level
+citation audit (Phase 9 item 6), including `ref44` propping up the image-locality claim that
+reconciliation row 11 already flags.
 
 ## 8. Architecture sign-off decisions (roadmap §18)
 

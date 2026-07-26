@@ -559,6 +559,11 @@ tracking nearest-neighbour interactions from qubit index $i$ to $i + 1$ (mod 10)
 We proposed a fully quantum-native convolutional neural network (FQCNN) that performs encoding, convolution, pooling, and classification entirely through unitary operations. The architecture integrates amplitude encoding, SU(2)-based convolutional kernels, and coherence-preserving pooling to yield expressive yet shallow quantum models. It reaches approx 98\% classification accuracy, showing that fully unitary architectures can perform well while maintaining coherence throughout the computation. Parameter sharing and structured design support scalability and training stability under NISQ constraints. These results demonstrate that measurement-free quantum convolutional models are viable for practical machine learning. Future work will extend the framework to multi-class settings, improve scalability, and validate performance on real quantum hardware.
 
 \begin{thebibliography}{00}
+% M9 AUDIT 2026-07-26 -- DO NOT SUBMIT AS IS. arXiv:2006.12763 is "Method of
+% fundamental solutions for the problem of doubly-periodic potential flow" by
+% H. Ogata: a computational fluid dynamics paper, unrelated to this entry.
+% This entry is also never cited anywhere in the text.
+% Resolve the identifier or delete the entry before submission.
 \bibitem{ref1} C. Oh et al., ``A tutorial on quantum machine learning and related quantum algorithms,'' arXiv:2006.12763, 2020.
 \bibitem{ref2} P. R\"oseler et al., ``Efficient quantum convolutional neural networks for image classification: overcoming hardware constraints,'' arXiv:2505.05957, 2025.
 \bibitem{ref3} H. Asaoka and K. Kudo, ``Quantum autoencoders for image classification,'' arXiv:2502.15254, 2025.
@@ -570,31 +575,37 @@ We proposed a fully quantum-native convolutional neural network (FQCNN) that per
 \bibitem{ref9} K. Yu, B. Cai, and S. Lin, ``Knowledge distillation for variational quantum convolutional neural networks on heterogeneous data,'' arXiv:2509.16699, 2025.
 \bibitem{ref10} S. Peng, S. Chen, X. Sun, and H. Zhou, ``Stochastic quantum Hamiltonian descent,'' arXiv:2507.15424, 2025.
 \bibitem{ref11} P.-K. Yang, ``Quantum convolutional neural network with nonlinear effects and barren plateau mitigation,'' arXiv:2508.02459, 2025.
-\bibitem{ref12} ``Genetic optimization of ansatz expressibility for enhanced variational quantum algorithm performance,'' arXiv:2509.05804.
-\bibitem{ref13} ``Learning parameterized quantum circuits with quantum gradient,'' arXiv:2409.20044.
-\bibitem{ref14} ``Connecting ansatz expressibility to gradient magnitudes and barren plateaus,'' PRX Quantum, 2022.
-\bibitem{ref15} ``Stochastic gradient line Bayesian optimization for efficient quantum circuit optimization,'' Nat. Commun., 2022.
-\bibitem{ref16} ``Noise-agnostic quantum error mitigation with data augmentation,'' Nat. Commun., 2025.
-\bibitem{ref17} ``Expressibility of the alternating layered ansatz for quantum computing,'' Quantum, 2021.
-\bibitem{ref18} ``Trainability enhancement of parameterized quantum circuits via reduced-domain parameter initialization,'' Phys. Rev. Applied, 2024.
-\bibitem{ref19} ``Efficient measure for the expressivity of variational quantum algorithms,'' Phys. Rev. Lett., 2022.
-\bibitem{ref20} ``Quantum error mitigation with artificial neural networks,'' IEEE Trans. Neural Netw. Learn. Syst., 2022.
-\bibitem{ref21} ``Random coordinate descent: a simple alternative for optimizing parameterized quantum circuits,'' Phys. Rev. Research, 2024.
-\bibitem{ref22} ``Quantum error mitigation,'' Rev. Mod. Phys., 2023.
-\bibitem{ref23} ``Information compression via hidden subgroup quantum autoencoders,'' arXiv:2306.08047.
+\bibitem{ref12} M. Mallapur, R. Raj, and A. Raina, ``Genetic optimization of ansatz expressibility for enhanced variational quantum algorithm performance,'' arXiv:2509.05804, 2025.
+\bibitem{ref13} K. Li, Y. Wang, P. Gao, and S. Zheng, ``Learning parameterized quantum circuits with quantum gradient,'' arXiv:2409.20044, 2024.
+\bibitem{ref14} Z. Holmes, K. Sharma, M. Cerezo, and P. J. Coles, ``Connecting ansatz expressibility to gradient magnitudes and barren plateaus,'' PRX Quantum, vol. 3, no. 1, art. 010313, 2022, doi: 10.1103/PRXQuantum.3.010313.
+\bibitem{ref15} S. Tamiya and H. Yamasaki, ``Stochastic gradient line Bayesian optimization for efficient noise-robust optimization of parameterized quantum circuits,'' npj Quantum Information, vol. 8, art. 90, 2022, doi: 10.1038/s41534-022-00592-6.
+\bibitem{ref16} M. Liao, Y. Zhu, G. Chiribella, and Y. Yang, ``Noise-agnostic quantum error mitigation with data augmented neural models,'' npj Quantum Information, vol. 11, art. 8, 2025, doi: 10.1038/s41534-025-00960-y.
+\bibitem{ref17} K. Nakaji and N. Yamamoto, ``Expressibility of the alternating layered ansatz for quantum computation,'' Quantum, vol. 5, art. 434, 2021, doi: 10.22331/q-2021-04-19-434.
+\bibitem{ref18} Y. Wang, B. Qi, C. Ferrie, and D. Dong, ``Trainability enhancement of parameterized quantum circuits via reduced-domain parameter initialization,'' Physical Review Applied, vol. 22, no. 5, art. 054005, 2024, doi: 10.1103/PhysRevApplied.22.054005.
+\bibitem{ref19} Y. Du, Z. Tu, X. Yuan, and D. Tao, ``Efficient measure for the expressivity of variational quantum algorithms,'' Physical Review Letters, vol. 128, no. 8, art. 080506, 2022, doi: 10.1103/PhysRevLett.128.080506.
+\bibitem{ref20} C. Kim, K. D. Park, and J.-K. K. Rhee, ``Quantum error mitigation with artificial neural network,'' IEEE Access, vol. 8, pp. 188853--188860, 2020, doi: 10.1109/ACCESS.2020.3031607.
+\bibitem{ref21} Z. Ding, T. Ko, J. Yao, L. Lin, and X. Li, ``Random coordinate descent: a simple alternative for optimizing parameterized quantum circuits,'' Physical Review Research, vol. 6, no. 3, art. 033029, 2024, doi: 10.1103/PhysRevResearch.6.033029.
+\bibitem{ref22} Z. Cai, R. Babbush, S. C. Benjamin, S. Endo, W. J. Huggins, Y. Li, J. R. McClean, and T. E. O'Brien, ``Quantum error mitigation,'' Reviews of Modern Physics, vol. 95, no. 4, art. 045005, 2023, doi: 10.1103/RevModPhys.95.045005.
+\bibitem{ref23} F. Liu, K. Bian, F. Meng, W. Zhang, and O. Dahlsten, ``Information compression via hidden subgroup quantum autoencoders,'' npj Quantum Information, vol. 10, art. 74, 2024, doi: 10.1038/s41534-024-00865-2.
 \bibitem{ref24} J. Kim, J. Huh, and D. K. Park, ``Classical-to-quantum convolutional neural network transfer learning,'' Neurocomputing, vol. 555, art. 126643, 2023.
 \bibitem{ref25} J. Romero, J. P. Olson, and A. Aspuru-Guzik, ``Quantum autoencoders for efficient compression of quantum data,'' Quantum Sci. Technol., vol. 2, no. 4, art. 045001, 2017.
 \bibitem{ref26} H. Ma, C.-J. Huang, C. Chen, D. Dong, Y. Wang, R.-B. Wu, and G.-Y. Xiang, ``On compression rate of quantum autoencoders: Control design, numerical and experimental realization,'' Automatica, vol. 147, art. 110659, 2023.
+% M9 AUDIT 2026-07-26 -- UNRESOLVED. No paper with this exact title was found.
+% Closest match by topic, venue family and year: J. Dudas, B. Carles, E. Plouet,
+% F. A. Mizrahi, J. Grollier and D. Markovic, "Quantum reservoir computing
+% implementation on coherently coupled quantum oscillators", npj Quantum Inf. 9,
+% 64 (2023), doi: 10.1038/s41534-023-00734-4. That is an inference, not a match,
+% so it has NOT been substituted. This entry is also never cited. Author to confirm.
 \bibitem{ref27} ``Quantum reservoir computing implementation on superconducting circuits,'' Nat. Commun., 2023.
-\bibitem{ref28} ``Quantum parallel information exchange hybrid network with transfer learning,'' arXiv:2504.04235.
-\bibitem{ref29} ``Optimized quantum autoencoder,'' arXiv:2404.08429.
-\bibitem{ref30} ``Harnessing quantum extreme learning machines for image classification,'' arXiv:2409.00998.
-\bibitem{ref31} ``Hybrid classical--quantum neural networks enhanced by quantum architecture search,'' ScienceDirect, 2025.
-\bibitem{ref32} ``Quantum image classification: experiments on utility-scale quantum computers,'' arXiv:2504.10595.
-\bibitem{ref33} ``Lean classical-quantum hybrid neural network model for image classification,'' arXiv:2412.02059.
-\bibitem{ref34} ``Satellite image classification with neural quantum kernels,'' arXiv:2409.20356.
-\bibitem{ref35} ``Image classification by combining quantum kernel learning and tensor networks,'' Phys. Rev. A, 2025.
-\bibitem{ref36} ``Quantum pointwise convolution: a flexible and scalable approach,'' arXiv:2412.01241.
+\bibitem{ref28} Z. Guo, A. Khan, V. S. Sheng, S. Jabeen, and Z. Pan, ``Quantum parallel information exchange (QPIE) hybrid network with transfer learning,'' arXiv:2504.04235, 2025.
+\bibitem{ref29} Y. Huang, M. Yang, and D. L. Zhou, ``Optimized quantum autoencoder,'' arXiv:2404.08429, 2024.
+\bibitem{ref30} A. De Lorenzis, M. P. Casado, M. P. Estarellas, N. Lo Gullo, T. Lux, F. Plastina, A. Riera, and J. Settino, ``Harnessing quantum extreme learning machines for image classification,'' Physical Review Applied, vol. 23, no. 4, art. 044024, 2025, doi: 10.1103/PhysRevApplied.23.044024.
+\bibitem{ref31} S. Li, J. Cui, and J. Ren, ``Hybrid classical--quantum neural networks enhanced by quantum architecture search for coronary artery stenosis detection,'' Neurocomputing, vol. 618, art. 129111, 2025.
+\bibitem{ref32} H. Gharibyan, H. Karapetyan, T. Sedrakyan, P. Subasic, V. P. Su, R. H. Tanin, and H. Tepanyan, ``Quantum image classification: experiments on utility-scale quantum computers,'' arXiv:2504.10595, 2025.
+\bibitem{ref33} A. Liu, C. Wen, and J. Wang, ``Lean classical-quantum hybrid neural network model for image classification,'' Advanced Quantum Technologies, art. 2400703, 2025, doi: 10.1002/qute.202400703.
+\bibitem{ref34} P. Rodriguez-Grasa, R. Farzan-Rodriguez, G. Novelli, Y. Ban, and M. Sanz, ``Satellite image classification with neural quantum kernels,'' Machine Learning: Science and Technology, vol. 6, no. 1, art. 015043, 2025, doi: 10.1088/2632-2153/ada86c.
+\bibitem{ref35} N. X. Kodama, A. Bocharov, and M. P. da Silva, ``Image classification by combining quantum kernel learning and tensor networks,'' Physical Review A, vol. 111, no. 1, art. 012630, 2025, doi: 10.1103/PhysRevA.111.012630.
+\bibitem{ref36} A. Ning, T.-Y. Li, and N.-Y. Chen, ``Quantum pointwise convolution: a flexible and scalable approach for neural network enhancement,'' arXiv:2412.01241, 2024.
 \bibitem{ref37} I. Cong, S. Choi, and M. D. Lukin, ``Quantum convolutional neural networks,'' Nature Physics, vol. 15, no. 12, pp. 1273--1278, 2019.
 \bibitem{ref38} J. R. McClean, S. Boixo, V. N. Smelyanskiy, R. Babbush, and H. Neven, ``Barren plateaus in quantum neural network training landscapes,'' Nature Communications, vol. 9, art. 4812, 2018.
 \bibitem{ref39} V. Havl\'i\v{c}ek, A. D. C\'orcoles, K. Temme, A. W. Harrow, A. Kandala, J. M. Chow, and J. M. Gambetta, ``Supervised learning with quantum-enhanced feature spaces,'' Nature, vol. 567, no. 7747, pp. 209--212, 2019.

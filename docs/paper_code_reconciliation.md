@@ -88,3 +88,60 @@ both consume it; at zero noise the `default.mixed` noise path reproduces the fro
 `lightning.qubit` model to 7.2e-16. Resource, hardware, and drawing tooling attach to
 the same builder in later phases, so a figure or a gate count can no longer describe a
 circuit different from the one that was trained.
+
+
+## M9 bibliography audit (2026-07-26)
+
+Phase 9 requires full authors, venue, volume, pages and DOI for every entry, published
+versions in place of preprints, and every citation to support its sentence. Status after the
+first pass:
+
+| Metric | Before | After |
+|---|---|---|
+| Entries with **no author list** | **22 of 51 (43%)** | **1** (ref27, flagged) |
+| arXiv-only, no DOI | 21 (41%) | 17 (33%) |
+| Missing DOI | 51 (100%) | 37 (73%) |
+| Preprints upgraded to published versions | -- | **5** |
+
+Twenty-one entries were rewritten with metadata verified against the publisher record or the
+arXiv listing. Nothing was filled in that could not be checked.
+
+### Errors found, not merely gaps
+
+The audit changed character once it started: several entries were not incomplete but **wrong**.
+
+| Entry | Cited as | Actually |
+|---|---|---|
+| **ref1** | C. Oh et al., "A tutorial on quantum machine learning...", arXiv:2006.12763 | **arXiv:2006.12763 is "Method of fundamental solutions for the problem of doubly-periodic potential flow" by H. Ogata — computational fluid dynamics, entirely unrelated** |
+| ref15 | Nat. Commun., 2022 | npj Quantum Information 8, 90 (2022); title also truncated |
+| ref16 | Nat. Commun., 2025 | npj Quantum Information 11, 8 (2025); title also truncated |
+| ref20 | IEEE Trans. Neural Netw. Learn. Syst., 2022 | **IEEE Access 8, 188853--188860, 2020** — wrong venue *and* wrong year |
+| ref31 | "...enhanced by quantum architecture search," ScienceDirect | Title truncated; full title ends "...for coronary artery stenosis detection", Neurocomputing 618, 129111 (2025) |
+| ref17 | "...for quantum computing" | "...for quantum computation" |
+| ref27 | "Quantum reservoir computing implementation on superconducting circuits," Nat. Commun., 2023 | **No paper with this title found.** Not substituted |
+
+Every other arXiv identifier (ref2--ref13, ref23, ref28--ref36) was fetched and confirmed to
+match its cited title and first author. ref1 is the only bad identifier.
+
+### Two items requiring author decisions
+
+1. **ref1** — wrong identifier, and never cited.
+2. **ref27** — title matches no findable paper, and never cited. The closest match by topic,
+   venue family and year is Dudas et al., npj Quantum Inf. 9, 64 (2023), but substituting it
+   would be guessing at intent, so it was not done.
+
+Both carry `% M9 AUDIT` comments in `fqcnn.tex` so they cannot ship unnoticed.
+
+### Uncited entries
+
+**12 of 51 entries (24%) are never cited:** ref1, ref5, ref9, ref12, ref24, ref27, ref28, ref30,
+ref32, ref33, ref34, ref35. IEEE style does not permit uncited references, so each must either
+be cited or removed — an editorial decision for the authors. Notably, both problematic entries
+above fall in this set.
+
+### Remaining Phase 9 work
+
+- DOIs for the 37 entries that still lack them.
+- Decide ref1 and ref27; decide the 12 uncited entries.
+- Sentence-level citation audit (Phase 9 item 6), including `ref44` propping up the
+  image-locality claim, which reconciliation row 5 already flags.
