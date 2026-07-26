@@ -1,0 +1,7 @@
+--- Epoch 1/50 | Loss: 0.5557 | Train Acc: 96.5% | Val Acc: 95.6% | CM: [TP:940, TN:876, FP:12, FN:72] | Progress: 2.0% | ETA: 8460.1s ---
+--- Epoch 2/50 | Loss: 0.4937 | Train Acc: 97.5% | Val Acc: 97.5% | CM: [TP:980, TN:873, FP:15, FN:32] | Progress: 4.0% | ETA: 4025.8s ---
+--- Epoch 3/50 | Loss: 0.4863 | Train Acc: 98.5% | Val Acc: 98.2% | CM: [TP:993, TN:872, FP:16, FN:19] | Progress: 6.0% | ETA: 2820.4s ---
+--- Epoch 4/50 | Loss: 0.4842 | Train Acc: 98.5% | Val Acc: 98.2% | CM: [TP:991, TN:875, FP:13, FN:21] | Progress: 8.0% | ETA: 2398.5s ---
+--- Epoch 5/50 | Loss: 0.4823 | Train Acc: 97.5% | Val Acc: 98.0% | CM: [TP:986, TN:876, FP:12, FN:26] | Progress: 10.0% | ETA: 1715.7s ---
+--- Epoch 6/50 | Loss: 0.4813 | Train Acc: 97.5% | Val Acc: 97.6% | CM: [TP:983, TN:871, FP:17, FN:29] | Progress: 12.0% | ETA: 1313.4s ---
+--- Epoch 7/50 | Loss: 0.4807 | Train Acc: 98.0% | Val Acc: 97.6% | CM: [TP:984, TN:870, FP:18, FN:28] | Progress: 14.0% | ETA: 1022.9s ---

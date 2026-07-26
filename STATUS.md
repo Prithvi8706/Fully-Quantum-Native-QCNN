@@ -7,7 +7,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Design:** `docs/superpowers/specs/2026-07-23-fqcnn-q1-upgrade-design.md`
 **Month plan:** `docs/superpowers/plans/2026-07-25-fqcnn-remaining-work-month-plan.md`
 
-**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 162 passing
+**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 185 passing
 
 ---
 
@@ -18,7 +18,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
 | **M1 — Phase 1: affordable execution** | **IN PROGRESS** · 1.1–1.4 done, 1.5 not required | **grid fits ≤7 nights: PASSED** (2.2 h of 70 h) | §§3a–3d; 110 tests |
 | M2 — Phase 2: pooling theory (E1–E5) | **2.1, E1, E2, E3, E4, 2.7 done**; E5 blocked | **E1 agrees to ~1e-12: PASSED** (2.2e-16 at headline n=10) | `Results/evidence/`; §§7, 7a–7c |
-| M3 — Phase 3: model analysis | not started | — | — |
+| M3 — Phase 3: model analysis | **primitives built + tested**; analyses not yet run | — | `QCNN/utils/capacity.py`, `state_metrics.meyer_wallach`; 22 tests |
 | M4 — Phase 4: harder datasets | not started | — | — |
 | M5 — Phase 5: baselines + statistics | not started | — | — |
 | M6 — Phase 6: ablation grid | not started | — | — |
@@ -75,7 +75,7 @@ Python 3.9.13 · PennyLane 0.38.0 · NumPy 1.26.4 · scikit-learn 1.6.1
 | **1.3 Safe parallelism and resume** | **DONE 2026-07-25** | `tests/test_resume_and_parallelism.py` (15 tests) |
 | **1.4 Cost estimator and grid approval** | **DONE 2026-07-25 — GATE PASSES** | `experiments/estimate_cost.py`; `tests/test_cost_estimator.py` (9 tests); §3d |
 | 1.5 Conditional accelerators | **not required** | 1.4 uses 3% of budget; §18.4 stays off |
-| Clean headline retrain | not started | gated on 1.1–1.4 |
+| Clean headline retrain | **RUNNING** since 2026-07-26 13:48 | detached process; see `docs/superpowers/plans/2026-07-26-session-handoff.md` |
 
 ### M1.1 exit check (roadmap: outputs, loss, *every* gradient, one optimizer update)
 
