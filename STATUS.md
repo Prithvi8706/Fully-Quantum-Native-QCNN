@@ -7,7 +7,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Design:** `docs/superpowers/specs/2026-07-23-fqcnn-q1-upgrade-design.md`
 **Month plan:** `docs/superpowers/plans/2026-07-25-fqcnn-remaining-work-month-plan.md`
 
-**Last updated:** 2026-07-26 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 187 passing
+**Last updated:** 2026-07-27 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 204 passing
 
 ---
 
@@ -18,7 +18,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
 | **M1 — Phase 1: affordable execution** | **COMPLETE 2026-07-26** | grid ≤7 nights **PASSED**; headline retrained clean at **98.29%** | §§3a–3e |
 | M2 — Phase 2: pooling theory (E1–E5) | **2.1, E1, E2, E3, E4, 2.7 done**; E5 blocked | **E1 agrees to ~1e-12: PASSED** (2.2e-16 at headline n=10) | `Results/evidence/`; §§7, 7a–7c |
-| M3 — Phase 3: model analysis | **primitives built + tested**; analyses not yet run | — | `QCNN/utils/capacity.py`, `state_metrics.meyer_wallach`; 22 tests |
+| M3 — Phase 3: model analysis | **3.2 and 3.4 run**; 3.1, 3.3, 3.5–3.7 remain | — | `Results/evidence/f_e_gradient_variance.json`, `t6_expressibility.json`; §12 |
 | M4 — Phase 4: harder datasets | not started | — | — |
 | M5 — Phase 5: baselines + statistics | not started | — | — |
 | M6 — Phase 6: ablation grid | not started | — | — |
@@ -406,12 +406,12 @@ extrapolated rows are sound. Batch 32 is measured end to end, not extrapolated.
 | T3 | Baselines, CIs, paired tests, cost columns | M5 | not started |
 | T4 | Ablation Δacc ± CI | M6 | not started |
 | T5 | Pooling arms + SU(4) ceiling + measurement tie | M2 | **generated** (§7c) |
-| T6 | DLA, effective dim, expressibility, gen. bound | M3 | not started |
+| T6 | DLA, effective dim, expressibility, gen. bound | M3 | **partial** — expressibility + Q generated (§12); DLA, effective dim, bound remain |
 | F-A | E1 exact tie + E2 dephasing | M2.2–2.3 | **both generated** |
 | F-B | Coherence / purity / entropy / MI per stage | M2.5 | **generated** (§7b) |
 | F-C | Noise ladder ideal → fake → real + threshold | M7 | not started |
 | F-D | Scaling family | M8.2 | not started |
-| F-E | Gradient variance + DLA certificate | M3.1–3.2 | not started |
+| F-E | Gradient variance + DLA certificate | M3.1–3.2 | **variance sweep generated** (§12); DLA (3.1) remains |
 | F-F | Learning curves + calibration | M5.4–5.5 | not started |
 
 ## 7. B1 — the E1 blocker (recorded 2026-07-25)
@@ -681,6 +681,96 @@ uses the **exact** binomial test rather than the chi-square approximation, becau
 is often zero here -- Theorem 1 guarantees it for one arm -- and chi-square is unreliable there.
 
 Evidence: `Results/evidence/t5_pooling_arms.json`.
+
+## 12. Phase 3 — model analysis: 3.2 and 3.4 (2026-07-26)
+
+`python -m experiments.model_analysis --experiment {gradient_variance,expressibility}`
+
+Runner follows `pooling_analysis.py`: a `run_*` per item, `--experiment` CLI, JSON into
+`Results/evidence/`. Both measures were pinned against analytically known cases first —
+`variance_decay_fit` is new and has 6 tests recovering exact exponential and power-law series.
+
+### 3.2 — gradient variance (**F-E generated**)
+
+200 parameter initialisations × 4 random inputs = 800 gradient draws per qubit count,
+parameters uniform [0, 2π), backprop on `default.qubit`. 1,367 s serial (n=14 alone is 894 s).
+
+| n | slots | live | median Var (live) | **designated conv0 Var** | mean \|grad\| |
+|---|---|---|---|---|---|
+| 4 | 188 | 62 | 2.816e-2 | **1.335e-2** | 1.287e-1 |
+| 6 | 194 | 62 | 1.413e-2 | **9.270e-3** | 8.788e-2 |
+| 8 | 260 | 122 | 2.910e-3 | **4.416e-3** | 4.653e-2 |
+| 10 | 269 | **74** | 3.768e-3 | **1.889e-3** | 4.092e-2 |
+| 12 | 278 | 128 | 3.334e-4 | **7.304e-4** | 1.619e-2 |
+| 14 | 287 | 74 | 2.951e-3 | **1.037e-3** | 3.352e-2 |
+
+Controlled-slot fits: exponential `Var ≈ 0.0466 exp(−0.3035 n)`, **R² = 0.9229**; power law
+`Var ≈ 0.5162 n^−2.4296`, **R² = 0.9152**.
+
+1. **The data cannot identify the decay law.** ΔR² = 0.008 across two qualitatively different
+   laws on six points is noise, and the two reductions actively disagree — the median series
+   prefers the power law (R² = 0.66), the controlled slot prefers the exponential (R² = 0.92).
+   **F-E may not claim a barren plateau, nor claim its absence asymptotically.** What it can
+   claim: no plateau is *observed* to n=14 — gradients stay O(10⁻²) and variance falls about
+   one order of magnitude per five qubits, which is trainable in the tested range.
+2. **The median-over-live-slots reduction is confounded** and should not be quoted. The live
+   count is non-monotone — 62, 62, 122, 74, 128, 74 — so the median is taken over a slot
+   population that changes size and group composition with n; n=8 and n=12 carry ~2× the live
+   slots of their neighbours and correspondingly ~10× lower medians. This was written into the
+   evidence as a caveat *before* the run, and it is the operative one. The designated conv0
+   slot (same index, same role at every n) is the series to trust.
+3. **n=14 breaks monotonicity** even on the controlled slot (1.037e-3 against 7.304e-4 at n=12),
+   so the tail is not clean and the fit rests on a series that turns at its last point.
+4. **Independent confirmation of the 269/74 audit.** At n=10 exactly **74** slots are live,
+   reproducing M0's effective-parameter count from a *different criterion* (variance over 800
+   random-parameter draws vs max \|gradient\| over 20 inputs) at *different weights* (random vs
+   archived). The effective-parameter count is therefore a structural property of the circuit,
+   not an artifact of the trained model — which strengthens the F1 disclosure considerably.
+   Only the counts were compared; the runner now records `live_slots` so the *sets* can be
+   compared on the next run.
+
+### 3.4 — expressibility and entangling capability (**T6 partial**)
+
+3,000 parameter pairs at headline n=10, input held fixed (the ansatz's expressibility, not the
+data's), state captured through the `terminal` hook. 343 s.
+
+| Quantity | Value |
+|---|---|
+| Expressibility KL (75 bins) | **1e-6** |
+| **Haar reference KL**, same sample size and binning | **1e-6** |
+| Mean output fidelity | 9.7423e-4 |
+| Haar mean fidelity | 9.7656e-4 |
+| **Meyer-Wallach Q** | **0.9745 ± 0.0135** (range 0.895–0.995) |
+
+**The controls are what make this readable.** A KL of 1e-6 means nothing on its own, because a
+finite sample of the Haar law itself does not score zero. Scored identically:
+
+| Control | KL | Reading |
+|---|---|---|
+| Haar law sampled by inverse CDF | **1e-6** | the ansatz matches this exactly |
+| Fidelities inflated 10× | 3.82 | measure still has power at n=10 |
+| Degenerate ensemble (F ≈ 0.9) | 25.81 | gross failure is detected |
+| Haar mass in first of 75 bins | 0.9999989 | the resolution limit |
+
+So the ansatz's output ensemble is **indistinguishable from Haar-random at this measure's
+resolution**, and that resolution is roughly an order-of-magnitude deviation in mean fidelity —
+not finer. Stating it as "maximally expressible" would overclaim; the honest form is
+"Haar-indistinguishable at n=10 to within a measure that separates ~10× deviations".
+
+**This sits in tension with 3.2, and the tension is the interesting part.** Holmes et al. (2022)
+tie high expressibility to barren plateaus, so a Haar-indistinguishable ansatz at n=10 is
+precisely where a plateau is expected — yet 3.2 sees gradients surviving to n=14. Three
+candidate reconciliations, in order of how much support they currently have:
+(a) only 74 of 269 slots are live, so the *effective* ansatz is far smaller than the nominal
+one, and the expressibility of the full parameterisation is not what governs its gradients;
+(b) n ≤ 14 is short of asymptotic;
+(c) the expressibility measure saturates at n=10, so "Haar-like" is a weaker statement than it
+sounds. These are hypotheses, recorded so the manuscript does not silently pick one. The DLA
+(3.1) is the item that would discriminate.
+
+**Not yet done in Phase 3:** 3.1 DLA, 3.3 effective dimension (needs the empirical Fisher plus
+matched MLP/CNN controls), 3.5 Caro bound (primitive exists; plug T=74/269 and N=7,599),
+3.6 inductive bias, 3.7 simulability prose.
 
 ## 9. M9 bibliography audit (2026-07-26)
 

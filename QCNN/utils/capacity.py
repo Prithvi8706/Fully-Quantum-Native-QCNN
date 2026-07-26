@@ -65,6 +65,61 @@ def expressibility_kl(fidelities, n_qubits: int, n_bins: int = 75) -> dict:
     }
 
 
+def variance_decay_fit(n_values, variances) -> dict:
+    """How gradient variance scales with qubit count (Phase 3.2, F-E).
+
+    The trainability question is not "is the variance small" but "how does it
+    shrink": a barren plateau means ``Var ~ exp(-gamma n)``, while a benign ansatz
+    decays polynomially, ``Var ~ n^-p``. Both are straight lines under different
+    transforms, so both are fitted by least squares and reported with their
+    R-squared. Choosing between them on the data rather than assuming the
+    exponential is what makes the certificate falsifiable.
+
+    Returns the exponential rate ``gamma`` (per qubit), the power-law exponent
+    ``p``, each fit's R-squared, and which of the two the data prefers.
+    """
+    n = np.asarray(n_values, dtype=float)
+    v = np.asarray(variances, dtype=float)
+    if n.size != v.size:
+        raise ValueError('n_values and variances must have equal length')
+    if n.size < 3:
+        raise ValueError('need at least 3 points to compare two decay laws')
+    if np.any(v <= 0):
+        raise ValueError('variances must be positive to fit on a log scale')
+    if np.any(n <= 0):
+        raise ValueError('qubit counts must be positive')
+
+    log_v = np.log(v)
+
+    def _fit(x, y):
+        """Least-squares line, with R-squared. Constant y is a perfect fit."""
+        slope, intercept = np.polyfit(x, y, 1)
+        predicted = slope * x + intercept
+        ss_res = float(np.sum((y - predicted) ** 2))
+        ss_tot = float(np.sum((y - y.mean()) ** 2))
+        r2 = 1.0 if ss_tot == 0.0 else 1.0 - ss_res / ss_tot
+        return float(slope), float(intercept), float(r2)
+
+    exp_slope, exp_intercept, exp_r2 = _fit(n, log_v)
+    pow_slope, pow_intercept, pow_r2 = _fit(np.log(n), log_v)
+
+    return {
+        'n_values': [int(x) for x in n],
+        'variances': [float(x) for x in v],
+        # Var ~ exp(-gamma * n): gamma > 0 means decay.
+        'exponential_rate': float(-exp_slope),
+        'exponential_prefactor': float(np.exp(exp_intercept)),
+        'exponential_r_squared': exp_r2,
+        # Var ~ n^-p: p > 0 means decay.
+        'power_law_exponent': float(-pow_slope),
+        'power_law_prefactor': float(np.exp(pow_intercept)),
+        'power_law_r_squared': pow_r2,
+        'preferred_law': 'exponential' if exp_r2 > pow_r2 else 'power_law',
+        # Halving of the variance per added qubit, the readable form of gamma.
+        'variance_ratio_per_qubit': float(np.exp(exp_slope)),
+    }
+
+
 def caro_generalization_bound(n_trainable_gates: int, n_train: int) -> dict:
     """Caro et al. (2022) generalization scaling, ``sqrt(T log T / N)``.
 
