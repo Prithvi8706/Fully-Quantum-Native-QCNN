@@ -176,3 +176,19 @@ discarded and the DOI resolved separately. Fuzzy bibliographic matching is not v
 preprints -- an editorial choice, not a metadata fix. The sentence-level citation audit
 (Phase 9 item 6) also remains, including `ref44` propping up the image-locality claim flagged
 in reconciliation row 11.
+
+## Row 10 resolved (2026-07-26)
+
+The clean-protocol retrain is done: **test accuracy 0.98294** on 3,166 held-out samples,
+selection on validation only (best 0.9821, epoch 24), test read once under the guard. Split
+manifest `idx_0v1_n12665_seed42.json`, 7,599 / 1,900 / 3,166, disjoint verified.
+
+98.86% is retired. It was the maximum over 24 epochs of a test score that was simultaneously
+selecting the checkpoint; the clean figure is 0.57 points lower and absorbs both the removal of
+the leak and a 14% smaller training set.
+
+**The disposition is only half-applied.** `UPGRADE_PLAN.md` 5.3 forbids any single-run number in
+the manuscript, and this is one seed. 98.29% therefore becomes the reference number everywhere
+internally, but the paper's three `approx 98\%` claims stay as they are until Phase 5 produces
+mean +/- std with a 95% CI over >= 5 seeds. Substituting one single-run figure for another would
+reintroduce the class of problem this row exists to fix.

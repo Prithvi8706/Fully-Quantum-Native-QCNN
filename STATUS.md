@@ -16,7 +16,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 | Milestone | State | Gate | Evidence |
 |---|---|---|---|
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
-| **M1 — Phase 1: affordable execution** | **IN PROGRESS** · 1.1–1.4 done, 1.5 not required | **grid fits ≤7 nights: PASSED** (2.2 h of 70 h) | §§3a–3d; 110 tests |
+| **M1 — Phase 1: affordable execution** | **COMPLETE 2026-07-26** | grid ≤7 nights **PASSED**; headline retrained clean at **98.29%** | §§3a–3e |
 | M2 — Phase 2: pooling theory (E1–E5) | **2.1, E1, E2, E3, E4, 2.7 done**; E5 blocked | **E1 agrees to ~1e-12: PASSED** (2.2e-16 at headline n=10) | `Results/evidence/`; §§7, 7a–7c |
 | M3 — Phase 3: model analysis | **primitives built + tested**; analyses not yet run | — | `QCNN/utils/capacity.py`, `state_metrics.meyer_wallach`; 22 tests |
 | M4 — Phase 4: harder datasets | not started | — | — |
@@ -75,7 +75,7 @@ Python 3.9.13 · PennyLane 0.38.0 · NumPy 1.26.4 · scikit-learn 1.6.1
 | **1.3 Safe parallelism and resume** | **DONE 2026-07-25** | `tests/test_resume_and_parallelism.py` (15 tests) |
 | **1.4 Cost estimator and grid approval** | **DONE 2026-07-25 — GATE PASSES** | `experiments/estimate_cost.py`; `tests/test_cost_estimator.py` (9 tests); §3d |
 | 1.5 Conditional accelerators | **not required** | 1.4 uses 3% of budget; §18.4 stays off |
-| Clean headline retrain | **RUNNING** since 2026-07-26 13:48 | detached process; see `docs/superpowers/plans/2026-07-26-session-handoff.md` |
+| **Clean headline retrain** | **DONE 2026-07-26 -- test accuracy 0.98294** | §3e; `Results/metrics.json` |
 
 ### M1.1 exit check (roadmap: outputs, loss, *every* gradient, one optimizer update)
 
@@ -244,11 +244,59 @@ Baselines add **76 s** to each `proposed` cell (classical + cong/hur/ttn).
 `QCNN/utils/metrics.py:55`, costing 18.7 s of each 133 s cell (14%). Deferred in M1.1 as
 off-the-hot-path; the measurement now says otherwise.
 
+## 3e. Clean headline retrain (2026-07-26) -- **98.29%**
+
+The number that replaces 98.86%. One run of the frozen headline configuration under the
+60/15/25 manifest protocol, split id `adbb1486`, 7,599 train / 1,900 val / 3,166 test,
+disjoint verified. Selection on validation only; test read exactly once under
+`TestEvaluationGuard`.
+
+| Quantity | Value |
+|---|---|
+| **Test accuracy** | **0.98294** |
+| Precision | 0.98340 |
+| Recall | 0.98457 |
+| F1 | 0.98399 |
+| ROC-AUC | 0.99901 |
+| Confusion | TP 1659 - TN 1453 - FP 28 - FN 26 |
+| Best validation (selection) | 0.9821 at epoch 24 |
+| Stopping | early stop, patience 3 |
+
+Evidence: `Results/metrics.json`, `Results/headline_retrain_summary.txt`,
+`Results/manifests/idx_0v1_n12665_seed42.json`, weights `Results/Weights/run_seed42.npz`.
+
+### What it cost to become defensible
+
+The risk register rated "clean accuracy below 98%" as **high** likelihood, against **two**
+headwinds: the leak removed, *and* 14% less training data (7,599 vs 8,865) because validation
+had to come from somewhere. Both were absorbed for **0.57 points**.
+
+The trajectory shows why the old number was inflated: validation peaked at 98.21% early, then
+sat at 97.3--97.4% for a dozen epochs. Under the old protocol that peak was read off the **test**
+set and reported. Now it only selected a checkpoint, and test -- consulted once, afterwards --
+independently landed at 98.29%.
+
+### NOT yet written into the manuscript, deliberately
+
+`UPGRADE_PLAN.md` 5.3 is explicit: *"No single-run number appears anywhere in the paper again."*
+This is **one seed**. Writing 98.29% into the abstract as a bare figure would swap one
+single-run claim for another and violate 5.3 the day after M9 removed a different integrity
+problem.
+
+So 98.29% is the **protocol-clean reference number** -- it retires 98.86% for all internal
+purposes and for reconciliation row 10 -- but the manuscript must quote **mean +/- std with a
+95% CI across >= 5 seeds**, produced by Phase 5. The three `approx 98\%` claims in `fqcnn.tex`
+stay untouched until that distribution exists.
+
+**Caveat that travels with the number:** MNIST 0v1 is ~99.8% linearly separable, so 98.29% is
+defensible but not impressive -- a logistic baseline should beat it. That comparison lands in
+T3, and Phase 4's harder pairs are where the model has to earn its place.
+
 ## 4. Run cells: required vs completed
 
 | Workstream | Required cells | Complete | Milestone |
 |---|---|---|---|
-| Clean headline retrain | 1 | 0 | M1 |
+| Clean headline retrain | 1 | **1** | M1 |
 | E1 / E2 (fixed-parameter, no training) | 2 | 0 | M2 |
 | E3 pooling arms (arms × ≥5 seeds × ≥3 datasets) | ≥75 | 0 | M2 |
 | Datasets (hard pairs + 3 domains) | TBD at M4 | 0 | M4 |
