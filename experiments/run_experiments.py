@@ -149,7 +149,7 @@ def prepare_split(cfg: QuantumNativeConfig, classes, dataset_dir, train_sample_s
         y,
         seed=cfg.seed,
         dataset_id="idx_{}v{}_n{}".format(classes[0], classes[1], len(y)),
-        class_mapping={str(classes[0]): 1, str(classes[1]): -1},
+        class_mapping=split_service.class_mapping_for(classes),
     )
     split_service.save_manifest(manifest, os.path.join(
         MANIFEST_ROOT, "{}_seed{}.json".format(manifest["dataset_id"], cfg.seed)))

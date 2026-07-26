@@ -224,7 +224,9 @@ def main(train_sample_size=None, use_bce=True, dataset_path=None, dataset_type='
         y_quantum,
         seed=config.seed,
         dataset_id=f"{dataset_type}_{config.classes[0]}v{config.classes[1]}_n{len(y_quantum)}",
-        class_mapping={str(config.classes[0]): 1, str(config.classes[1]): -1},
+        # encode_labels maps sorted(unique)[0] -> -1 and sorted(unique)[1] -> +1,
+        # so the manifest must record sorted order, not CLI argument order.
+        class_mapping=split_service.class_mapping_for(config.classes),
     )
     manifest_path = os.path.join(
         "Results", "manifests", f"{manifest['dataset_id']}_seed{config.seed}.json")
@@ -435,7 +437,7 @@ def main(train_sample_size=None, use_bce=True, dataset_path=None, dataset_type='
 
         plt.subplot(1, 2, 2)
         plt.plot(trained_model.training_history['accuracy'])
-        plt.title('Pure Quantum Test Accuracy')
+        plt.title('Pure Quantum Validation Accuracy')
         plt.xlabel('Epoch')
         plt.ylabel('Quantum Accuracy')
         plt.grid(True)

@@ -108,3 +108,30 @@ def test_apply_manifest_rejects_a_size_mismatch(labels):
     manifest = splits.make_split_manifest(labels, seed=0, dataset_id="unit", class_mapping={})
     with pytest.raises(ValueError, match="n_total"):
         splits.apply_manifest(manifest, np.zeros((10, 4)), labels[:10])
+
+
+def test_class_mapping_matches_the_encoder_that_actually_labels_the_data():
+    """The manifest must name the same positive class the encoder produces.
+
+    ``encode_labels`` maps sorted(unique(y))[0] -> -1 and [1] -> +1. A manifest
+    built from CLI argument order records the opposite whenever the arguments
+    are not already sorted, which misattributes precision/recall/F1 to the wrong
+    digit while leaving accuracy (symmetric) unchanged and therefore silent.
+    """
+    from QCNN.utils.data_preprocessing import encode_labels
+
+    for classes in [(0, 1), (1, 0), (3, 5), (5, 3), (4, 9), (9, 4)]:
+        raw = np.array([classes[0]] * 5 + [classes[1]] * 5)
+        encoded = encode_labels(raw, encoding="binary")
+        mapping = splits.class_mapping_for(classes)
+
+        for digit, sign in zip(raw, encoded):
+            assert mapping[str(digit)] == sign, (
+                "manifest says %s -> %d but encode_labels produced %d"
+                % (digit, mapping[str(digit)], sign)
+            )
+
+
+def test_class_mapping_is_independent_of_argument_order():
+    assert splits.class_mapping_for((0, 1)) == splits.class_mapping_for((1, 0))
+    assert splits.class_mapping_for((0, 1)) == {"0": -1, "1": 1}

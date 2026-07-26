@@ -1,7 +1,7 @@
 {
   "class_mapping": {
-    "0": 1,
-    "1": -1
+    "0": -1,
+    "1": 1
   },
   "dataset_id": "idx_0v1_n12665",
   "fractions": [

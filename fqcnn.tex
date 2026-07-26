@@ -43,7 +43,7 @@ rohan.jain7@gmail.com}
 \maketitle
 
 \begin{abstract}
-Building a quantum convolutional neural network that stays coherent throughout the circuit remains difficult. Near-term devices are limited in depth and noise tolerance, so most quantum machine learning models either combine classical and quantum processing or rely on measurement-based pooling, both of which require capabilities that are slow or unavailable on much current hardware. We propose a model that performs data encoding, local convolution, pooling, and classification using only unitary quantum operations. It uses amplitude encoding for compact representation, a parameter-shared SU(2) quantum convolutional kernel for local feature extraction, and a mid-circuit measurement-free pooling layer that transfers information through parameterized controlled unitary operations. We prove that this coherent block reproduces measurement-based pooling exactly, in every observable statistic of the retained register, while requiring no mid-circuit measurement, qubit reset, or classical feed-forward; the prediction is confirmed numerically to $2 	imes 10^{-16}$. Coherent pooling is therefore not an information-preservation advantage but an architectural one. The circuit is kept shallow and parameter-efficient to suit NISQ devices, and the pooling layer architecture ensures that physical reset overheads are bypassed while allowing execution on standard feed-forward quantum backends. In our experiments the model achieves approx 98\% test accuracy while remaining coherent across all layers. The results suggest that fully unitary hierarchical quantum models can perform competitively without intermediate measurements, which is useful for scaling quantum machine learning.
+Building a quantum convolutional neural network that stays coherent throughout the circuit remains difficult. Near-term devices are limited in depth and noise tolerance, so most quantum machine learning models either combine classical and quantum processing or rely on measurement-based pooling, both of which require capabilities that are slow or unavailable on much current hardware. We propose a model that performs data encoding, local convolution, pooling, and classification using only unitary quantum operations. It uses amplitude encoding for compact representation, a parameter-shared SU(2) quantum convolutional kernel for local feature extraction, and a mid-circuit measurement-free pooling layer that transfers information through parameterized controlled unitary operations. We prove that this coherent block reproduces measurement-based pooling exactly, in every observable statistic of the retained register, while requiring no mid-circuit measurement, qubit reset, or classical feed-forward; the prediction is confirmed numerically to $2 \times 10^{-16}$. Coherent pooling is therefore not an information-preservation advantage but an architectural one. The circuit is kept shallow and parameter-efficient to suit NISQ devices, and the pooling layer architecture ensures that physical reset overheads are bypassed while allowing execution on standard feed-forward quantum backends. In our experiments the model achieves approx 98\% test accuracy while remaining coherent across all layers. The results suggest that fully unitary hierarchical quantum models can perform competitively without intermediate measurements, which is useful for scaling quantum machine learning.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -59,8 +59,7 @@ Substantial as these advances are, several limitations still hinder effective de
 
 These limitations matter most on NISQ devices, where noise, short coherence times, and restricted qubit connectivity place tight constraints on circuit design. Architectures that depend on deep variational blocks or frequent mid-circuit measurements are particularly exposed to decoherence and error accumulation, which leads to unstable training and poor generalisation. Losing coherence between convolutional layers also undermines the hierarchical feature extraction that motivates convolutional architectures in the first place. As NISQ hardware scales incrementally rather than exponentially, there is growing value in models that emphasise shallow depth, locality-preserving operations, and parameter efficiency while keeping information flowing coherently through the circuit.
 
-In this work we address these challenges by introducing a fully quantum-native neural network (FQCNN) architecture designed to preserve coherence across every stage of the learning pipeline. The model performs data encoding, convolution, pooling, and classification entirely through unitary operations, removing the need for intermediate measurement or classical post-processing. Local quantum convolution is implemented with a shared 2$\times$2 kernel acting on spatially adjacent qubits, which enforces parameter sharing and a translational inductive bias while keeping circuit depth low. Dimensionality reduction is achieved through a coherent pooling mechanism that uses unitaries to compress information while keeping the global state pure. Section~
-ef{sec:pooling-theory} proves that this mechanism reproduces measurement-based pooling exactly, so the benefit it delivers is the removal of mid-circuit control requirements rather than the retention of otherwise-lost information.
+In this work we address these challenges by introducing a fully quantum-native neural network (FQCNN) architecture designed to preserve coherence across every stage of the learning pipeline. The model performs data encoding, convolution, pooling, and classification entirely through unitary operations, removing the need for intermediate measurement or classical post-processing. Local quantum convolution is implemented with a shared 2$\times$2 kernel acting on spatially adjacent qubits, which enforces parameter sharing and a translational inductive bias while keeping circuit depth low. Dimensionality reduction is achieved through a coherent pooling mechanism that uses unitaries to compress information while keeping the global state pure. Section~\ref{sec:pooling-theory} proves that this mechanism reproduces measurement-based pooling exactly, so the benefit it delivers is the removal of mid-circuit control requirements rather than the retention of otherwise-lost information.
 
 Beyond its architectural advantages, the model also performs strongly in practice, reaching approx 98\% test accuracy on a binary classification task while maintaining quantum coherence throughout the computation. This suggests the architecture is physically consistent with quantum hardware constraints.
 
@@ -371,7 +370,7 @@ If the noise channel is independent of $\theta$, differentiation moves inside th
 
 \section{Experimental Results and Analysis}
 \subsection{Dataset Description}
-Experiments were performed on the MNIST handwritten-digit dataset~\cite{ref49} in the standard IDX binary format, selecting digits 0 and 1 to define a strict binary classification task. The two classes form a dataset of 14,780 images (6,903 of digit 0 and 7,877 of digit 1). From this pool we draw a balanced subset of 11,430 images (5,715 per digit) and apply a 70/30 stratified split with fixed random seed 42, yielding 8,001 training and 3,429 test images, with class balance preserved in each set.
+Experiments were performed on the MNIST handwritten-digit dataset~\cite{ref49} in the standard IDX binary format, selecting digits 0 and 1 to define a strict binary classification task. The MNIST training partition contains 12,665 such images (5,923 of digit 0 and 6,742 of digit 1), all of which are used. We apply a single seeded stratified 60/15/25 split with fixed random seed 42, yielding 7,599 training, 1,900 validation, and 3,166 test images, with the class ratio preserved in each split. Model selection---checkpointing, learning-rate scheduling, and early stopping---reads the validation split only; the test split is evaluated exactly once, after training has finished. The partition is recorded as a manifest (identity \texttt{adbb1486}) that each run loads rather than reconstructing from an assumed random-number sequence.
 
 \begin{table}[!t]
 \caption{Dataset Configuration}
@@ -383,15 +382,16 @@ Experiments were performed on the MNIST handwritten-digit dataset~\cite{ref49} i
 \midrule
 Dataset & MNIST (LeCun et al.) \\
 Format & IDX binary (ubyte) \\
-Binary classes & Digit 0 (+1) vs Digit 1 ($-$1) \\
-Total samples & 11,430 (balanced, 5,715 per class) \\
-Training samples & 8,001 (70\%, stratified) \\
-Test samples & 3,429 (30\%, stratified) \\
+Binary classes & Digit 0 ($-$1) vs Digit 1 (+1) \\
+Total samples & 12,665 (5,923 digit 0, 6,742 digit 1) \\
+Training samples & 7,599 (60\%, stratified) \\
+Validation samples & 1,900 (15\%, stratified) \\
+Test samples & 3,166 (25\%, stratified) \\
 Input image size & 28 $\times$ 28 grayscale \\
 Normalization & Min-max scaling to [0, 1] \\
 Encoding strategy & Global amplitude encoding \\
 State amplitudes & 1024 ($2^{10}$, zero-padded) \\
-Label mapping & Digit 0 $\rightarrow$ +1, Digit 1 $\rightarrow$ $-$1 \\
+Label mapping & Digit 0 $\rightarrow$ $-$1, Digit 1 $\rightarrow$ +1 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -399,7 +399,7 @@ Label mapping & Digit 0 $\rightarrow$ +1, Digit 1 $\rightarrow$ $-$1 \\
 Each 28 $\times$ 28 image is min-max normalised to [0, 1] for angle-based gate parameterisation. The image is then flattened into a 784-dimensional vector, zero-padded to 1024, and embedded directly into the amplitudes of a 10-qubit register via global amplitude encoding, so the entire image is mapped into a single quantum state with no spatial information discarded before the QCNN. Labels are mapped to $\{+1, -1\}$ for the Pauli-$Z$ expectation output. Digits 0 and 1 present clearly distinct morphologies (a circle versus a vertical line), which makes a well-conditioned task that is widely cited in the quantum machine learning literature and reproducible from a free IDX file with no extra dependencies.
 
 \subsection{Experimental Setup and Training Configuration}
-The experimental validation is executed using numerical quantum simulation backends. The architecture uses a register of $n = 10$ qubits initialised in the ground state $|0\rangle^{\otimes 10}$. A 2D input image $X \in \mathbb{R}^{28 \times 28}$ is flattened into a 784-dimensional vector $x$, which is zero-padded to 1024 and mapped to the 1024 state amplitudes ($2^{10}$) using a global amplitude-encoding sub-circuit. Simulations are run via the \texttt{lightning.qubit} exact statevector simulator, tracking a total of 11,430 samples split into a 70/30 training and test arrangement. The model comprises convolutional layers with shared SU(2) kernels, coherence-preserving pooling layers, and a final variational classification head. Training uses mini-batch optimisation with Adam, gradient clipping, and EMA of parameters.
+The experimental validation is executed using numerical quantum simulation backends. The architecture uses a register of $n = 10$ qubits initialised in the ground state $|0\rangle^{\otimes 10}$. A 2D input image $X \in \mathbb{R}^{28 \times 28}$ is flattened into a 784-dimensional vector $x$, which is zero-padded to 1024 and mapped to the 1024 state amplitudes ($2^{10}$) using a global amplitude-encoding sub-circuit. Simulations are run via the \texttt{lightning.qubit} exact statevector simulator, tracking a total of 12,665 samples split 60/15/25 into training, validation, and test sets. The model comprises convolutional layers with shared SU(2) kernels, coherence-preserving pooling layers, and a final variational classification head. Training uses mini-batch optimisation with Adam, gradient clipping, and EMA of parameters.
 
 \begin{table}[!t]
 \caption{Training Configuration}
@@ -409,7 +409,7 @@ The experimental validation is executed using numerical quantum simulation backe
 \toprule
 \textbf{Parameter} & \textbf{Value} \\
 \midrule
-Epochs & 50 max; early-stopped $\approx$ 24 \\
+Epochs & 50 max; early-stopped at 25 \\
 Batch size & 32 \\
 Learning rate & 0.005 \\
 Optimizer & Adam \\
@@ -423,7 +423,7 @@ Random seed & 42 (NumPy / Python / PennyLane) \\
 
 \subsection{Results}
 \label{sec:results}
-The optimisation profile shows an ideal convergence pathway, where the proposed amplitude-encoded FQCNN model reaches a final test accuracy of approx 98\% on the MNIST 0 vs 1 binary classification, with precision 99.2\%, recall 98.5\%, F1-score approx 98\%, and ROC-AUC 0.999 (14 false positives and 25 false negatives over 3,429 held-out test images). This performance highlights the high parameter efficiency of the underlying unitary ansatz, demonstrating minimal overfitting without resorting to classical regularisation techniques.
+The optimisation profile shows an ideal convergence pathway, where the proposed amplitude-encoded FQCNN model reaches a final test accuracy of approx 98\% on the MNIST 0 vs 1 binary classification, with precision 98.3\%, recall 98.5\%, F1-score 98.4\%, and ROC-AUC 0.999 (28 false positives and 26 false negatives over 3,166 held-out test images). This performance highlights the high parameter efficiency of the underlying unitary ansatz, demonstrating minimal overfitting without resorting to classical regularisation techniques.
 
 \begin{table}[!t]
 \caption{Final Evaluation Results}
@@ -433,8 +433,8 @@ The optimisation profile shows an ideal convergence pathway, where the proposed 
 \toprule
 \textbf{Metric} & \textbf{Value} \\
 \midrule
-Training accuracy & 99.0\% \\
-Validation accuracy & 98.7\% \\
+Training accuracy & 98.0\% \\
+Validation accuracy & 98.2\% \\
 Test accuracy & approx 98\% \\
 \bottomrule
 \end{tabular}
@@ -443,14 +443,17 @@ Test accuracy & approx 98\% \\
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{figs_final/fig5.png}
-\caption{Training convergence of the FQCNN on MNIST 0 vs 1: (left) training loss and (right) test accuracy over the 24 early-stopped epochs, with test accuracy converging to approx 98\%.}
+% FIGURE AUDIT: right-hand panel's in-image title still reads "Test Accuracy";
+% the plotted series is validation accuracy (Qtrainer records val_accuracy).
+% main.py is corrected, but the PNG needs re-plotting on the next headline run.
+\caption{Training convergence of the FQCNN on MNIST 0 vs 1: (left) training loss and (right) validation accuracy over the 25 early-stopped epochs. Validation accuracy peaks at 98.2\% at epoch 4, which is the checkpoint model selection retains; the test set is evaluated once, afterwards.}
 \label{fig:convergence}
 \end{figure}
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{figs_final/fig6.png}
-\caption{Confusion matrix of the FQCNN on the MNIST 0 vs 1 test set (3,429 images): 1,701 true negatives and 1,689 true positives against only 14 false positives and 25 false negatives, i.e. approx 98\% accuracy.}
+\caption{Confusion matrix of the FQCNN on the MNIST 0 vs 1 test set (3,166 images): 1,453 true negatives and 1,659 true positives against only 28 false positives and 26 false negatives, i.e. approx 98\% accuracy.}
 \label{fig:confusion}
 \end{figure}
 
@@ -471,20 +474,19 @@ Test accuracy & approx 98\% \\
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{figs_final/fig9.png}
-\caption{Summary of test-set performance metrics: sensitivity 0.985, precision 0.992, F1-score 0.989, prediction bias 0.059, and prediction variance 0.099.}
+\caption{Summary of test-set performance metrics: sensitivity 0.985, precision 0.983, F1-score 0.984, prediction bias 0.052, and prediction variance 0.101.}
 \label{fig:metrics}
 \end{figure}
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{figs_final/fig10.png}
-\caption{Per-epoch quantum computation time on the lightning.qubit statevector simulator (24 epochs; total $\approx$ 78,682 s).}
+\caption{Per-epoch quantum computation time on the lightning.qubit statevector simulator (25 epochs; total $\approx$ 4,470 s).}
 \label{fig:time}
 \end{figure}
 
 \subsection{Analysis of Model Performance}
-Performance is driven by the fully unitary design, which preserves coherence across all layers. Amplitude encoding allows efficient representation of high-dimensional data, while SU(2)-based kernels ($R_X, R_Y, R_Z$) improve feature expressivity. The pooling mechanism reproduces measurement-based pooling exactly (Theorem~
-ef{thm:exact}), so it neither adds nor removes information relative to that class; its contribution is to deliver the same channel without mid-circuit control. Parameter sharing reduces model complexity while improving generalisation. Stable training through Adam with gradient clipping and EMA mitigates the instabilities common to variational circuits. The small gap between training (99.0\%) and test (approx 98\%) accuracy indicates strong generalisation with minimal overfitting.
+Performance is driven by the fully unitary design, which preserves coherence across all layers. Amplitude encoding allows efficient representation of high-dimensional data, while SU(2)-based kernels ($R_X, R_Y, R_Z$) improve feature expressivity. The pooling mechanism reproduces measurement-based pooling exactly (Theorem~\ref{thm:exact}), so it neither adds nor removes information relative to that class; its contribution is to deliver the same channel without mid-circuit control. Parameter sharing reduces model complexity while improving generalisation. Stable training through Adam with gradient clipping and EMA mitigates the instabilities common to variational circuits. The small gap between training (98.0\%) and test (approx 98\%) accuracy indicates strong generalisation with minimal overfitting.
 
 \subsection{Comparison with Existing QCNN Approaches}
 
@@ -506,8 +508,7 @@ FQCNN (ours) & Unitary & Yes & $12d{+}3|P|{+}n_r{+}1$ & approx 98\% & 0/1 \\
 \end{tabular}
 \end{table}
 
-The proposed FQCNN is the only architecture in the comparison that maintains full quantum coherence across the entire pipeline. Hybrid approaches~\cite{ref31} reach comparable accuracy but require coherence-interrupting classical post-processing, while measurement-based pooling variants~\cite{ref2,ref4,ref6} require mid-circuit measurement and feed-forward at every pooling stage. By Theorem~
-ef{thm:exact} those variants are not at an information disadvantage; the distinction is one of hardware requirements, not of representational power. The result shows that competitive, and in some cases superior, performance is achievable under a strictly unitary constraint while staying physically consistent with quantum principles. On the core MNIST 0 vs 1 amplitude-encoding benchmark, the FQCNN reaches approx 98\% test accuracy using only 269 trainable quantum parameters, and the full metric profile of Table~\ref{tab:final} (precision 99.2\%, recall 98.5\%, F1-score approx 98\%, ROC-AUC 0.999) confirms that the fully unitary pipeline is both accurate and well-calibrated on this task. Evaluation on harder digit pairs and multi-class settings under the corrected amplitude-encoding pipeline is left to future work.
+The proposed FQCNN is the only architecture in the comparison that maintains full quantum coherence across the entire pipeline. Hybrid approaches~\cite{ref31} reach comparable accuracy but require coherence-interrupting classical post-processing, while measurement-based pooling variants~\cite{ref2,ref4,ref6} require mid-circuit measurement and feed-forward at every pooling stage. By Theorem~\ref{thm:exact} those variants are not at an information disadvantage; the distinction is one of hardware requirements, not of representational power. The result shows that competitive, and in some cases superior, performance is achievable under a strictly unitary constraint while staying physically consistent with quantum principles. On the core MNIST 0 vs 1 amplitude-encoding benchmark, the FQCNN reaches approx 98\% test accuracy using only 269 trainable quantum parameters, and the full metric profile of Table~\ref{tab:final} (precision 98.3\%, recall 98.5\%, F1-score 98.4\%, ROC-AUC 0.999) confirms that the fully unitary pipeline is accurate on this task. Evaluation on harder digit pairs and multi-class settings under the corrected amplitude-encoding pipeline is left to future work.
 
 \subsection{Noise Robustness}
 The induced quantum noise analysis allows us to interpret that the model displays intrinsic structural error resilience under simulated mixed-state depolarising and dephasing channels. Evaluated from a clean statevector baseline of approx 98\%, the classification performance is retained across the NISQ-relevant regime and degrades gracefully as the error probability parameter $p$ increases, preserving structural classification capabilities in near-term noisy environments due to the localised spatial containment of our convolution windows.
@@ -529,8 +530,7 @@ The current evaluation is limited to binary classification and simulation-based 
 The proposed FQCNN departs from previous quantum convolutional architectures on four precise technical fronts that together make up the main contributions of this paper.
 
 \subsection{Fully unitary pipeline}
-Previous QCNNs rely on mid-circuit measurements or classical post-processing at pooling~\cite{ref2,ref4,ref6}, which requires dynamic-circuit capability at each pooling layer. Theorem~
-ef{thm:exact} shows that the coherent block reproduces those constructions exactly on the retained register, so the contribution here is the removal of that requirement rather than the recovery of lost information. Here, encoding, convolution, pooling, and classification are merged into a single unitary transform with no intermediate measurements. This is a significant practical advantage, since mid-circuit measurement relies on classical control that is not yet ubiquitous on NISQ hardware.
+Previous QCNNs rely on mid-circuit measurements or classical post-processing at pooling~\cite{ref2,ref4,ref6}, which requires dynamic-circuit capability at each pooling layer. Theorem~\ref{thm:exact} shows that the coherent block reproduces those constructions exactly on the retained register, so the contribution here is the removal of that requirement rather than the recovery of lost information. Here, encoding, convolution, pooling, and classification are merged into a single unitary transform with no intermediate measurements. This is a significant practical advantage, since mid-circuit measurement relies on classical control that is not yet ubiquitous on NISQ hardware.
 
 \subsection{Coherent unitary pooling}
 Instead of a mid-circuit projection, which incurs latency and reset overheads on physical devices and requires dynamic-circuit support, the architecture uses the measurement-free pooling block of~\eqref{eq:poolblock}: features are routed from the compressed sub-register into the retained register by controlled rotations, with the compressed qubit as control. After pooling, the compressed sub-register is excluded from the remainder of the circuit, which is equivalent to a partial trace over those subsystems.

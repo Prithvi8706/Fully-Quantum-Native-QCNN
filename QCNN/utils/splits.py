@@ -32,6 +32,18 @@ def manifest_id(manifest: dict) -> str:
     return hashlib.sha256(blob.encode('utf-8')).hexdigest()
 
 
+def class_mapping_for(classes) -> dict:
+    """The label mapping a manifest must record, matching ``encode_labels``.
+
+    ``QCNN.utils.data_preprocessing.encode_labels`` maps ``sorted(unique(y))[0]``
+    to ``-1`` and ``sorted(unique(y))[1]`` to ``+1``. A manifest built from
+    command-line argument order instead would name the wrong positive class,
+    which silently misattributes precision, recall and F1.
+    """
+    lo, hi = sorted(classes)
+    return {str(lo): -1, str(hi): 1}
+
+
 def make_split_manifest(labels, seed, dataset_id, class_mapping, sample_ids=None) -> dict:
     """Build a seeded stratified 60/15/25 manifest over ``labels``.
 

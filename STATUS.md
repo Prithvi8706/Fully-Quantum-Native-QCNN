@@ -7,7 +7,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Design:** `docs/superpowers/specs/2026-07-23-fqcnn-q1-upgrade-design.md`
 **Month plan:** `docs/superpowers/plans/2026-07-25-fqcnn-remaining-work-month-plan.md`
 
-**Last updated:** 2026-07-25 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 185 passing
+**Last updated:** 2026-07-26 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 187 passing
 
 ---
 
@@ -259,8 +259,9 @@ disjoint verified. Selection on validation only; test read exactly once under
 | F1 | 0.98399 |
 | ROC-AUC | 0.99901 |
 | Confusion | TP 1659 - TN 1453 - FP 28 - FN 26 |
-| Best validation (selection) | 0.9821 at epoch 24 |
-| Stopping | early stop, patience 3 |
+| Best validation (selection) | 0.9821 at **epoch 4** |
+| Stopping | early stop after **25** epochs, patience 3 |
+| Wall-clock | 4,469.7 s (25 epochs) |
 
 Evidence: `Results/metrics.json`, `Results/headline_retrain_summary.txt`,
 `Results/manifests/idx_0v1_n12665_seed42.json`, weights `Results/Weights/run_seed42.npz`.
@@ -291,6 +292,61 @@ stay untouched until that distribution exists.
 **Caveat that travels with the number:** MNIST 0v1 is ~99.8% linearly separable, so 98.29% is
 defensible but not impressive -- a logistic baseline should beat it. That comparison lands in
 T3, and Phase 4's harder pairs are where the model has to earn its place.
+
+## 3f. Manuscript pass on the clean run (2026-07-26)
+
+Sec. IV/V still described the **leaked** protocol. `approx 98\%` was never the real problem;
+the specifics around it were. All fixed against `Results/metrics.json` and the split manifest.
+
+| Site | Was (leaked run) | Now (clean run) |
+|---|---|---|
+| Dataset prose + table | 11,430 balanced; 70/30; 8,001 / 3,429; no val split | 12,665 (5,923 / 6,742); 60/15/25; **7,599 / 1,900 / 3,166**, manifest `adbb1486` |
+| Sec. V prose, Table III | precision 99.2%, recall 98.5%; 14 FP / 25 FN over 3,429 | precision **98.3%**, recall 98.5%; **28 FP / 26 FN** over **3,166** |
+| Train / val rows | 99.0% / 98.7% | **98.0% / 98.2%** |
+| Fig. 6 caption | 1,701 TN, 1,689 TP, 14 FP, 25 FN | **1,453 / 1,659 / 28 / 26** |
+| Fig. 9 caption | precision 0.992, F1 0.989, bias 0.059, var 0.099 | **0.983 / 0.984 / 0.052 / 0.101** |
+| Fig. 10 caption | 24 epochs, 78,682 s | **25 epochs, 4,470 s** |
+| Epoch count | "early-stopped ≈ 24" | **25** ("Early Stopping triggered after 25 epochs") |
+| Figures 5–10 | archived leaked run (dated Jul 21) | regenerated clean run |
+
+The three `approx 98\%` claims are **deliberately unchanged** — `UPGRADE_PLAN.md` 5.3 forbids a
+single-run figure in the paper, and Phase 5 owes mean ± std ± CI over ≥ 5 seeds. Note the
+consequence: Sec. V is now *internally consistent single-run reporting*, which satisfies A6 but
+not yet 5.3. Phase 5 must replace the whole block, not just the accuracy claims.
+
+### Three defects found while doing it
+
+1. **`fqcnn.tex` was corrupted and the build could not see it.** Five commands had lost their
+   backslash to the heredoc bug: `\times` → TAB+`imes` in the **abstract**, and `\ref` →
+   CR+`ef{` at four sites (Sec. I, Sec. V analysis, Sec. V comparison, Sec. VI-A). The PDF
+   rendered literal `ef{thm:exact}` where "Theorem 1" belonged. **`pdflatex` reported zero
+   undefined references throughout — because with the backslash gone there is no `\ref`
+   command to be undefined.** M2.7's and M9's "0 undefined" build checks were therefore
+   vacuous for these sites. Now: "Theorem 1" renders 9×, verified in the extracted PDF text,
+   not just the log.
+
+2. **The recorded label mapping was inverted.** `encode_labels` assigns
+   `sorted(unique(y))[0] → -1`, so digit 0 → **−1**; `main.py` recorded the opposite in every
+   manifest, and the paper stated the opposite in two places. Accuracy is symmetric and hid it;
+   precision, recall and F1 were being attributed to the wrong digit. Confirmed arithmetically:
+   the test split holds 1,481 zeros and 1,685 ones, and `tp + fn = 1,685`. Fixed via
+   `splits.class_mapping_for()` (shared by `main.py` and `run_experiments.py`), pinned by a test
+   that checks the mapping against `encode_labels` for six class orderings. The committed
+   manifest's field was corrected in place; `class_mapping` is not in `manifest_id`'s payload,
+   so split identity `adbb14862dfec2f7` is provably unchanged.
+
+3. **`main.py` mislabelled the per-epoch plot "Test Accuracy"** while plotting
+   `training_history['accuracy']`, which `Qtrainer` fills with **validation** accuracy. Cosmetic
+   in effect but it reads exactly like a per-epoch test-set leak. Title corrected. **Fig. 5's PNG
+   still carries the old title** and is marked `% FIGURE AUDIT` in the tex: re-plotting needs the
+   run's per-epoch history, which is not persisted, so it lands on the next headline run.
+
+Also corrected: STATUS previously said best validation was "0.9821 at epoch 24". It was
+**epoch 4** — (991+875)/1900 = 0.98211; epoch 24 sat at 0.973. The run trained 21 further epochs
+without improving on the checkpoint it had at epoch 4.
+
+Dropped while editing: the "well-calibrated" clause in Sec. V's comparison paragraph, which
+reconciliation row 13 already marks as unsupported. Noted rather than smuggled.
 
 ## 4. Run cells: required vs completed
 
