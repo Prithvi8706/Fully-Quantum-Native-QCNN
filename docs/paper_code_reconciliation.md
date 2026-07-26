@@ -145,3 +145,34 @@ above fall in this set.
 - Decide ref1 and ref27; decide the 12 uncited entries.
 - Sentence-level citation audit (Phase 9 item 6), including `ref44` propping up the
   image-locality claim, which reconciliation row 5 already flags.
+
+### Second pass (2026-07-26): uncited entries removed, DOIs completed
+
+On author instruction the 12 uncited entries were deleted rather than cited. That disposed of
+both unresolved items without any guesswork -- ref1 (wrong identifier) and ref27 (unfindable
+title) were themselves uncited -- so the Dudas et al. substitution was never needed.
+
+| Metric | Original | Final |
+|---|---|---|
+| Entries | 51 | **39** |
+| No author list | 22 (43%) | **0** |
+| Uncited entries | 12 (24%) | **0** |
+| Undefined citations | 0 | 0 |
+| Published entries missing a DOI | all | **0** |
+| Entries missing any DOI | 51 (100%) | 11 (28%) -- all genuine preprints |
+| Preprints upgraded to published versions | -- | 5 |
+
+Deleted: ref1, ref5, ref9, ref12, ref24, ref27, ref28, ref30, ref32, ref33, ref34, ref35.
+
+18 DOIs added, each from a Crossref record or publisher page and cross-checked against the
+entry's existing title and venue. One near-miss worth recording: a fuzzy Crossref query for
+ref44 returned *"Entanglement-Induced Barren Plateaus"* -- a different paper -- so that hit was
+discarded and the DOI resolved separately. Fuzzy bibliographic matching is not verification.
+
+`pdflatex` x3: 12 pages, zero undefined references or citations.
+
+**Remaining Phase 9 item:** preprints are 28% of the list against the ~20% target. All 11 are
+2024--25 submissions with no journal version yet, so closing the gap means citing fewer
+preprints -- an editorial choice, not a metadata fix. The sentence-level citation audit
+(Phase 9 item 6) also remains, including `ref44` propping up the image-locality claim flagged
+in reconciliation row 11.
