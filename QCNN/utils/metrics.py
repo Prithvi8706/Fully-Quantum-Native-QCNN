@@ -44,18 +44,13 @@ def predict_raw_outputs(model, X_eval: np.ndarray, already_preprocessed: bool = 
     Returns:
         1D array of continuous outputs, one per sample.
     """
-    flat_params = model._flatten_params(model.quantum_params)
-
-    if already_preprocessed:
-        X_processed = np.asarray(X_eval)
-    else:
-        X_processed = model._preprocess_input(np.asarray(X_eval))
-
-    outputs = np.array([
-        float(np.squeeze(model.quantum_circuit(X_processed[i], flat_params)))
-        for i in range(len(X_processed))
-    ])
-    return outputs
+    # UPGRADE_PLAN.md 1.1: batched execution, chunked to bound memory. This is
+    # the single final test evaluation, so it is off the training hot path --
+    # but at n=10 the per-sample path costs ~1.3 s/sample, which is ~68 minutes
+    # on a 3,166-sample test set against ~18 s batched. Equivalence to the
+    # sequential oracle is pinned by tests/test_batched_execution.py.
+    return model.raw_expectations(np.asarray(X_eval),
+                                  already_preprocessed=already_preprocessed)
 
 
 def compute_classification_metrics(y_true: np.ndarray, raw_outputs: np.ndarray,

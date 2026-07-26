@@ -150,3 +150,25 @@ def test_batched_path_stays_unitary(headline_model):
         headline_model.batched_circuit, freeze.fixed_regression_inputs()[0], marker)
 
     assert freeze.unitarity_violations(tape) == []
+
+
+@pytest.mark.slow
+def test_final_test_evaluation_matches_the_sequential_oracle(
+        headline_model, archived_params, batch_inputs):
+    """The single final test evaluation is now batched (UPGRADE_PLAN.md 1.1).
+
+    It is off the training hot path, but at n=10 the per-sample path costs
+    ~1.3 s/sample -- about 68 minutes on a full test split. It may only be
+    ported if it changes no number.
+    """
+    from QCNN.utils.metrics import predict_raw_outputs
+
+    headline_model.quantum_params = headline_model._unflatten_params(archived_params)
+    sequential = np.array(
+        [float(headline_model.quantum_circuit(np.asarray(x), archived_params))
+         for x in batch_inputs])
+    batched = predict_raw_outputs(headline_model, np.asarray(batch_inputs),
+                                  already_preprocessed=True)
+
+    assert batched.shape == sequential.shape
+    np.testing.assert_allclose(batched, sequential, atol=freeze.REGRESSION_TOL, rtol=0.0)

@@ -73,6 +73,18 @@ def mutual_information(state, n_qubits: int, part_a, part_b) -> float:
     return float(s_a + s_b - s_ab)
 
 
+def meyer_wallach(state, n_qubits: int) -> float:
+    """Meyer-Wallach entangling capability Q (Phase 3.4).
+
+    ``Q = 2 (1 - (1/n) sum_k Tr[rho_k^2])`` over single-qubit reductions. Zero
+    for a product state, one for a maximally entangled state such as GHZ, and
+    the standard measure reported alongside expressibility in Sim et al. (2019).
+    """
+    purities = [purity(reduced_density_matrix(state, n_qubits, [k]))
+                for k in range(n_qubits)]
+    return float(2.0 * (1.0 - sum(purities) / n_qubits))
+
+
 def describe(state, n_qubits: int, keep, discard=None) -> dict:
     """Every E4 quantity for one stage, on the retained register."""
     rho = reduced_density_matrix(state, n_qubits, keep)

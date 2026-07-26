@@ -192,15 +192,21 @@ class PureQuantumNativeCNN:
             return self.batched_circuit(X, flat_params)
         return pnp.array([self.quantum_circuit(X[i], flat_params) for i in range(len(X))])
 
-    def quantum_predict_batch(self, X: np.ndarray) -> np.ndarray:
-        X_processed = np.asarray(self._preprocess_input(X))
+    def raw_expectations(self, X: np.ndarray, already_preprocessed: bool = False) -> np.ndarray:
+        """``<Z_readout>`` per sample, batched and chunked. Not differentiable.
+
+        Inference is not differentiated, so unlike the gradient path chunking
+        really does bound peak memory here: no tape is retained between chunks.
+        """
+        X_processed = np.asarray(X if already_preprocessed else self._preprocess_input(X))
         flat_params = self._flatten_params(self.quantum_params)
-        # Inference is not differentiated, so chunking really does bound memory.
         step = self.max_batch()
         chunks = [
             np.asarray(self.batched_circuit(X_processed[i:i + step], flat_params),
                        dtype=float).reshape(-1)
             for i in range(0, len(X_processed), step)
         ]
-        outputs = np.concatenate(chunks) if chunks else np.empty(0)
-        return np.where(outputs > 0, 1, -1)
+        return np.concatenate(chunks) if chunks else np.empty(0)
+
+    def quantum_predict_batch(self, X: np.ndarray) -> np.ndarray:
+        return np.where(self.raw_expectations(X) > 0, 1, -1)
