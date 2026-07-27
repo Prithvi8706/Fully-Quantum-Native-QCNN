@@ -1,0 +1,58 @@
+{
+  "T_readings": {
+    "allocated_parameter_slots": 269,
+    "effective_parameter_slots": 74,
+    "trainable_gates": 222,
+    "trainable_gates_from_effective_slots": 218
+  },
+  "artifact": "T6",
+  "bounds": {
+    "allocated_parameter_slots": {
+      "n_train": 7599,
+      "n_trainable_gates": 269,
+      "non_vacuous": true,
+      "sqrt_T_logT_over_N": 0.4450274105261463
+    },
+    "effective_parameter_slots": {
+      "n_train": 7599,
+      "n_trainable_gates": 74,
+      "non_vacuous": true,
+      "sqrt_T_logT_over_N": 0.20472791006546265
+    },
+    "trainable_gates": {
+      "n_train": 7599,
+      "n_trainable_gates": 222,
+      "non_vacuous": true,
+      "sqrt_T_logT_over_N": 0.39728556191944864
+    },
+    "trainable_gates_from_effective_slots": {
+      "n_train": 7599,
+      "n_trainable_gates": 218,
+      "non_vacuous": true,
+      "sqrt_T_logT_over_N": 0.3930271173855534
+    }
+  },
+  "caveats": [
+    "The theorem counts trainable gates, not parameters. T is therefore read off the frozen tape. The parameter-count readings are carried only so the gap is visible: the allocated total (269) overstates the circuit because most allocated slots never reach the tape, and the effective total (74) understates it because slots are reused across gates by the classifier block's modular indexing.",
+    "Caro et al. state a big-O result. What is reported is the scaling term with no constant attached, so \"non-vacuous\" means below 1 up to that unquantified constant and must be stated that way.",
+    "The effective-slot set comes from the M0 audit criterion (max |gradient| over 20 fixed inputs at archived weights, tolerance 1e-12). Run 3.2 reproduced the same count of 74 at n=10 from an independent criterion, so the split is structural, not an artifact of that threshold.",
+    "N is the clean 60/15/25 training split, which is 14% smaller than the historical 70/30 training set. The bound is computed against the protocol the headline was actually trained under."
+  ],
+  "claim": "Caro et al. (2022) sqrt(T log T / N) at the frozen headline",
+  "experiment": "3.5 generalization bound",
+  "gate_audit": {
+    "max_gates_from_one_slot": 4,
+    "n_operations_total": 327,
+    "n_slots_driving_multiple_gates": 48,
+    "n_slots_on_tape": 78,
+    "n_trainable_gates": 222,
+    "n_trainable_gates_from_effective_slots": 218
+  },
+  "image_size": 28,
+  "n_qubits": 10,
+  "n_train": 7599,
+  "preferred_reading": "trainable_gates",
+  "seconds": 0.019822359085083008,
+  "split_id": "adbb14862dfec2f7113dde062a63084b44e3c650a52066f9f3b9224987d45775",
+  "split_manifest": "idx_0v1_n12665_seed42.json"
+}

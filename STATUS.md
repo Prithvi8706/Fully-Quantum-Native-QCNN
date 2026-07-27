@@ -9,7 +9,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Track A (grid, M4→M5→M6):** `docs/superpowers/plans/2026-07-27-track-a-grid-handoff.md`
 **Track B (theory+hardware, M3/E5/M8→M7):** `docs/superpowers/plans/2026-07-27-track-b-theory-hardware-handoff.md`
 
-**Last updated:** 2026-07-27 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 204 passing
+**Last updated:** 2026-07-27 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 210 passing
 
 ---
 
@@ -20,7 +20,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
 | **M1 — Phase 1: affordable execution** | **COMPLETE 2026-07-26** | grid ≤7 nights **PASSED**; headline retrained clean at **98.29%** | §§3a–3e |
 | M2 — Phase 2: pooling theory (E1–E5) | **2.1, E1, E2, E3, E4, 2.7 done**; E5 blocked | **E1 agrees to ~1e-12: PASSED** (2.2e-16 at headline n=10) | `Results/evidence/`; §§7, 7a–7c |
-| M3 — Phase 3: model analysis | **3.2 and 3.4 run**; 3.1, 3.3, 3.5–3.7 remain | — | `Results/evidence/f_e_gradient_variance.json`, `t6_expressibility.json`; §12 |
+| M3 — Phase 3: model analysis | **3.2, 3.4, 3.5 run**; 3.1, 3.3, 3.6, 3.7 remain | — | `Results/evidence/f_e_gradient_variance.json`, `t6_expressibility.json`, `t6_generalization_bound.json`; §12 |
 | M4 — Phase 4: harder datasets | not started | — | — |
 | M5 — Phase 5: baselines + statistics | not started | — | — |
 | M6 — Phase 6: ablation grid | not started | — | — |
@@ -770,9 +770,47 @@ one, and the expressibility of the full parameterisation is not what governs its
 sounds. These are hypotheses, recorded so the manuscript does not silently pick one. The DLA
 (3.1) is the item that would discriminate.
 
+### 3.5 — generalization bound (**T6**, 2026-07-27)
+
+Caro et al. (2022) `sqrt(T log T / N)` at the frozen headline. N = 7,599, read from the clean
+split manifest `idx_0v1_n12665_seed42.json` rather than hardcoded. Runs in under a second.
+
+| Reading of T | T | `sqrt(T logT / N)` |
+|---|---|---|
+| **Trainable gates on the tape** | **222** | **0.3973** |
+| Trainable gates driven by effective slots | 218 | 0.3930 |
+| Effective parameter slots | 74 | 0.2047 |
+| Allocated parameter slots | 269 | 0.4450 |
+
+**The planned inputs were wrong, and this is the finding.** The prior note here said "plug
+T=74/269 → ~0.20 vs ~0.45, which is the parameter-frugality argument in one line". That
+argument does not survive, because **Caro's T counts trainable gates, not parameters**, and
+the two disagree in both directions at once:
+
+- **191 of the 269 allocated slots never reach the tape.** Only **78** appear in the frozen
+  circuit signature at all — the dead conv groups allocate 48 each and are never read, and the
+  classifier allocates 32 it indexes modularly. So 269 overstates the circuit badly.
+- **48 slots each drive more than one gate** (up to 4), through that same modular indexing. So
+  the 74 effective slots actually drive **218** gates, and 74 understates the circuit.
+
+In gate terms the effective-vs-allocated gap is **218 vs 222** — 0.3930 vs 0.3973, a difference
+of about 1%. **The dramatic 269→74 reduction nearly vanishes once T is counted correctly**,
+because the slots it removes were never on the circuit and the ones it keeps are reused. The
+parameter-frugality claim can still be made as a *parameter-count* statement, but it must not
+be attached to this bound.
+
+The tape audit is cross-checked against the M0 effective-parameter fixture from an independent
+code path: both give **78** syntactically-used slots
+(`test_headline_tape_audit_agrees_with_the_effective_params_fixture`).
+
+All four readings are non-vacuous (< 1), but only up to Caro's unquantified constant — the
+theorem is big-O, and the manuscript must say so rather than reporting 0.3973 as a gap.
+
+Evidence: `Results/evidence/t6_generalization_bound.json`. Suite: **210 passing**.
+
 **Not yet done in Phase 3:** 3.1 DLA, 3.3 effective dimension (needs the empirical Fisher plus
-matched MLP/CNN controls), 3.5 Caro bound (primitive exists; plug T=74/269 and N=7,599),
-3.6 inductive bias, 3.7 simulability prose.
+matched MLP/CNN controls — **gated on M5.1**, see the Track A ordering), 3.6 inductive bias,
+3.7 simulability prose.
 
 ## 9. M9 bibliography audit (2026-07-26)
 

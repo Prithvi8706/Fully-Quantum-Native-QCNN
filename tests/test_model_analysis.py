@@ -6,6 +6,8 @@ part those cannot see: that the runner feeds them the right thing.
 
 Everything runs at image_size 4 (n=4), so the file stays cheap.
 """
+import json
+
 import numpy as np
 import pennylane as qml
 import pytest
@@ -158,3 +160,80 @@ def test_expressibility_controls_separate_gross_deviations():
     assert c['degenerate_ensemble_kl'] > c['haar_reference_kl'] + 1.0
     assert c['inflated_fidelity_10x_kl'] > c['haar_reference_kl']
     assert 0.0 <= c['haar_mass_in_first_bin'] <= 1.0
+
+
+# --- 3.5 generalization bound -------------------------------------------------
+#
+# The bound arithmetic is pinned in test_capacity.py. What matters here is that
+# T is a gate count taken off the tape, because the whole point of 3.5 is that
+# the parameter counts the manuscript quotes are the wrong input to the theorem.
+
+
+def test_gate_count_is_not_the_slot_count(small_model):
+    """T counts gates. Slots and gates disagree, and the runner must not conflate them."""
+    cfg, model = small_model
+    n_slots = len(model._flatten_params(model.quantum_params))
+    audit = model_analysis.trainable_gate_counts(model, range(n_slots))
+
+    assert audit['n_trainable_gates'] > 0
+    assert audit['n_slots_on_tape'] <= n_slots
+    assert audit['n_trainable_gates'] <= audit['n_operations_total']
+
+
+def test_reused_slots_make_gates_outnumber_the_slots_that_drive_them(small_model):
+    """Modular indexing means one slot can drive several gates; that must show up."""
+    cfg, model = small_model
+    n_slots = len(model._flatten_params(model.quantum_params))
+    audit = model_analysis.trainable_gate_counts(model, range(n_slots))
+
+    assert audit['max_gates_from_one_slot'] >= 1
+    if audit['n_slots_driving_multiple_gates'] > 0:
+        assert audit['n_trainable_gates'] > audit['n_slots_on_tape']
+
+
+def test_headline_tape_audit_agrees_with_the_effective_params_fixture():
+    """Two independent code paths must agree on how many slots reach the tape.
+
+    The fixture counts syntactically-used slots via the M0 audit; this walks the
+    frozen tape signature. Disagreement would mean one of them is describing a
+    circuit the other is not.
+    """
+    with open(freeze.EFFECTIVE_PARAMS_FIXTURE) as fh:
+        fixture = json.load(fh)
+    audit = model_analysis.trainable_gate_counts(freeze.build_headline_model(),
+                                                 fixture['effective_slots'])
+
+    assert audit['n_slots_on_tape'] == fixture['n_syntactically_used']
+    assert audit['n_trainable_gates_from_effective_slots'] <= audit['n_trainable_gates']
+
+
+def test_generalization_run_is_well_formed():
+    result = model_analysis.run_generalization_bound()
+
+    assert result['artifact'] == 'T6'
+    assert result['n_train'] > 0
+    assert result['preferred_reading'] in result['bounds']
+    assert set(result['T_readings']) == set(result['bounds'])
+    for name, bound in result['bounds'].items():
+        assert bound['n_trainable_gates'] == result['T_readings'][name]
+        assert bound['n_train'] == result['n_train']
+
+
+def test_the_bound_grows_with_T():
+    """Monotonicity in T is what makes the four readings comparable at all."""
+    result = model_analysis.run_generalization_bound()
+    by_t = sorted(result['bounds'].values(), key=lambda b: b['n_trainable_gates'])
+    values = [b['sqrt_T_logT_over_N'] for b in by_t]
+
+    assert values == sorted(values)
+
+
+def test_n_train_comes_from_the_manifest(tmp_path):
+    """N must be read from the split, not hardcoded, or the bound can silently drift."""
+    manifest = tmp_path / 'fake_split.json'
+    manifest.write_text(json.dumps({'train_idx': list(range(500)), 'id': 'deadbeef'}))
+
+    result = model_analysis.run_generalization_bound(manifest_path=str(manifest))
+
+    assert result['n_train'] == 500
+    assert result['split_id'] == 'deadbeef'

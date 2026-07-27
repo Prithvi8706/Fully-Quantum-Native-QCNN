@@ -33,15 +33,17 @@ last; neither track starts them.
 
 Both close a definition-of-done checkbox in minutes and need nothing from Track A.
 
-### 2.1 M3.5 — Caro generalization bound
+### 2.1 M3.5 — Caro generalization bound — **DONE 2026-07-27**
 
-`caro_generalization_bound` already exists at `QCNN/utils/capacity.py:123`, validated by
-5 tests. Nothing to build; just run it and record.
+Run via `python -m experiments.model_analysis --experiment generalization_bound`.
+Evidence: `Results/evidence/t6_generalization_bound.json`. Full write-up in `STATUS.md` §12.
 
-Plug **T = 74 effective** and **T = 269 allocated**, against **N = 7,599** (the clean
-headline train split, manifest `idx_0v1_n12665_seed42.json`). Report both rows side by
-side — roughly 0.20 vs 0.45, which is the parameter-frugality argument in one line.
-Evidence JSON into `Results/evidence/`, following `experiments/model_analysis.py`.
+**Read that write-up before quoting the number.** The plan for this item — "plug T=74 and
+T=269, report ~0.20 vs ~0.45 as the parameter-frugality argument" — was wrong. Caro's T
+counts **trainable gates**, not parameters. Only 78 of the 269 allocated slots reach the
+tape, and 48 of those drive multiple gates, so the honest T is **222** (0.3973) and the
+effective-vs-allocated gap collapses to 218 vs 222. The frugality claim survives as a
+parameter-count statement but must not be hung on this bound.
 
 ### 2.2 M3.7 — simulability statement
 

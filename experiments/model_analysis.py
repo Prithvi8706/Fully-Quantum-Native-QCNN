@@ -17,6 +17,11 @@ Implemented here:
       *input is fixed and the parameters vary*, so what is measured is the
       ansatz's expressibility rather than the data's spread.
 
+  3.5 generalization bound -- Caro et al. (2022) ``sqrt(T log T / N)``. T is
+      counted off the frozen tape rather than taken from the parameter-slot
+      total, because the two differ in both directions (see
+      ``trainable_gate_counts``).
+
 Every measure used here is validated against analytically known cases in
 ``tests/test_capacity.py`` and ``tests/test_state_metrics.py`` before any circuit
 output is believed -- the convention that caught a sign defect in E4's entropy.
@@ -24,7 +29,10 @@ output is believed -- the convention that caught a sign defect in E4's entropy.
 Usage:
   python -m experiments.model_analysis --experiment gradient_variance
   python -m experiments.model_analysis --experiment expressibility
-  python -m experiments.model_analysis --experiment both
+  python -m experiments.model_analysis --experiment generalization_bound
+  python -m experiments.model_analysis --experiment all
+
+``both`` is kept as the pre-3.5 pair (gradient variance + expressibility).
 """
 from __future__ import annotations
 
@@ -387,6 +395,165 @@ def _report_expressibility(result: dict) -> None:
     print('  elapsed            : {:.1f}s'.format(result['seconds']))
 
 
+# ---------------------------------------------------------------------------
+# 3.5 -- generalization bound (T6)
+#
+# Caro et al. (2022) bound the generalization gap by ~sqrt(T log T / N), for T
+# trainable gates and N training samples. The quantity that needs care here is
+# T, not the arithmetic: the manuscript's "269 parameters" is not a gate count,
+# and neither is M0's "74 effective". Both are counted, and the tape is counted
+# too, so the reader can see how far apart they are.
+# ---------------------------------------------------------------------------
+
+HEADLINE_SPLIT_MANIFEST = os.path.join('Results', 'manifests',
+                                       'idx_0v1_n12665_seed42.json')
+GENERALIZATION_EVIDENCE = os.path.join('Results', 'evidence',
+                                       't6_generalization_bound.json')
+
+
+def _slots_driven_by(operation: dict) -> list:
+    """Slot indices an operation reads, from a ``freeze.tape_signature`` entry."""
+    return [int(p[len('slot'):]) for p in operation['params'] if p.startswith('slot')]
+
+
+def trainable_gate_counts(model, effective_slots) -> dict:
+    """Count trainable *gates* on the frozen tape. This is Caro's T.
+
+    Counting parameter slots instead would be wrong in two directions at once:
+
+    - most allocated slots never reach the tape (the classifier allocates 32 and
+      indexes them modularly, the dead conv groups allocate 48 each and are
+      never read), so the allocated total overstates the circuit; and
+    - several slots that do reach the tape drive more than one gate, through
+      that same modular indexing, so the effective slot count understates it.
+
+    Both directions are reported rather than reconciled, because the manuscript
+    currently quotes a parameter count where the theorem wants a gate count.
+    """
+    signature = freeze.circuit_signature(model)
+    effective = {int(s) for s in effective_slots}
+
+    n_trainable = n_from_effective = 0
+    gates_per_slot = {}
+    for op in signature['operations']:
+        slots = _slots_driven_by(op)
+        if not slots:
+            continue
+        n_trainable += 1
+        if effective.intersection(slots):
+            n_from_effective += 1
+        for slot in slots:
+            gates_per_slot[slot] = gates_per_slot.get(slot, 0) + 1
+
+    return {
+        'n_operations_total': len(signature['operations']),
+        'n_trainable_gates': n_trainable,
+        'n_trainable_gates_from_effective_slots': n_from_effective,
+        'n_slots_on_tape': len(gates_per_slot),
+        'n_slots_driving_multiple_gates': sum(1 for c in gates_per_slot.values() if c > 1),
+        'max_gates_from_one_slot': max(gates_per_slot.values()) if gates_per_slot else 0,
+    }
+
+
+def _headline_train_size(manifest_path: str) -> tuple:
+    """``(n_train, split_id)`` read from the clean 60/15/25 manifest.
+
+    Read rather than hardcoded so N cannot drift out of agreement with the split
+    the headline was actually trained on.
+    """
+    with open(manifest_path) as fh:
+        manifest = json.load(fh)
+    return len(manifest['train_idx']), manifest['id']
+
+
+def run_generalization_bound(manifest_path: str = HEADLINE_SPLIT_MANIFEST,
+                             fixture_path: str = None) -> dict:
+    """Caro generalization scaling at the frozen headline (roadmap 3.5)."""
+    fixture_path = fixture_path or freeze.EFFECTIVE_PARAMS_FIXTURE
+    with open(fixture_path) as fh:
+        fixture = json.load(fh)
+
+    n_train, split_id = _headline_train_size(manifest_path)
+    started = time.time()
+    gates = trainable_gate_counts(freeze.build_headline_model(),
+                                  fixture['effective_slots'])
+    elapsed = time.time() - started
+
+    # Four readings of T. The first two are gate counts and are what the theorem
+    # asks for; the last two are the parameter counts the manuscript currently
+    # quotes, carried so the difference is visible rather than silently resolved.
+    readings = {
+        'trainable_gates': gates['n_trainable_gates'],
+        'trainable_gates_from_effective_slots':
+            gates['n_trainable_gates_from_effective_slots'],
+        'effective_parameter_slots': int(fixture['n_effective']),
+        'allocated_parameter_slots': int(fixture['n_allocated']),
+    }
+    bounds = {name: capacity.caro_generalization_bound(t, n_train)
+              for name, t in readings.items()}
+
+    return {
+        'experiment': '3.5 generalization bound',
+        'artifact': 'T6',
+        'claim': 'Caro et al. (2022) sqrt(T log T / N) at the frozen headline',
+        'n_qubits': freeze.HEADLINE_N_QUBITS,
+        'image_size': freeze.HEADLINE_IMAGE_SIZE,
+        'n_train': n_train,
+        'split_manifest': os.path.basename(manifest_path),
+        'split_id': split_id,
+        'gate_audit': gates,
+        'T_readings': readings,
+        'bounds': bounds,
+        'preferred_reading': 'trainable_gates',
+        'seconds': float(elapsed),
+        'caveats': [
+            'The theorem counts trainable gates, not parameters. T is therefore '
+            'read off the frozen tape. The parameter-count readings are carried '
+            'only so the gap is visible: the allocated total (269) overstates '
+            'the circuit because most allocated slots never reach the tape, and '
+            'the effective total (74) understates it because slots are reused '
+            'across gates by the classifier block\'s modular indexing.',
+            'Caro et al. state a big-O result. What is reported is the scaling '
+            'term with no constant attached, so "non-vacuous" means below 1 up '
+            'to that unquantified constant and must be stated that way.',
+            'The effective-slot set comes from the M0 audit criterion (max '
+            '|gradient| over 20 fixed inputs at archived weights, tolerance '
+            '1e-12). Run 3.2 reproduced the same count of 74 at n=10 from an '
+            'independent criterion, so the split is structural, not an artifact '
+            'of that threshold.',
+            'N is the clean 60/15/25 training split, which is 14% smaller than '
+            'the historical 70/30 training set. The bound is computed against '
+            'the protocol the headline was actually trained under.',
+        ],
+    }
+
+
+def _report_generalization_bound(result: dict) -> None:
+    g = result['gate_audit']
+    print('\n3.5 -- generalization bound (Caro et al. 2022)')
+    print('  n_qubits           : {}'.format(result['n_qubits']))
+    print('  N (train)          : {}   [{}]'.format(
+        result['n_train'], result['split_manifest']))
+    print()
+    print('  tape audit:')
+    print('    operations total          : {}'.format(g['n_operations_total']))
+    print('    trainable gates           : {}'.format(g['n_trainable_gates']))
+    print('    slots reaching the tape   : {} of {}'.format(
+        g['n_slots_on_tape'], result['T_readings']['allocated_parameter_slots']))
+    print('    slots driving >1 gate     : {}   (max {} gates from one slot)'.format(
+        g['n_slots_driving_multiple_gates'], g['max_gates_from_one_slot']))
+    print()
+    print('  {:<38s} {:>6s}  {:>12s}  {:>11s}'.format(
+        'reading of T', 'T', 'sqrt(TlogT/N)', 'non-vacuous'))
+    for name, bound in result['bounds'].items():
+        marker = ' <-' if name == result['preferred_reading'] else ''
+        print('  {:<38s} {:>6d}  {:>12.4f}  {:>11s}{}'.format(
+            name.replace('_', ' '), bound['n_trainable_gates'],
+            bound['sqrt_T_logT_over_N'],
+            'yes' if bound['non_vacuous'] else 'no', marker))
+    print('\n  elapsed            : {:.1f}s'.format(result['seconds']))
+
+
 def _write(result: dict, path: str) -> None:
     os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
     with open(path, 'w') as fh:
@@ -397,8 +564,9 @@ def _write(result: dict, path: str) -> None:
 def main():
     ap = argparse.ArgumentParser(description='Phase 3 model analysis (M3)')
     ap.add_argument('--experiment',
-                    choices=['gradient_variance', 'expressibility', 'both'],
-                    default='both')
+                    choices=['gradient_variance', 'expressibility',
+                             'generalization_bound', 'both', 'all'],
+                    default='all')
     ap.add_argument('--image-size', type=int, default=freeze.HEADLINE_IMAGE_SIZE,
                     help='expressibility only; the gradient sweep spans the family')
     ap.add_argument('--image-sizes', type=int, nargs='+', default=list(SCALING_IMAGE_SIZES),
@@ -407,21 +575,29 @@ def main():
     ap.add_argument('--batch', type=int, default=4)
     ap.add_argument('--n-pairs', type=int, default=1000)
     ap.add_argument('--n-bins', type=int, default=75)
+    ap.add_argument('--split-manifest', default=HEADLINE_SPLIT_MANIFEST,
+                    help='generalization bound only; supplies N')
     args = ap.parse_args()
 
-    if args.experiment in ('gradient_variance', 'both'):
+    if args.experiment in ('gradient_variance', 'both', 'all'):
         print('3.2 -- gradient variance sweep ({} inits per qubit count)'.format(args.n_inits))
         result = run_gradient_variance(image_sizes=tuple(args.image_sizes),
                                        n_inits=args.n_inits, batch=args.batch)
         _report_gradient_variance(result)
         _write(result, GRADIENT_EVIDENCE)
 
-    if args.experiment in ('expressibility', 'both'):
+    if args.experiment in ('expressibility', 'both', 'all'):
         print('\n3.4 -- expressibility ({} parameter pairs)'.format(args.n_pairs))
         result = run_expressibility(image_size=args.image_size, n_pairs=args.n_pairs,
                                     n_bins=args.n_bins)
         _report_expressibility(result)
         _write(result, EXPRESSIBILITY_EVIDENCE)
+
+    if args.experiment in ('generalization_bound', 'all'):
+        print('\n3.5 -- generalization bound')
+        result = run_generalization_bound(manifest_path=args.split_manifest)
+        _report_generalization_bound(result)
+        _write(result, GENERALIZATION_EVIDENCE)
 
     return 0
 
