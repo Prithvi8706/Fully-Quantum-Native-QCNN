@@ -6,6 +6,8 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Roadmap:** `docs/superpowers/plans/2026-07-23-fqcnn-q1-upgrade-roadmap.md`
 **Design:** `docs/superpowers/specs/2026-07-23-fqcnn-q1-upgrade-design.md`
 **Month plan:** `docs/superpowers/plans/2026-07-25-fqcnn-remaining-work-month-plan.md`
+**Track A (grid, M4→M5→M6):** `docs/superpowers/plans/2026-07-27-track-a-grid-handoff.md`
+**Track B (theory+hardware, M3/E5/M8→M7):** `docs/superpowers/plans/2026-07-27-track-b-theory-hardware-handoff.md`
 
 **Last updated:** 2026-07-27 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 204 passing
 
