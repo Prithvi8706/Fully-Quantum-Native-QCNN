@@ -45,9 +45,18 @@ tape, and 48 of those drive multiple gates, so the honest T is **222** (0.3973) 
 effective-vs-allocated gap collapses to 218 vs 222. The frugality claim survives as a
 parameter-count statement but must not be hung on this bound.
 
-### 2.2 M3.7 — simulability statement
+### 2.2 M3.7 — simulability statement — **DONE 2026-07-29**
 
-Pure prose, trivial, not written. No compute, no primitive.
+Drafted in `docs/simulability_statement.md`; write-up in `STATUS.md` §12. Prose only, no
+compute, no primitive. **Not installed in `fqcnn.tex`** — that is M10.3.
+
+Two spec corrections were applied rather than copied. `UPGRADE_PLAN.md` 3.7's "~76-parameter"
+is stale (use 269 allocated / 78 on tape / **74 effective** / **222 trainable gates**, and
+always name which), and its "characterises its scaling (Phase 8)" clause is **not** asserted
+because M8 has not run. The draft also states plainly that every number in the paper is a
+classical simulation and that M7's real-QPU point does not exist yet.
+
+With §2 closed, **§3's DLA is the next piece of work** — §4's items stay blocked on Track A.
 
 ---
 
@@ -171,7 +180,8 @@ artifacts exist. Evidence goes to `Results/evidence/*.json`; the manuscript is M
   backslash escaping; it corrupted `fqcnn.tex` once and bit three times. Write scripts to
   a file with the Write tool instead.
 - **Treat `estimate_cost.py` projections as lower bounds.**
-- Suite is **204 tests passing** as of 2026-07-27. Keep it green; it is the gate.
+- Suite is **210 tests passing** as of 2026-07-29 (was 204 when this file was written; 3.5 added
+  six). Keep it green; it is the gate.
 
 ## 8. Decisions already taken — do not re-litigate
 

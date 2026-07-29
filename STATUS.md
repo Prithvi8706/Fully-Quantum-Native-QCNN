@@ -9,7 +9,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Track A (grid, M4→M5→M6):** `docs/superpowers/plans/2026-07-27-track-a-grid-handoff.md`
 **Track B (theory+hardware, M3/E5/M8→M7):** `docs/superpowers/plans/2026-07-27-track-b-theory-hardware-handoff.md`
 
-**Last updated:** 2026-07-27 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 210 passing
+**Last updated:** 2026-07-29 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 210 passing
 
 ---
 
@@ -20,7 +20,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
 | **M1 — Phase 1: affordable execution** | **COMPLETE 2026-07-26** | grid ≤7 nights **PASSED**; headline retrained clean at **98.29%** | §§3a–3e |
 | M2 — Phase 2: pooling theory (E1–E5) | **2.1, E1, E2, E3, E4, 2.7 done**; E5 blocked | **E1 agrees to ~1e-12: PASSED** (2.2e-16 at headline n=10) | `Results/evidence/`; §§7, 7a–7c |
-| M3 — Phase 3: model analysis | **3.2, 3.4, 3.5 run**; 3.1, 3.3, 3.6, 3.7 remain | — | `Results/evidence/f_e_gradient_variance.json`, `t6_expressibility.json`, `t6_generalization_bound.json`; §12 |
+| M3 — Phase 3: model analysis | **3.2, 3.4, 3.5, 3.7 done**; 3.1 next, 3.3/3.6 blocked on M5.1 | — | `Results/evidence/f_e_gradient_variance.json`, `t6_expressibility.json`, `t6_generalization_bound.json`, `docs/simulability_statement.md`; §12 |
 | M4 — Phase 4: harder datasets | not started | — | — |
 | M5 — Phase 5: baselines + statistics | not started | — | — |
 | M6 — Phase 6: ablation grid | not started | — | — |
@@ -684,7 +684,7 @@ is often zero here -- Theorem 1 guarantees it for one arm -- and chi-square is u
 
 Evidence: `Results/evidence/t5_pooling_arms.json`.
 
-## 12. Phase 3 — model analysis: 3.2 and 3.4 (2026-07-26)
+## 12. Phase 3 — model analysis: 3.2, 3.4, 3.5, 3.7
 
 `python -m experiments.model_analysis --experiment {gradient_variance,expressibility}`
 
@@ -808,9 +808,51 @@ theorem is big-O, and the manuscript must say so rather than reporting 0.3973 as
 
 Evidence: `Results/evidence/t6_generalization_bound.json`. Suite: **210 passing**.
 
-**Not yet done in Phase 3:** 3.1 DLA, 3.3 effective dimension (needs the empirical Fisher plus
-matched MLP/CNN controls — **gated on M5.1**, see the Track A ordering), 3.6 inductive bias,
-3.7 simulability prose.
+### 3.7 — classical-simulability statement (**DONE 2026-07-29**)
+
+Prose only, no compute. Drafted into `docs/simulability_statement.md`; **not** installed in
+`fqcnn.tex` — that is M10.3, and the Track B contract keeps both tracks out of the manuscript
+until then. Suite unchanged at **210 passing**.
+
+The admission: the headline model is 10 qubits — a 1,024-amplitude state, 16 KB in
+`complex128` — so it is exactly and cheaply classically simulable, and **every number in this
+paper is a classical simulation** (`default.qubit` backprop for training and Phase 3,
+`lightning.qubit` adjoint as the sequential oracle, `default.mixed` for E1/E2 and `noise_sim`).
+**No quantum-advantage claim is made**, and MNIST 0v1 being ~99.8% linearly separable means the
+evidence could not support one. Two of the three reasons simulation is *easy* are architectural
+rather than incidental — the main path is unitary end to end (A3, permitted by Theorem 1) so a
+state-vector simulator suffices, and the tape is shallow (327 operations, 222 trainable gates).
+
+The framing that earns its place: simulability is the **precondition** for the evidence, not a
+weakness of it. Theorem 1's 2.2e-16 tie is readable only because the state can be computed
+exactly two ways.
+
+**Two corrections to the `UPGRADE_PLAN.md` 3.7 spec, applied rather than copied:**
+
+1. The spec's "~76-parameter" is stale, and 3.5 showed the ambiguity behind it is itself a
+   finding. The statement uses the audited figures and always names the quantity: 269 allocated
+   slots · 78 on the tape · **74 effective** · **222 trainable gates** · 218 gates from effective
+   slots · 327 total operations. The two families disagree in both directions, so "~76
+   parameters" is not a safe shorthand anywhere in the manuscript.
+2. The spec pairs the admission with "and characterises its scaling (Phase 8)". **M8 has not
+   run** — the scaling sweep and resource table are both at zero cells (§4) — so the scaling
+   half is written as pending, not asserted. Likewise **there is no hardware result**: M7.3's
+   real-QPU point is unrun and the QPU allocation stands at 0 minutes consumed (§5).
+
+Recorded as open in the draft, because they bear on how strong the admission should be: **3.1
+(DLA) is the item that could change it qualitatively** — 10 qubits is simulable for trivial
+reasons, but a polynomially-scaling DLA would imply the *family* is efficiently simulable at
+arbitrary n via the Lie-algebraic simulation results, which is a finding to report rather than
+bury. And 3.4's Haar-indistinguishability is a statement about the output ensemble, not about
+simulation hardness, so it must not be recruited as evidence of "quantumness".
+
+One resource caveat travels with the statement: `AmplitudeEmbedding` at n=10 decomposes into a
+~2,026-CNOT Möttönen sequence (§7), so on real hardware state prep, not the model, would bind.
+Quantifying that split is M8.1's and is recorded as an observation, not a number.
+
+**Not yet done in Phase 3:** 3.1 DLA — now the next real piece of work — plus 3.3 effective
+dimension and 3.6 inductive bias, both of which need the empirical Fisher and matched MLP/CNN
+controls and stay **gated on M5.1** (see the Track A ordering).
 
 ## 9. M9 bibliography audit (2026-07-26)
 
