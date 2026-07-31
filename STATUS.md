@@ -9,7 +9,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Track A (grid, M4→M5→M6):** `docs/superpowers/plans/2026-07-27-track-a-grid-handoff.md`
 **Track B (theory+hardware, M3/E5/M8→M7):** `docs/superpowers/plans/2026-07-27-track-b-theory-hardware-handoff.md`
 
-**Last updated:** 2026-07-29 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 210 passing
+**Last updated:** 2026-07-31 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 276 passing
 
 ---
 
@@ -20,7 +20,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
 | **M1 — Phase 1: affordable execution** | **COMPLETE 2026-07-26** | grid ≤7 nights **PASSED**; headline retrained clean at **98.29%** | §§3a–3e |
 | M2 — Phase 2: pooling theory (E1–E5) | **2.1, E1, E2, E3, E4, 2.7 done**; E5 blocked | **E1 agrees to ~1e-12: PASSED** (2.2e-16 at headline n=10) | `Results/evidence/`; §§7, 7a–7c |
-| M3 — Phase 3: model analysis | **3.2, 3.4, 3.5, 3.7 done**; 3.1 next, 3.3/3.6 blocked on M5.1 | — | `Results/evidence/f_e_gradient_variance.json`, `t6_expressibility.json`, `t6_generalization_bound.json`, `docs/simulability_statement.md`; §12 |
+| M3 — Phase 3: model analysis | **3.1, 3.2, 3.4, 3.5, 3.7 done**; 3.3/3.6 blocked on M5.1 | DLA exact at n=10; **no trainability certificate — it is exponential** | `Results/evidence/t6_dynamical_lie_algebra.json`, `f_e_gradient_variance.json`, `t6_expressibility.json`, `t6_generalization_bound.json`, `docs/simulability_statement.md`; §12 |
 | M4 — Phase 4: harder datasets | not started | — | — |
 | M5 — Phase 5: baselines + statistics | not started | — | — |
 | M6 — Phase 6: ablation grid | not started | — | — |
@@ -408,12 +408,12 @@ extrapolated rows are sound. Batch 32 is measured end to end, not extrapolated.
 | T3 | Baselines, CIs, paired tests, cost columns | M5 | not started |
 | T4 | Ablation Δacc ± CI | M6 | not started |
 | T5 | Pooling arms + SU(4) ceiling + measurement tie | M2 | **generated** (§7c) |
-| T6 | DLA, effective dim, expressibility, gen. bound | M3 | **partial** — expressibility + Q generated (§12); DLA, effective dim, bound remain |
+| T6 | DLA, effective dim, expressibility, gen. bound | M3 | **partial** — DLA, expressibility + Q, and bound generated (§12); effective dim remains (blocked on M5.1) |
 | F-A | E1 exact tie + E2 dephasing | M2.2–2.3 | **both generated** |
 | F-B | Coherence / purity / entropy / MI per stage | M2.5 | **generated** (§7b) |
 | F-C | Noise ladder ideal → fake → real + threshold | M7 | not started |
 | F-D | Scaling family | M8.2 | not started |
-| F-E | Gradient variance + DLA certificate | M3.1–3.2 | **variance sweep generated** (§12); DLA (3.1) remains |
+| F-E | Gradient variance + DLA certificate | M3.1–3.2 | **both generated** (§12) — but there is **no certificate**: the DLA is the full su(2ⁿ) |
 | F-F | Learning curves + calibration | M5.4–5.5 | not started |
 
 ## 7. B1 — the E1 blocker (recorded 2026-07-25)
@@ -684,13 +684,188 @@ is often zero here -- Theorem 1 guarantees it for one arm -- and chi-square is u
 
 Evidence: `Results/evidence/t5_pooling_arms.json`.
 
-## 12. Phase 3 — model analysis: 3.2, 3.4, 3.5, 3.7
+## 12. Phase 3 — model analysis: 3.1, 3.2, 3.4, 3.5, 3.7
 
-`python -m experiments.model_analysis --experiment {gradient_variance,expressibility}`
+`python -m experiments.model_analysis --experiment {dla,gradient_variance,expressibility}`
 
 Runner follows `pooling_analysis.py`: a `run_*` per item, `--experiment` CLI, JSON into
 `Results/evidence/`. Both measures were pinned against analytically known cases first —
 `variance_decay_fit` is new and has 6 tests recovering exact exponential and power-law series.
+
+### 3.1 — dynamical Lie algebra (**T6 / F-E**, 2026-07-31)
+
+`python -m experiments.model_analysis --experiment dla`. Exact closure by iterated commutators
+in the Pauli basis, 1,658 s total, no overnight compute. Evidence:
+`Results/evidence/t6_dynamical_lie_algebra.json`.
+
+**Exact closure was reached at the headline n=10 for all three generator sets** — 1,048,575
+basis elements enumerated, not a truncation and not an extrapolation. n=12 and n=14 are capped
+and are reported as lower bounds.
+
+#### "The ansatz's generators" is ambiguous, and the ambiguity is the finding
+
+The same trap 3.5 hit with Caro's *T*. `UPGRADE_PLAN.md` 3.1 says "the Lie closure of the frozen
+ansatz's generators". The frozen tape carries **222 trainable gates and 104 fixed ones** (96
+CNOTs in the convolution kernel plus the 8 inert `RY(0.02)`s), so that phrase names three
+different algebras and they do not agree:
+
+| Generator set | What it is | dim at n=10 |
+|---|---|---|
+| `parameterized` | trainable-gate generators as they appear; the literal spec | **65,550** |
+| `propagated` | the same, conjugated through the fixed prefix, so the circuit really is `F · ∏ exp(−iθₖH̃ₖ)` — **the algebra the Ragone/Fontana variance expressions are stated over** | **1,048,575** |
+| `full` | trainable plus fixed-gate generators, so `exp(g)` provably contains the circuit — **the algebra g-sim simulability needs** | **1,048,575** |
+
+su(2¹⁰) has dimension 1,048,575. So the two algebras that any theorem here quantifies over are
+**the entire special unitary algebra**, and the literal reading understates the circuit by a
+factor of 16. Reporting 65,550 as "the DLA" would be quoting Ragone et al. outside their
+hypotheses, because the 96 CNOTs it ignores are not optional parts of the circuit.
+
+The propagation is checked against the circuit itself, not asserted:
+`test_propagated_generators_reconstruct_the_circuit` rebuilds the frozen unitary at n=4 as
+`F · ∏ exp(−iθₖH̃ₖ/2)` and matches to 1e-9. A wrong conjugation order would otherwise yield a
+generator set belonging to no circuit.
+
+#### The sweep
+
+| n | su(2ⁿ) ceiling | `parameterized` | `propagated` | `full` |
+|---|---|---|---|---|
+| 4 | 255 | 255 | 255 | 255 |
+| 6 | 4,095 | 270 | 4,095 | 4,095 |
+| 8 | 65,535 | 65,535 | 65,535 | 65,535 |
+| **10** | **1,048,575** | **65,550** | **1,048,575** | **1,048,575** |
+| 12 | 16,777,215 | 65,790 | ≥120,000 | ≥120,000 |
+| 14 | 268,435,455 | 65,805 | ≥120,000 | ≥120,000 |
+
+#### 1. There is no trainability certificate, and this is the opposite of what 3.1 was for
+
+`UPGRADE_PLAN.md` 3.1's premise was "polynomially-sized DLA ⇒ no barren plateau, upgrading the
+paper's Pesah et al. citation from analogy to a computed certificate for this exact circuit."
+**The premise fails.** dim g = 4ⁿ − 1 is exponential, so the Ragone et al. (2024) / Fontana et
+al. route certifies nothing; applied under its own 2-design hypothesis its exact variance
+expressions would predict a plateau, not rule one out.
+
+So the definition-of-done item *"Trainability certificate (DLA + variance sweep)"* **cannot be
+closed by its DLA half** and stays unticked (§9). The Pesah et al. citation remains an analogy.
+What the manuscript may now say is stronger than silence and weaker than a certificate: the DLA
+was computed exactly for this circuit, it is the full su(2ⁿ), and therefore the
+poly-DLA argument is unavailable in either direction.
+
+#### 2. The simulability half, reported because it is the other face of the same number
+
+A polynomially-sized DLA would have implied the *family* is efficiently classically simulable
+at arbitrary n via the Lie-algebraic (g-sim) results — the consequence `docs/simulability_statement.md`
+§4 recorded as open and load-bearing. It does not arise: g-sim needs the circuit inside
+`exp(g)` for a small `g`, and here `g` is everything.
+
+**This is not a hardness result and must not be written as one.** It closes one
+efficient-simulation route. The tape is shallow (327 operations, three pooling stages), which is
+exactly the regime where tensor-network simulation may still succeed. Simulability at arbitrary
+n is **open, with one route ruled out**. `docs/simulability_statement.md` §4 is updated
+accordingly; §1's admission is untouched, because at ten qubits simulability follows from 1,024
+amplitudes and never depended on the DLA.
+
+#### 3. It discriminates the 3.2/3.4 tension: (a) is refuted
+
+The recorded reconciliations of "Haar-indistinguishable at n=10, yet gradients survive to n=14":
+
+- **(a) "only 74 of 269 slots are live, so the *effective* ansatz is far smaller than the
+  nominal one" — refuted.** The live parameterisation generates the **entire** su(2¹⁰). A sparse
+  live-slot count does not shrink the reachable algebra, so the effective-parameter audit cannot
+  be the mechanism that saves trainability. This is the one reconciliation the measurement
+  settles, and it settles it against the reading that was most convenient.
+- **(b) "n ≤ 14 is short of asymptotic" — survives, and is sharpened into something different.**
+  The circuit has **222 trainable gates against a DLA of dimension 1,048,575**, and the gate
+  count grows roughly linearly in n while dim g grows as 4ⁿ. The gap widens with n rather than
+  closing, so this family does not approach the asymptotic regime *at any n* — it is not that
+  n=14 is too small.
+- **(c) "the expressibility measure saturates at n=10" — survives** on 3.4's own controls
+  (Haar holds 0.9999989 of its mass in the first of 75 bins).
+
+The logic that ties this together, stated as modus tollens so it does not overreach: an
+exponential DLA means that **if** the ansatz formed a 2-design over `exp(g)`, the variance would
+be exponentially suppressed. 3.2 measures that it is not, to n=14. Therefore the 2-design
+premise fails for this circuit at these depths. Both Holmes et al.'s expressibility argument and
+the DLA variance expressions are statements about ansätze that randomise over their group, and
+this one does not. **The manuscript may now say why the plateau predictions do not bite here,
+rather than choosing silently among (a)/(b)/(c).**
+
+#### 4. Where the algebra actually comes from — an architectural finding
+
+The `parameterized` algebra is exactly a direct sum of full su blocks over the **pooling**
+connectivity graph, at every n (`sum(4^|C| − 1)` matches the enumerated dimension in all six
+cases):
+
+| n | components | dimension |
+|---|---|---|
+| 8 | [8] | 65,535 |
+| **10** | **[0–7], [8,9]** | **65,535 + 15 = 65,550** |
+| 12 | [8], [4] | 65,535 + 255 = 65,790 |
+| 14 | [8], [4], [2] | 65,535 + 255 + 15 = 65,805 |
+
+The largest block is **pinned at 8 wires from n=8 onward**, because there are exactly three
+pooling stages and the merge tree therefore cannot join more than 2³ wires. So the
+parameterized-only algebra grows merely *linearly* in n past that point — "polynomial", with a
+constant of 65,535, which is why polynomial scaling is worthless as a claim without its constant.
+
+The two ablation arms attribute this (capped at 120,000 with the su(2ⁿ) certificate supplying the
+exact value; the frozen row is the exact enumeration above):
+
+| Arm at n=10 | `parameterized` | `propagated` | `full` |
+|---|---|---|---|
+| frozen | 65,550 | 1,048,575 | 1,048,575 |
+| `pool_none` | **30** (= 3n, local su(2) only) | 1,048,575 (certificate) | 1,048,575 (certificate) |
+| `ent_none` | 65,550 | **65,550** | **65,550** |
+
+Two readings, both about the frozen architecture rather than about Lie theory:
+
+1. **Pooling is the model's only trainable entangler.** Remove it and no parameterised gate is
+   entangling at all — the algebra collapses to local su(2) on ten wires. The convolution layer
+   contributes trainable *rotations* and *fixed* entanglement, nothing trainable and entangling.
+   Read next to E3, where `pool_none` is 2.7pp worse and significant on both tests, this says
+   what the pooling block is doing structurally.
+2. **The exponential size is bought entirely by non-trainable gates.** Delete the 96 fixed CNOTs
+   (`ent_none`) and all three algebras drop from 1,048,575 to 65,550 and stay block-diagonal —
+   a factor of 16. The circuit's reach over state space comes from gates that have no parameters
+   and were never presented as a design choice.
+
+#### 5. Controls — what makes a dimension readable
+
+Carrying 3.4's habit. Two reference ansätze with independently known dimensions were closed by
+the same routine at **the same n**, in the same run:
+
+| Control | Known dimension | At n=10 | Agrees |
+|---|---|---|---|
+| local rotations only | 3n (su(2)^⊕ⁿ) | 30 | yes |
+| open-chain transverse-field Ising | 2n² − n (Wiersema et al. 2024) | 190 | yes |
+
+Both agree at every n from 4 to 14. The Ising arm is the load-bearing one: it is a **polynomial**
+answer from the same code that returns 1,048,575 for the FQCNN, so the exponential result is a
+property of the circuit and not of the closure routine. In `tests/test_lie_algebra.py` the
+primitive is additionally pinned against su(2) = 3, su(2)^⊕ⁿ = 3n, the universality result
+4ⁿ − 1, TFIM at n = 2,3,4, and — the control a formula pin cannot give — **an independent
+cross-check against PennyLane's `qml.pauli.lie_closure`**, which catches an error shared between
+this code and my reading of the references.
+
+#### 6. Numerical hygiene, checked rather than assumed
+
+The one hazard was the propagated set: conjugation through the fixed `RY(0.02)`s could drive
+coefficients toward `sin(0.02)^k`, and a pivot normalised by a near-tolerance coefficient
+amplifies round-off. **It does not occur.** Propagated generators carry at most **2** Pauli terms
+with minimum |coefficient| **0.5** — 5×10⁸ above the 1e-9 dependence tolerance — because CNOT
+conjugation is Clifford (one Pauli string to one Pauli string), and every `RY(0.02)` sits on a
+discarded wire that no later trainable gate touches. It is inert under propagation for the same
+reason decision 1 found it inert in the circuit. Recorded in the artifact as
+`generator_conditioning` rather than asserted.
+
+#### Caveats that travel with the number
+
+- **n=12 and n=14 are lower bounds (≥120,000), not closures.** 4¹² − 1 = 16.7M elements is out
+  of reach here. Exactness stops at n=10, which is the headline, and the sweep says so.
+- **The DLA is a property of the ansatz**, not of the trained weights and not of the data. It
+  says nothing on its own about the loss landscape at the archived parameters.
+- `AmplitudeEmbedding` is **excluded** from the generators: it carries the input, so it belongs
+  to the state the ansatz acts on. Folding its ~2,026-CNOT Möttönen decomposition in would
+  describe a different object with data-dependent angles no theorem here quantifies over.
 
 ### 3.2 — gradient variance (**F-E generated**)
 
@@ -850,9 +1025,10 @@ One resource caveat travels with the statement: `AmplitudeEmbedding` at n=10 dec
 ~2,026-CNOT Möttönen sequence (§7), so on real hardware state prep, not the model, would bind.
 Quantifying that split is M8.1's and is recorded as an observation, not a number.
 
-**Not yet done in Phase 3:** 3.1 DLA — now the next real piece of work — plus 3.3 effective
-dimension and 3.6 inductive bias, both of which need the empirical Fisher and matched MLP/CNN
-controls and stay **gated on M5.1** (see the Track A ordering).
+**Not yet done in Phase 3:** 3.3 effective dimension and 3.6 inductive bias, both of which need
+the empirical Fisher and matched MLP/CNN controls and stay **gated on M5.1** (see the Track A
+ordering). 3.1 landed 2026-07-31 and answered this section's open question in the negative —
+see 3.1 above.
 
 ## 9. M9 bibliography audit (2026-07-26)
 
@@ -961,7 +1137,11 @@ in reconciliation row 11.
 - [ ] ≥3 datasets × ≥5 seeds; all numbers mean ± std with CIs and paired tests
 - [ ] Every comparison row reproduced on your split or explicitly out-of-table
 - [ ] Resource table with state-prep/model split; scaling family n=4…14
-- [ ] Trainability certificate (DLA + variance sweep) and generalization bound
+- [ ] Trainability certificate (DLA + variance sweep) and generalization bound — **the DLA half
+  cannot close this.** 3.1 computed it exactly and it is the full su(2ⁿ) (§12), so the
+  poly-DLA no-plateau argument does not apply. The variance sweep and the bound are done; what
+  remains achievable here is a *measurement* ("no plateau observed to n=14") and not a
+  certificate. Reword or drop at M10, do not tick.
 - [ ] Noise ladder incl. one real-QPU point, scoped and caveated
 - [ ] `reproduce.sh` regenerates every table and figure from a clean checkout
 - [ ] Bibliography: full metadata, DOIs, peer-reviewed versions, no author-less entries

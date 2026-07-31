@@ -1,0 +1,2046 @@
+{
+  "artifact": "T6 / F-E",
+  "caveats": [
+    "The three generator sets are not interchangeable. Quoting the parameterized-only dimension as \"the DLA\" would understate the circuit by ignoring 96 fixed CNOTs, and it is the understatement that manufactures a favourable trainability result.",
+    "A polynomially-sized DLA cuts both ways: it would certify no barren plateau (Ragone et al. 2024) AND imply the family is efficiently classically simulable at arbitrary n (g-sim). Neither half may be reported without the other.",
+    "Dimensions marked as lower bounds hit the truncation cap and are not closures. Where the su(2^n) certificate holds, the exact value follows from the universality result rather than from enumeration, and is labelled as such.",
+    "The DLA is a property of the ansatz, not of the trained weights or of the data. It says nothing on its own about the loss landscape at the archived parameters."
+  ],
+  "circuit_variants": {
+    "ent_none": {
+      "algebras": {
+        "full": {
+          "closed": true,
+          "commutator_rounds": 16,
+          "component_sizes": [
+            8,
+            2
+          ],
+          "dimension": 65550,
+          "direct_sum_of_full_blocks": 65550,
+          "fraction_of_su_ceiling": 0.06251341105786425,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 230,
+          "n_independent_generators": 46,
+          "seconds": 16.876869440078735,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              8,
+              9
+            ]
+          ]
+        },
+        "parameterized": {
+          "closed": true,
+          "commutator_rounds": 16,
+          "component_sizes": [
+            8,
+            2
+          ],
+          "dimension": 65550,
+          "direct_sum_of_full_blocks": 65550,
+          "fraction_of_su_ceiling": 0.06251341105786425,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 222,
+          "n_independent_generators": 46,
+          "seconds": 15.516420364379883,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              8,
+              9
+            ]
+          ]
+        },
+        "propagated": {
+          "closed": true,
+          "commutator_rounds": 16,
+          "component_sizes": [
+            8,
+            2
+          ],
+          "dimension": 65550,
+          "direct_sum_of_full_blocks": 65550,
+          "fraction_of_su_ceiling": 0.06251341105786425,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 222,
+          "n_independent_generators": 46,
+          "seconds": 17.10635256767273,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              8,
+              9
+            ]
+          ]
+        }
+      },
+      "closure_cap": 120000,
+      "n_fixed_gates": 8,
+      "n_parameterized_gates": 222,
+      "n_qubits": 10,
+      "overrides": {
+        "conv_entanglement": "none"
+      },
+      "reused_from_sweep": false
+    },
+    "frozen": {
+      "algebras": {
+        "full": {
+          "closed": true,
+          "commutator_rounds": 11,
+          "component_sizes": [
+            10
+          ],
+          "dimension": 1048575,
+          "direct_sum_of_full_blocks": 1048575,
+          "fraction_of_su_ceiling": 1.0,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 1048575,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": true,
+          "is_lower_bound_only": false,
+          "n_generators": 326,
+          "n_independent_generators": 67,
+          "seconds": 458.094357252121,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ]
+          ]
+        },
+        "parameterized": {
+          "closed": true,
+          "commutator_rounds": 16,
+          "component_sizes": [
+            8,
+            2
+          ],
+          "dimension": 65550,
+          "direct_sum_of_full_blocks": 65550,
+          "fraction_of_su_ceiling": 0.06251341105786425,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 222,
+          "n_independent_generators": 46,
+          "seconds": 32.92924785614014,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              8,
+              9
+            ]
+          ]
+        },
+        "propagated": {
+          "closed": true,
+          "commutator_rounds": 7,
+          "component_sizes": [
+            10
+          ],
+          "dimension": 1048575,
+          "direct_sum_of_full_blocks": 1048575,
+          "fraction_of_su_ceiling": 1.0,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 1048575,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": true,
+          "is_lower_bound_only": false,
+          "n_generators": 222,
+          "n_independent_generators": 146,
+          "seconds": 977.9878075122833,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ]
+          ]
+        }
+      },
+      "closure_cap": null,
+      "n_fixed_gates": 104,
+      "n_parameterized_gates": 222,
+      "n_qubits": 10,
+      "overrides": {},
+      "reused_from_sweep": true
+    },
+    "pool_none": {
+      "algebras": {
+        "full": {
+          "closed": false,
+          "commutator_rounds": 7,
+          "component_sizes": [
+            10
+          ],
+          "dimension": 120000,
+          "direct_sum_of_full_blocks": 1048575,
+          "fraction_of_su_ceiling": 0.1144410271082183,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 1048575,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": false,
+          "is_full_su": false,
+          "is_lower_bound_only": true,
+          "n_generators": 294,
+          "n_independent_generators": 51,
+          "seconds": 11.64844036102295,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ]
+          ]
+        },
+        "parameterized": {
+          "closed": true,
+          "commutator_rounds": 1,
+          "component_sizes": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "dimension": 30,
+          "direct_sum_of_full_blocks": 30,
+          "fraction_of_su_ceiling": 2.8610256777054574e-05,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 198,
+          "n_independent_generators": 30,
+          "seconds": 0.003004789352416992,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0
+            ],
+            [
+              1
+            ],
+            [
+              2
+            ],
+            [
+              3
+            ],
+            [
+              4
+            ],
+            [
+              5
+            ],
+            [
+              6
+            ],
+            [
+              7
+            ],
+            [
+              8
+            ],
+            [
+              9
+            ]
+          ]
+        },
+        "propagated": {
+          "closed": false,
+          "commutator_rounds": 4,
+          "component_sizes": [
+            10
+          ],
+          "dimension": 120000,
+          "direct_sum_of_full_blocks": 1048575,
+          "fraction_of_su_ceiling": 0.1144410271082183,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 1048575,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": false,
+          "is_full_su": false,
+          "is_lower_bound_only": true,
+          "n_generators": 198,
+          "n_independent_generators": 134,
+          "seconds": 10.782445669174194,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ]
+          ]
+        }
+      },
+      "closure_cap": 120000,
+      "n_fixed_gates": 96,
+      "n_parameterized_gates": 198,
+      "n_qubits": 10,
+      "overrides": {
+        "pooling_mode": "none"
+      },
+      "reused_from_sweep": false
+    }
+  },
+  "claim": "dimension of the Lie closure of the frozen ansatz generators, and what it certifies about trainability and simulability",
+  "exact_closure_max_qubits": 10,
+  "experiment": "3.1 dynamical Lie algebra",
+  "generator_conventions": {
+    "full": "trainable plus fixed-gate generators, so exp(g) provably contains the circuit; the algebra g-sim simulability needs",
+    "parameterized": "generators of the trainable gates as they appear; the literal 3.1 spec, and a lower bound only",
+    "propagated": "trainable generators conjugated through the fixed prefix, so the circuit is F . prod exp(-i theta H~); the algebra the Ragone/Fontana variance expressions are stated over"
+  },
+  "headline": {
+    "full_dimension": 1048575,
+    "n_qubits": 10,
+    "parameterized_dimension": 65550,
+    "propagated_dimension": 1048575,
+    "su_ceiling": 1048575
+  },
+  "method": "iterated commutators to closure, exact in the Pauli basis",
+  "per_n": [
+    {
+      "algebras": {
+        "full": {
+          "closed": true,
+          "commutator_rounds": 5,
+          "component_sizes": [
+            4
+          ],
+          "dimension": 255,
+          "direct_sum_of_full_blocks": 255,
+          "fraction_of_su_ceiling": 1.0,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 255,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": true,
+          "is_lower_bound_only": false,
+          "n_generators": 90,
+          "n_independent_generators": 24,
+          "seconds": 0.07489156723022461,
+          "su_ceiling": 255,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ]
+        },
+        "parameterized": {
+          "closed": true,
+          "commutator_rounds": 8,
+          "component_sizes": [
+            4
+          ],
+          "dimension": 255,
+          "direct_sum_of_full_blocks": 255,
+          "fraction_of_su_ceiling": 1.0,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 255,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": true,
+          "is_lower_bound_only": false,
+          "n_generators": 63,
+          "n_independent_generators": 18,
+          "seconds": 0.052207231521606445,
+          "su_ceiling": 255,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ]
+        },
+        "propagated": {
+          "closed": true,
+          "commutator_rounds": 3,
+          "component_sizes": [
+            4
+          ],
+          "dimension": 255,
+          "direct_sum_of_full_blocks": 255,
+          "fraction_of_su_ceiling": 1.0,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 255,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": true,
+          "is_lower_bound_only": false,
+          "n_generators": 63,
+          "n_independent_generators": 41,
+          "seconds": 0.11574506759643555,
+          "su_ceiling": 255,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ]
+        }
+      },
+      "closure_cap": 256,
+      "controls": {
+        "local_rotations_only": {
+          "agrees_with_expected": true,
+          "closed": true,
+          "commutator_rounds": 1,
+          "component_sizes": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "dimension": 12,
+          "direct_sum_of_full_blocks": 12,
+          "expected_dimension": 12,
+          "fraction_of_su_ceiling": 0.047058823529411764,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 12,
+          "n_independent_generators": 12,
+          "seconds": 0.001027822494506836,
+          "su_ceiling": 255,
+          "support_components": [
+            [
+              0
+            ],
+            [
+              1
+            ],
+            [
+              2
+            ],
+            [
+              3
+            ]
+          ]
+        },
+        "transverse_field_ising": {
+          "agrees_with_expected": true,
+          "closed": true,
+          "commutator_rounds": 7,
+          "component_sizes": [
+            4
+          ],
+          "dimension": 28,
+          "direct_sum_of_full_blocks": 255,
+          "expected_dimension": 28,
+          "fraction_of_su_ceiling": 0.10980392156862745,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": false,
+            "implied_dimension": null,
+            "missing_local_generators": [
+              "Y0",
+              "Z0",
+              "Y1",
+              "Z1",
+              "Y2",
+              "Z2",
+              "Y3",
+              "Z3"
+            ],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": false,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 7,
+          "n_independent_generators": 7,
+          "seconds": 0.0020072460174560547,
+          "su_ceiling": 255,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ]
+        }
+      },
+      "generator_conditioning": {
+        "full": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 10000000.000000041,
+          "max_terms_per_generator": 3,
+          "min_abs_coefficient": 0.010000000000000042
+        },
+        "parameterized": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 499999999.99999994,
+          "max_terms_per_generator": 2,
+          "min_abs_coefficient": 0.5
+        },
+        "propagated": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 499999999.99999994,
+          "max_terms_per_generator": 2,
+          "min_abs_coefficient": 0.5
+        }
+      },
+      "image_size": 4,
+      "n_fixed_gates": 27,
+      "n_parameterized_gates": 63,
+      "n_qubits": 4,
+      "n_slots": 188
+    },
+    {
+      "algebras": {
+        "full": {
+          "closed": true,
+          "commutator_rounds": 7,
+          "component_sizes": [
+            6
+          ],
+          "dimension": 4095,
+          "direct_sum_of_full_blocks": 4095,
+          "fraction_of_su_ceiling": 1.0,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 4095,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": true,
+          "is_lower_bound_only": false,
+          "n_generators": 166,
+          "n_independent_generators": 37,
+          "seconds": 1.569504737854004,
+          "su_ceiling": 4095,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ]
+        },
+        "parameterized": {
+          "closed": true,
+          "commutator_rounds": 8,
+          "component_sizes": [
+            4,
+            2
+          ],
+          "dimension": 270,
+          "direct_sum_of_full_blocks": 270,
+          "fraction_of_su_ceiling": 0.06593406593406594,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 114,
+          "n_independent_generators": 26,
+          "seconds": 0.06836533546447754,
+          "su_ceiling": 4095,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ]
+        },
+        "propagated": {
+          "closed": true,
+          "commutator_rounds": 4,
+          "component_sizes": [
+            6
+          ],
+          "dimension": 4095,
+          "direct_sum_of_full_blocks": 4095,
+          "fraction_of_su_ceiling": 1.0,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 4095,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": true,
+          "is_lower_bound_only": false,
+          "n_generators": 114,
+          "n_independent_generators": 76,
+          "seconds": 3.998568058013916,
+          "su_ceiling": 4095,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ]
+        }
+      },
+      "closure_cap": 4096,
+      "controls": {
+        "local_rotations_only": {
+          "agrees_with_expected": true,
+          "closed": true,
+          "commutator_rounds": 1,
+          "component_sizes": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "dimension": 18,
+          "direct_sum_of_full_blocks": 18,
+          "expected_dimension": 18,
+          "fraction_of_su_ceiling": 0.004395604395604396,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 18,
+          "n_independent_generators": 18,
+          "seconds": 0.0020084381103515625,
+          "su_ceiling": 4095,
+          "support_components": [
+            [
+              0
+            ],
+            [
+              1
+            ],
+            [
+              2
+            ],
+            [
+              3
+            ],
+            [
+              4
+            ],
+            [
+              5
+            ]
+          ]
+        },
+        "transverse_field_ising": {
+          "agrees_with_expected": true,
+          "closed": true,
+          "commutator_rounds": 11,
+          "component_sizes": [
+            6
+          ],
+          "dimension": 66,
+          "direct_sum_of_full_blocks": 4095,
+          "expected_dimension": 66,
+          "fraction_of_su_ceiling": 0.01611721611721612,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": false,
+            "implied_dimension": null,
+            "missing_local_generators": [
+              "Y0",
+              "Z0",
+              "Y1",
+              "Z1",
+              "Y2",
+              "Z2",
+              "Y3",
+              "Z3",
+              "Y4",
+              "Z4",
+              "Y5",
+              "Z5"
+            ],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": false,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 11,
+          "n_independent_generators": 11,
+          "seconds": 0.008128643035888672,
+          "su_ceiling": 4095,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ]
+        }
+      },
+      "generator_conditioning": {
+        "full": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 10000000.000000041,
+          "max_terms_per_generator": 3,
+          "min_abs_coefficient": 0.010000000000000042
+        },
+        "parameterized": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 499999999.99999994,
+          "max_terms_per_generator": 2,
+          "min_abs_coefficient": 0.5
+        },
+        "propagated": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 499999999.99999994,
+          "max_terms_per_generator": 2,
+          "min_abs_coefficient": 0.5
+        }
+      },
+      "image_size": 8,
+      "n_fixed_gates": 52,
+      "n_parameterized_gates": 114,
+      "n_qubits": 6,
+      "n_slots": 194
+    },
+    {
+      "algebras": {
+        "full": {
+          "closed": true,
+          "commutator_rounds": 9,
+          "component_sizes": [
+            8
+          ],
+          "dimension": 65535,
+          "direct_sum_of_full_blocks": 65535,
+          "fraction_of_su_ceiling": 1.0,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 65535,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": true,
+          "is_lower_bound_only": false,
+          "n_generators": 322,
+          "n_independent_generators": 58,
+          "seconds": 26.757582902908325,
+          "su_ceiling": 65535,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          ]
+        },
+        "parameterized": {
+          "closed": true,
+          "commutator_rounds": 16,
+          "component_sizes": [
+            8
+          ],
+          "dimension": 65535,
+          "direct_sum_of_full_blocks": 65535,
+          "fraction_of_su_ceiling": 1.0,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 65535,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": true,
+          "is_lower_bound_only": false,
+          "n_generators": 219,
+          "n_independent_generators": 38,
+          "seconds": 29.891457080841064,
+          "su_ceiling": 65535,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          ]
+        },
+        "propagated": {
+          "closed": true,
+          "commutator_rounds": 5,
+          "component_sizes": [
+            8
+          ],
+          "dimension": 65535,
+          "direct_sum_of_full_blocks": 65535,
+          "fraction_of_su_ceiling": 1.0,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 65535,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": true,
+          "is_lower_bound_only": false,
+          "n_generators": 219,
+          "n_independent_generators": 131,
+          "seconds": 58.94967174530029,
+          "su_ceiling": 65535,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          ]
+        }
+      },
+      "closure_cap": 65536,
+      "controls": {
+        "local_rotations_only": {
+          "agrees_with_expected": true,
+          "closed": true,
+          "commutator_rounds": 1,
+          "component_sizes": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "dimension": 24,
+          "direct_sum_of_full_blocks": 24,
+          "expected_dimension": 24,
+          "fraction_of_su_ceiling": 0.0003662165255207141,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 24,
+          "n_independent_generators": 24,
+          "seconds": 0.0039958953857421875,
+          "su_ceiling": 65535,
+          "support_components": [
+            [
+              0
+            ],
+            [
+              1
+            ],
+            [
+              2
+            ],
+            [
+              3
+            ],
+            [
+              4
+            ],
+            [
+              5
+            ],
+            [
+              6
+            ],
+            [
+              7
+            ]
+          ]
+        },
+        "transverse_field_ising": {
+          "agrees_with_expected": true,
+          "closed": true,
+          "commutator_rounds": 15,
+          "component_sizes": [
+            8
+          ],
+          "dimension": 120,
+          "direct_sum_of_full_blocks": 65535,
+          "expected_dimension": 120,
+          "fraction_of_su_ceiling": 0.0018310826276035706,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": false,
+            "implied_dimension": null,
+            "missing_local_generators": [
+              "Y0",
+              "Z0",
+              "Y1",
+              "Z1",
+              "Y2",
+              "Z2",
+              "Y3",
+              "Z3",
+              "Y4",
+              "Z4",
+              "Y5",
+              "Z5",
+              "Y6",
+              "Z6",
+              "Y7",
+              "Z7"
+            ],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": false,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 15,
+          "n_independent_generators": 15,
+          "seconds": 0.01073145866394043,
+          "su_ceiling": 65535,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          ]
+        }
+      },
+      "generator_conditioning": {
+        "full": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 10000000.000000041,
+          "max_terms_per_generator": 3,
+          "min_abs_coefficient": 0.010000000000000042
+        },
+        "parameterized": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 499999999.99999994,
+          "max_terms_per_generator": 2,
+          "min_abs_coefficient": 0.5
+        },
+        "propagated": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 499999999.99999994,
+          "max_terms_per_generator": 2,
+          "min_abs_coefficient": 0.5
+        }
+      },
+      "image_size": 16,
+      "n_fixed_gates": 103,
+      "n_parameterized_gates": 219,
+      "n_qubits": 8,
+      "n_slots": 260
+    },
+    {
+      "algebras": {
+        "full": {
+          "closed": true,
+          "commutator_rounds": 11,
+          "component_sizes": [
+            10
+          ],
+          "dimension": 1048575,
+          "direct_sum_of_full_blocks": 1048575,
+          "fraction_of_su_ceiling": 1.0,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 1048575,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": true,
+          "is_lower_bound_only": false,
+          "n_generators": 326,
+          "n_independent_generators": 67,
+          "seconds": 458.094357252121,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ]
+          ]
+        },
+        "parameterized": {
+          "closed": true,
+          "commutator_rounds": 16,
+          "component_sizes": [
+            8,
+            2
+          ],
+          "dimension": 65550,
+          "direct_sum_of_full_blocks": 65550,
+          "fraction_of_su_ceiling": 0.06251341105786425,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 222,
+          "n_independent_generators": 46,
+          "seconds": 32.92924785614014,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              8,
+              9
+            ]
+          ]
+        },
+        "propagated": {
+          "closed": true,
+          "commutator_rounds": 7,
+          "component_sizes": [
+            10
+          ],
+          "dimension": 1048575,
+          "direct_sum_of_full_blocks": 1048575,
+          "fraction_of_su_ceiling": 1.0,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 1048575,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": true,
+          "is_lower_bound_only": false,
+          "n_generators": 222,
+          "n_independent_generators": 146,
+          "seconds": 977.9878075122833,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ]
+          ]
+        }
+      },
+      "closure_cap": 1048576,
+      "controls": {
+        "local_rotations_only": {
+          "agrees_with_expected": true,
+          "closed": true,
+          "commutator_rounds": 1,
+          "component_sizes": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "dimension": 30,
+          "direct_sum_of_full_blocks": 30,
+          "expected_dimension": 30,
+          "fraction_of_su_ceiling": 2.8610256777054574e-05,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 30,
+          "n_independent_generators": 30,
+          "seconds": 0.0061032772064208984,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0
+            ],
+            [
+              1
+            ],
+            [
+              2
+            ],
+            [
+              3
+            ],
+            [
+              4
+            ],
+            [
+              5
+            ],
+            [
+              6
+            ],
+            [
+              7
+            ],
+            [
+              8
+            ],
+            [
+              9
+            ]
+          ]
+        },
+        "transverse_field_ising": {
+          "agrees_with_expected": true,
+          "closed": true,
+          "commutator_rounds": 19,
+          "component_sizes": [
+            10
+          ],
+          "dimension": 190,
+          "direct_sum_of_full_blocks": 1048575,
+          "expected_dimension": 190,
+          "fraction_of_su_ceiling": 0.00018119829292134564,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": false,
+            "implied_dimension": null,
+            "missing_local_generators": [
+              "Y0",
+              "Z0",
+              "Y1",
+              "Z1",
+              "Y2",
+              "Z2",
+              "Y3",
+              "Z3",
+              "Y4",
+              "Z4",
+              "Y5",
+              "Z5",
+              "Y6",
+              "Z6",
+              "Y7",
+              "Z7",
+              "Y8",
+              "Z8",
+              "Y9",
+              "Z9"
+            ],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": false,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 19,
+          "n_independent_generators": 19,
+          "seconds": 0.012483835220336914,
+          "su_ceiling": 1048575,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ]
+          ]
+        }
+      },
+      "generator_conditioning": {
+        "full": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 10000000.000000041,
+          "max_terms_per_generator": 3,
+          "min_abs_coefficient": 0.010000000000000042
+        },
+        "parameterized": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 499999999.99999994,
+          "max_terms_per_generator": 2,
+          "min_abs_coefficient": 0.5
+        },
+        "propagated": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 499999999.99999994,
+          "max_terms_per_generator": 2,
+          "min_abs_coefficient": 0.5
+        }
+      },
+      "image_size": 28,
+      "n_fixed_gates": 104,
+      "n_parameterized_gates": 222,
+      "n_qubits": 10,
+      "n_slots": 269
+    },
+    {
+      "algebras": {
+        "full": {
+          "closed": false,
+          "commutator_rounds": 4,
+          "component_sizes": [
+            12
+          ],
+          "dimension": 120000,
+          "direct_sum_of_full_blocks": 16777215,
+          "fraction_of_su_ceiling": 0.007152557799372542,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 16777215,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": false,
+          "is_full_su": false,
+          "is_lower_bound_only": true,
+          "n_generators": 622,
+          "n_independent_generators": 94,
+          "seconds": 9.881896495819092,
+          "su_ceiling": 16777215,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ]
+          ]
+        },
+        "parameterized": {
+          "closed": true,
+          "commutator_rounds": 16,
+          "component_sizes": [
+            8,
+            4
+          ],
+          "dimension": 65790,
+          "direct_sum_of_full_blocks": 65790,
+          "fraction_of_su_ceiling": 0.003921389813505996,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 420,
+          "n_independent_generators": 56,
+          "seconds": 16.006680250167847,
+          "su_ceiling": 16777215,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              8,
+              9,
+              10,
+              11
+            ]
+          ]
+        },
+        "propagated": {
+          "closed": false,
+          "commutator_rounds": 2,
+          "component_sizes": [
+            12
+          ],
+          "dimension": 120000,
+          "direct_sum_of_full_blocks": 16777215,
+          "fraction_of_su_ceiling": 0.007152557799372542,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 16777215,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": false,
+          "is_full_su": false,
+          "is_lower_bound_only": true,
+          "n_generators": 420,
+          "n_independent_generators": 246,
+          "seconds": 4.803128480911255,
+          "su_ceiling": 16777215,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ]
+          ]
+        }
+      },
+      "closure_cap": 120000,
+      "controls": {
+        "local_rotations_only": {
+          "agrees_with_expected": true,
+          "closed": true,
+          "commutator_rounds": 1,
+          "component_sizes": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "dimension": 36,
+          "direct_sum_of_full_blocks": 36,
+          "expected_dimension": 36,
+          "fraction_of_su_ceiling": 2.1457673398117626e-06,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 36,
+          "n_independent_generators": 36,
+          "seconds": 0.0029990673065185547,
+          "su_ceiling": 16777215,
+          "support_components": [
+            [
+              0
+            ],
+            [
+              1
+            ],
+            [
+              2
+            ],
+            [
+              3
+            ],
+            [
+              4
+            ],
+            [
+              5
+            ],
+            [
+              6
+            ],
+            [
+              7
+            ],
+            [
+              8
+            ],
+            [
+              9
+            ],
+            [
+              10
+            ],
+            [
+              11
+            ]
+          ]
+        },
+        "transverse_field_ising": {
+          "agrees_with_expected": true,
+          "closed": true,
+          "commutator_rounds": 23,
+          "component_sizes": [
+            12
+          ],
+          "dimension": 276,
+          "direct_sum_of_full_blocks": 16777215,
+          "expected_dimension": 276,
+          "fraction_of_su_ceiling": 1.6450882938556845e-05,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": false,
+            "implied_dimension": null,
+            "missing_local_generators": [
+              "Y0",
+              "Z0",
+              "Y1",
+              "Z1",
+              "Y2",
+              "Z2",
+              "Y3",
+              "Z3",
+              "Y4",
+              "Z4",
+              "Y5",
+              "Z5",
+              "Y6",
+              "Z6",
+              "Y7",
+              "Z7",
+              "Y8",
+              "Z8",
+              "Y9",
+              "Z9",
+              "Y10",
+              "Z10",
+              "Y11",
+              "Z11"
+            ],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": false,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 23,
+          "n_independent_generators": 23,
+          "seconds": 0.016005754470825195,
+          "su_ceiling": 16777215,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11
+            ]
+          ]
+        }
+      },
+      "generator_conditioning": {
+        "full": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 10000000.000000041,
+          "max_terms_per_generator": 3,
+          "min_abs_coefficient": 0.010000000000000042
+        },
+        "parameterized": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 499999999.99999994,
+          "max_terms_per_generator": 2,
+          "min_abs_coefficient": 0.5
+        },
+        "propagated": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 499999999.99999994,
+          "max_terms_per_generator": 2,
+          "min_abs_coefficient": 0.5
+        }
+      },
+      "image_size": 64,
+      "n_fixed_gates": 202,
+      "n_parameterized_gates": 420,
+      "n_qubits": 12,
+      "n_slots": 278
+    },
+    {
+      "algebras": {
+        "full": {
+          "closed": false,
+          "commutator_rounds": 5,
+          "component_sizes": [
+            14
+          ],
+          "dimension": 120000,
+          "direct_sum_of_full_blocks": 268435455,
+          "fraction_of_su_ceiling": 0.0004470348374807642,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 268435455,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": false,
+          "is_full_su": false,
+          "is_lower_bound_only": true,
+          "n_generators": 482,
+          "n_independent_generators": 95,
+          "seconds": 9.278917789459229,
+          "su_ceiling": 268435455,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13
+            ]
+          ]
+        },
+        "parameterized": {
+          "closed": true,
+          "commutator_rounds": 16,
+          "component_sizes": [
+            8,
+            4,
+            2
+          ],
+          "dimension": 65805,
+          "direct_sum_of_full_blocks": 65805,
+          "fraction_of_su_ceiling": 0.0002451427290035141,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 327,
+          "n_independent_generators": 64,
+          "seconds": 18.83245015144348,
+          "su_ceiling": 268435455,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              8,
+              9,
+              10,
+              11
+            ],
+            [
+              12,
+              13
+            ]
+          ]
+        },
+        "propagated": {
+          "closed": false,
+          "commutator_rounds": 3,
+          "component_sizes": [
+            14
+          ],
+          "dimension": 120000,
+          "direct_sum_of_full_blocks": 268435455,
+          "fraction_of_su_ceiling": 0.0004470348374807642,
+          "full_su_certificate": {
+            "certified_full_su": true,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": 268435455,
+            "missing_local_generators": [],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": false,
+          "is_full_su": false,
+          "is_lower_bound_only": true,
+          "n_generators": 327,
+          "n_independent_generators": 214,
+          "seconds": 8.45409631729126,
+          "su_ceiling": 268435455,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13
+            ]
+          ]
+        }
+      },
+      "closure_cap": 120000,
+      "controls": {
+        "local_rotations_only": {
+          "agrees_with_expected": true,
+          "closed": true,
+          "commutator_rounds": 1,
+          "component_sizes": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "dimension": 42,
+          "direct_sum_of_full_blocks": 42,
+          "expected_dimension": 42,
+          "fraction_of_su_ceiling": 1.5646219311826748e-07,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": true,
+            "implied_dimension": null,
+            "missing_local_generators": [],
+            "support_is_connected": false
+          },
+          "is_direct_sum_of_full_blocks": true,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 42,
+          "n_independent_generators": 42,
+          "seconds": 0.004002094268798828,
+          "su_ceiling": 268435455,
+          "support_components": [
+            [
+              0
+            ],
+            [
+              1
+            ],
+            [
+              2
+            ],
+            [
+              3
+            ],
+            [
+              4
+            ],
+            [
+              5
+            ],
+            [
+              6
+            ],
+            [
+              7
+            ],
+            [
+              8
+            ],
+            [
+              9
+            ],
+            [
+              10
+            ],
+            [
+              11
+            ],
+            [
+              12
+            ],
+            [
+              13
+            ]
+          ]
+        },
+        "transverse_field_ising": {
+          "agrees_with_expected": true,
+          "closed": true,
+          "commutator_rounds": 27,
+          "component_sizes": [
+            14
+          ],
+          "dimension": 378,
+          "direct_sum_of_full_blocks": 268435455,
+          "expected_dimension": 378,
+          "fraction_of_su_ceiling": 1.4081597380644073e-06,
+          "full_su_certificate": {
+            "certified_full_su": false,
+            "has_local_su2_on_every_wire": false,
+            "implied_dimension": null,
+            "missing_local_generators": [
+              "Y0",
+              "Z0",
+              "Y1",
+              "Z1",
+              "Y2",
+              "Z2",
+              "Y3",
+              "Z3",
+              "Y4",
+              "Z4",
+              "Y5",
+              "Z5",
+              "Y6",
+              "Z6",
+              "Y7",
+              "Z7",
+              "Y8",
+              "Z8",
+              "Y9",
+              "Z9",
+              "Y10",
+              "Z10",
+              "Y11",
+              "Z11",
+              "Y12",
+              "Z12",
+              "Y13",
+              "Z13"
+            ],
+            "support_is_connected": true
+          },
+          "is_direct_sum_of_full_blocks": false,
+          "is_full_su": false,
+          "is_lower_bound_only": false,
+          "n_generators": 27,
+          "n_independent_generators": 27,
+          "seconds": 0.023000001907348633,
+          "su_ceiling": 268435455,
+          "support_components": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13
+            ]
+          ]
+        }
+      },
+      "generator_conditioning": {
+        "full": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 10000000.000000041,
+          "max_terms_per_generator": 3,
+          "min_abs_coefficient": 0.010000000000000042
+        },
+        "parameterized": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 499999999.99999994,
+          "max_terms_per_generator": 2,
+          "min_abs_coefficient": 0.5
+        },
+        "propagated": {
+          "dependence_tolerance": 1e-09,
+          "margin_over_tolerance": 499999999.99999994,
+          "max_terms_per_generator": 2,
+          "min_abs_coefficient": 0.5
+        }
+      },
+      "image_size": 128,
+      "n_fixed_gates": 155,
+      "n_parameterized_gates": 327,
+      "n_qubits": 14,
+      "n_slots": 287
+    }
+  ],
+  "seed": 20260730,
+  "state_preparation": "excluded -- AmplitudeEmbedding carries the input, not the ansatz",
+  "truncation_cap": 120000
+}

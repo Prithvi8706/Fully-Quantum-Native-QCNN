@@ -6,6 +6,13 @@ Roadmap M3. Each item is a ``run_*`` function writing JSON evidence into
 
 Implemented here:
 
+  3.1 dynamical Lie algebra -- the dimension of the Lie closure of the ansatz's
+      gate generators, by iterated commutators. The same number certifies
+      trainability (Ragone et al. 2024) and classical simulability (g-sim), in
+      opposite directions, so both halves are reported. Three generator sets are
+      closed because "the ansatz's generators" is ambiguous once fixed gates are
+      interleaved with trainable ones -- see the section header below.
+
   3.2 gradient variance  -- how Var[d<Z>/dtheta] scales with qubit count. A barren
       plateau is exponential decay in n; a trainable ansatz decays polynomially.
       Both laws are fitted and the data chooses (``capacity.variance_decay_fit``).
@@ -27,6 +34,7 @@ Every measure used here is validated against analytically known cases in
 output is believed -- the convention that caught a sign defect in E4's entropy.
 
 Usage:
+  python -m experiments.model_analysis --experiment dla
   python -m experiments.model_analysis --experiment gradient_variance
   python -m experiments.model_analysis --experiment expressibility
   python -m experiments.model_analysis --experiment generalization_bound
@@ -48,7 +56,7 @@ from QCNN import circuits, freeze
 from QCNN.config.Qconfig import QuantumNativeConfig
 from QCNN.encoding import PureQuantumEncoder
 from QCNN.models.QCNNModel import PureQuantumNativeCNN
-from QCNN.utils import capacity, state_metrics
+from QCNN.utils import capacity, lie_algebra, state_metrics
 
 # image_size -> n_qubits under amplitude encoding: 4, 6, 8, 10, 12, 14.
 # 28 is the frozen headline (freeze.HEADLINE_IMAGE_SIZE).
@@ -528,6 +536,412 @@ def run_generalization_bound(manifest_path: str = HEADLINE_SPLIT_MANIFEST,
     }
 
 
+# ---------------------------------------------------------------------------
+# 3.1 -- dynamical Lie algebra (T6 / F-E)
+#
+# The DLA is the Lie closure of the ansatz's gate generators. Its dimension is
+# what two separate results are stated over -- Ragone et al. (2024) / Fontana et
+# al. (2024) for gradient variance, and the Lie-algebraic ("g-sim") simulation
+# results of Somma et al. (2006) / Goh et al. (2023) for classical simulability.
+# A polynomially-sized DLA gives a trainability certificate *and* an efficient
+# classical simulation of the family; an exponentially-sized one gives neither.
+# Both halves come from the same number, so 3.1 reports both.
+#
+# Three generator sets are computed, because "the ansatz's generators" is not
+# one thing once fixed gates are interleaved with trainable ones:
+#
+#   parameterized -- generators of the trainable gates exactly as they appear.
+#       The literal reading of UPGRADE_PLAN.md 3.1. It ignores the 96 fixed
+#       CNOTs and the 8 fixed RY(0.02)s, so it is a lower bound on anything the
+#       circuit can do, not a description of it.
+#
+#   propagated -- the same generators conjugated through the fixed gates that
+#       precede them, giving H~_k = A_k^dag H_k A_k with A_k the fixed prefix.
+#       The circuit then really is F . prod_k exp(-i theta_k H~_k), which is the
+#       form the variance expressions assume. **This is the algebra that governs
+#       trainability**, and using `parameterized` in its place would be quoting
+#       a theorem outside its hypotheses.
+#
+#   full -- parameterized generators plus the generators of the fixed gates.
+#       Every gate is then exp of an element, so exp(g_full) provably contains
+#       the whole circuit unitary. **This is the algebra the simulability
+#       argument needs**, since g-sim requires the circuit to lie in exp(g).
+#
+# By construction g_param <= g_prop <= g_full, so the three bracket the answer.
+# ---------------------------------------------------------------------------
+
+DLA_EVIDENCE = os.path.join('Results', 'evidence', 't6_dynamical_lie_algebra.json')
+DLA_SEED = 20260730
+
+# 4^10 - 1 = 1,048,575 basis elements is the largest exact enumeration this
+# machine completes in minutes rather than hours, so the headline n=10 closes
+# exactly and n=12/14 do not. Above this the closure is capped and its dimension
+# is reported as a lower bound -- a truncated closure is not a dimension.
+EXACT_CLOSURE_MAX_QUBITS = 10
+TRUNCATION_CAP = 120000
+
+
+def _closure_cap(n_qubits: int, truncation_cap: int = TRUNCATION_CAP) -> int:
+    """Dimension cap for the closure at this qubit count.
+
+    In the exact regime the cap is ``4^n``, one above the su(2^n) ceiling and so
+    unreachable -- the closure stops when it closes, never because of the cap.
+    """
+    if n_qubits <= EXACT_CLOSURE_MAX_QUBITS:
+        return 4 ** n_qubits
+    return min(4 ** n_qubits, truncation_cap)
+
+
+def _fixed_gate_key(operation) -> tuple:
+    """Identity of a fixed gate, for caching its conjugation table."""
+    return (operation.name, tuple(round(float(v), 12) for v in operation.data))
+
+
+def _tape_gates(cfg, model) -> list:
+    """``(operation, is_parameterized)`` for every gate after state preparation.
+
+    State preparation is excluded on purpose: ``AmplitudeEmbedding`` carries the
+    *input*, so it belongs to the state the ansatz acts on, not to the ansatz.
+    Its ~2,026-CNOT Mottonen decomposition would otherwise dominate the algebra
+    with data-dependent angles that no theorem here quantifies over.
+    """
+    n_slots = len(model._flatten_params(model.quantum_params))
+    marker = qml.numpy.array(np.arange(1, n_slots + 1, dtype=float), requires_grad=True)
+    encoded = _random_inputs(np.random.default_rng(DLA_SEED), cfg, 1)[0]
+    tape = freeze.headline_tape(model, encoded, marker)
+    signature = freeze.tape_signature(tape, n_slots)
+
+    gates = []
+    for operation, entry in zip(tape.operations, signature['operations']):
+        if operation.name in freeze._STATE_PREP_OPS:
+            continue
+        parameterized = any(p.startswith('slot') for p in entry['params'])
+        gates.append((operation, parameterized))
+    return gates
+
+
+def dla_generator_sets(cfg, model) -> dict:
+    """The three generator sets described above, plus the gate census."""
+    n_qubits = cfg.n_qubits
+    parameterized, propagated, fixed = [], [], []
+    tables, prefix = {}, []
+
+    for operation, is_parameterized in _tape_gates(cfg, model):
+        wires = [int(w) for w in operation.wires]
+        if is_parameterized:
+            generator = lie_algebra.gate_generator(operation.name, wires, n_qubits)
+            parameterized.append(generator)
+            # A_k^dag H_k A_k with A_k = f_m ... f_1 the fixed prefix, so the
+            # conjugations apply latest-fixed-gate-first.
+            carried = generator
+            for key, fixed_wires in reversed(prefix):
+                carried = lie_algebra.conjugate(carried, tables[key], fixed_wires, n_qubits)
+            propagated.append(carried)
+        else:
+            matrix = qml.matrix(operation, wire_order=list(operation.wires))
+            key = _fixed_gate_key(operation)
+            if key not in tables:
+                tables[key] = lie_algebra.conjugation_table(matrix, len(wires))
+            fixed.append(lie_algebra.unitary_generator(matrix, wires, n_qubits))
+            prefix.append((key, wires))
+
+    sets = {
+        'parameterized': parameterized,
+        'propagated': propagated,
+        'full': parameterized + fixed,
+        'n_parameterized_gates': len(parameterized),
+        'n_fixed_gates': len(fixed),
+    }
+    sets['conditioning'] = {name: _generator_conditioning(sets[name])
+                            for name in ('parameterized', 'propagated', 'full')}
+    return sets
+
+
+def _generator_conditioning(generators) -> dict:
+    """How far the generator coefficients sit above the dependence tolerance.
+
+    The one numerical hazard in the propagated set would be conjugation through
+    the fixed ``RY(0.02)`` gates driving coefficients toward ``sin(0.02)^k``: a
+    pivot normalised by a near-tolerance coefficient amplifies round-off. It does
+    not happen here -- CNOT conjugation is Clifford, so it maps a Pauli string to
+    a single Pauli string, and every ``RY(0.02)`` acts on a discarded wire that
+    no later parameterised gate touches, so it is inert under propagation exactly
+    as it is inert in the circuit (decision 1). This records the margin instead
+    of asserting it.
+    """
+    coefficients = [abs(c) for g in generators for c in g.values()]
+    return {
+        'min_abs_coefficient': min(coefficients) if coefficients else 0.0,
+        'max_terms_per_generator': max((len(g) for g in generators), default=0),
+        'dependence_tolerance': lie_algebra.TOL,
+        'margin_over_tolerance': (min(coefficients) / lie_algebra.TOL
+                                  if coefficients else 0.0),
+    }
+
+
+def _summarise_closure(closure: dict, n_qubits: int, seconds: float) -> dict:
+    """Dimension plus the structure that makes it readable rather than an integer."""
+    ceiling = 4 ** n_qubits - 1
+    components = lie_algebra.support_components(closure['basis'], n_qubits)
+    block_sum = lie_algebra.direct_sum_of_full_blocks(components)
+    certificate = lie_algebra.full_su_certificate(
+        closure['span'], n_qubits, components=components)
+
+    return {
+        'dimension': closure['dimension'],
+        'closed': closure['closed'],
+        'is_lower_bound_only': not closure['closed'],
+        'commutator_rounds': closure['commutator_rounds'],
+        'n_generators': closure['n_generators'],
+        'n_independent_generators': closure['n_independent_generators'],
+        'su_ceiling': ceiling,
+        'fraction_of_su_ceiling': closure['dimension'] / ceiling,
+        'is_full_su': closure['closed'] and closure['dimension'] == ceiling,
+        'support_components': [list(c) for c in components],
+        'component_sizes': [len(c) for c in components],
+        'direct_sum_of_full_blocks': block_sum,
+        'is_direct_sum_of_full_blocks': closure['closed'] and closure['dimension'] == block_sum,
+        'full_su_certificate': certificate,
+        'seconds': float(seconds),
+    }
+
+
+def _close(generators, n_qubits: int, truncation_cap: int, cap: int = None) -> dict:
+    """Close a generator set. ``cap`` overrides the qubit-count rule."""
+    started = time.time()
+    closure = lie_algebra.lie_closure(
+        generators,
+        max_dimension=cap if cap is not None else _closure_cap(n_qubits, truncation_cap))
+    return _summarise_closure(closure, n_qubits, time.time() - started)
+
+
+# Reference ansatze with independently known DLA dimensions, closed at the same
+# qubit count as the measurement. 3.4's lesson: a dimension means nothing on its
+# own. The Ising arm is the load-bearing control -- it is the one that shows the
+# method returns a *polynomial* dimension at n=10 when the ansatz has one, so an
+# exponential answer for the FQCNN is a property of the circuit and not of the
+# closure code.
+def _control_generators(name: str, n_qubits: int) -> list:
+    single = lie_algebra.single
+    compose = lie_algebra.compose
+    if name == 'local_rotations_only':
+        return [{single(n_qubits, q, letter): 1.0}
+                for q in range(n_qubits) for letter in 'XYZ']
+    if name == 'transverse_field_ising':
+        generators = [{single(n_qubits, q, 'X'): 1.0} for q in range(n_qubits)]
+        return generators + [
+            {compose(single(n_qubits, q, 'Z'), single(n_qubits, q + 1, 'Z')): 1.0}
+            for q in range(n_qubits - 1)]
+    raise ValueError('unknown control {!r}'.format(name))
+
+
+def _control_expectation(name: str, n_qubits: int) -> int:
+    if name == 'local_rotations_only':
+        return 3 * n_qubits                      # su(2)^(+)n
+    if name == 'transverse_field_ising':
+        return 2 * n_qubits * n_qubits - n_qubits  # Wiersema et al. (2024)
+    raise ValueError('unknown control {!r}'.format(name))
+
+
+CONTROL_ANSATZE = ('local_rotations_only', 'transverse_field_ising')
+
+# Ablation arms already defined in the config, used here to attribute the
+# algebra to circuit blocks rather than reporting one number for the whole tape.
+CIRCUIT_VARIANTS = {
+    'frozen': {},
+    'pool_none': {'pooling_mode': 'none'},
+    'ent_none': {'conv_entanglement': 'none'},
+}
+
+
+def _variant_model(image_size: int, overrides: dict):
+    cfg = _config(image_size)
+    for name, value in overrides.items():
+        setattr(cfg, name, value)
+    return cfg, PureQuantumNativeCNN(cfg)
+
+
+def run_dla(image_sizes=SCALING_IMAGE_SIZES,
+            truncation_cap: int = TRUNCATION_CAP,
+            variant_image_size: int = freeze.HEADLINE_IMAGE_SIZE) -> dict:
+    """Dynamical Lie algebra of the frozen ansatz (roadmap 3.1)."""
+    per_n = []
+    for image_size in image_sizes:
+        cfg, model = _variant_model(image_size, {})
+        n_qubits = cfg.n_qubits
+        sets = dla_generator_sets(cfg, model)
+
+        algebras = {}
+        for name in ('parameterized', 'propagated', 'full'):
+            algebras[name] = _close(sets[name], n_qubits, truncation_cap)
+            summary = algebras[name]
+            print('  n={:>2d} {:<14s} dim {:>9d}{}  ({}/{} of su ceiling)  '
+                  'blocks {}  [{:.1f}s]'.format(
+                      n_qubits, name, summary['dimension'],
+                      ' (lower bound)' if summary['is_lower_bound_only'] else '',
+                      summary['dimension'], summary['su_ceiling'],
+                      summary['component_sizes'], summary['seconds']))
+
+        controls = {}
+        for control in CONTROL_ANSATZE:
+            closure = _close(_control_generators(control, n_qubits),
+                             n_qubits, truncation_cap)
+            expected = _control_expectation(control, n_qubits)
+            closure['expected_dimension'] = expected
+            closure['agrees_with_expected'] = (closure['closed']
+                                               and closure['dimension'] == expected)
+            controls[control] = closure
+
+        per_n.append({
+            'image_size': int(image_size),
+            'n_qubits': int(n_qubits),
+            'n_slots': int(len(model._flatten_params(model.quantum_params))),
+            'n_parameterized_gates': sets['n_parameterized_gates'],
+            'n_fixed_gates': sets['n_fixed_gates'],
+            'generator_conditioning': sets['conditioning'],
+            'closure_cap': _closure_cap(n_qubits, truncation_cap),
+            'algebras': algebras,
+            'controls': controls,
+        })
+
+    # Block attribution at one qubit count: which part of the tape supplies the
+    # entanglement the algebra is built from. Two economies here, both stated
+    # rather than hidden:
+    #
+    #   - the frozen arm is reused from the sweep when it is already there,
+    #     because re-closing su(2^10) exactly costs ~20 minutes; and
+    #   - the variant closures are capped at ``truncation_cap`` even where the
+    #     sweep would enumerate exactly. This is an attribution study, not the
+    #     headline measurement: what it needs is which arms are exponential and
+    #     which are not, and where an arm hits the cap the su(2^n) certificate
+    #     supplies the exact dimension from the universality result. The headline
+    #     numbers stay exact enumerations.
+    already_run = {r['image_size']: r for r in per_n}
+    variants = {}
+    for name, overrides in CIRCUIT_VARIANTS.items():
+        cfg, model = _variant_model(variant_image_size, overrides)
+        sets = dla_generator_sets(cfg, model)
+        reusable = already_run.get(variant_image_size) if not overrides else None
+        print('  variant {:<10s} (n={})'.format(name, cfg.n_qubits))
+        variants[name] = {
+            'overrides': overrides,
+            'n_qubits': int(cfg.n_qubits),
+            'n_parameterized_gates': sets['n_parameterized_gates'],
+            'n_fixed_gates': sets['n_fixed_gates'],
+            'reused_from_sweep': reusable is not None,
+            'closure_cap': None if reusable is not None else int(truncation_cap),
+            'algebras': reusable['algebras'] if reusable is not None else {
+                key: _close(sets[key], cfg.n_qubits, truncation_cap,
+                            cap=truncation_cap)
+                for key in ('parameterized', 'propagated', 'full')},
+        }
+
+    headline = next((r for r in per_n
+                     if r['n_qubits'] == freeze.HEADLINE_N_QUBITS), None)
+    return {
+        'experiment': '3.1 dynamical Lie algebra',
+        'artifact': 'T6 / F-E',
+        'claim': ('dimension of the Lie closure of the frozen ansatz generators, '
+                  'and what it certifies about trainability and simulability'),
+        'method': 'iterated commutators to closure, exact in the Pauli basis',
+        'seed': DLA_SEED,
+        'state_preparation': 'excluded -- AmplitudeEmbedding carries the input, '
+                             'not the ansatz',
+        'exact_closure_max_qubits': EXACT_CLOSURE_MAX_QUBITS,
+        'truncation_cap': int(truncation_cap),
+        'generator_conventions': {
+            'parameterized': 'generators of the trainable gates as they appear; '
+                             'the literal 3.1 spec, and a lower bound only',
+            'propagated': 'trainable generators conjugated through the fixed '
+                          'prefix, so the circuit is F . prod exp(-i theta H~); '
+                          'the algebra the Ragone/Fontana variance expressions '
+                          'are stated over',
+            'full': 'trainable plus fixed-gate generators, so exp(g) provably '
+                    'contains the circuit; the algebra g-sim simulability needs',
+        },
+        'per_n': per_n,
+        'circuit_variants': variants,
+        'headline': None if headline is None else {
+            'n_qubits': headline['n_qubits'],
+            'parameterized_dimension': headline['algebras']['parameterized']['dimension'],
+            'propagated_dimension': headline['algebras']['propagated']['dimension'],
+            'full_dimension': headline['algebras']['full']['dimension'],
+            'su_ceiling': headline['algebras']['full']['su_ceiling'],
+        },
+        'caveats': [
+            'The three generator sets are not interchangeable. Quoting the '
+            'parameterized-only dimension as "the DLA" would understate the '
+            'circuit by ignoring 96 fixed CNOTs, and it is the understatement '
+            'that manufactures a favourable trainability result.',
+            'A polynomially-sized DLA cuts both ways: it would certify no '
+            'barren plateau (Ragone et al. 2024) AND imply the family is '
+            'efficiently classically simulable at arbitrary n (g-sim). Neither '
+            'half may be reported without the other.',
+            'Dimensions marked as lower bounds hit the truncation cap and are '
+            'not closures. Where the su(2^n) certificate holds, the exact value '
+            'follows from the universality result rather than from enumeration, '
+            'and is labelled as such.',
+            'The DLA is a property of the ansatz, not of the trained weights or '
+            'of the data. It says nothing on its own about the loss landscape '
+            'at the archived parameters.',
+        ],
+    }
+
+
+def _report_dla(result: dict) -> None:
+    print('\n3.1 -- dynamical Lie algebra of the frozen ansatz')
+    print('  method             : {}'.format(result['method']))
+    print('  state prep         : {}'.format(result['state_preparation']))
+    print()
+    print('  {:>3s}  {:>10s}  {:>12s}  {:>12s}  {:>12s}'.format(
+        'n', 'su ceiling', 'parameterized', 'propagated', 'full'))
+    for record in result['per_n']:
+        cells = []
+        for name in ('parameterized', 'propagated', 'full'):
+            algebra = record['algebras'][name]
+            cells.append('{}{}'.format(
+                '>=' if algebra['is_lower_bound_only'] else '', algebra['dimension']))
+        print('  {:>3d}  {:>10d}  {:>12s}  {:>12s}  {:>12s}'.format(
+            record['n_qubits'], record['algebras']['full']['su_ceiling'], *cells))
+
+    print('\n  block structure of the parameterized algebra '
+          '(pooling connectivity):')
+    for record in result['per_n']:
+        algebra = record['algebras']['parameterized']
+        print('    n={:>2d}  components {:<16s}  sum(4^|C| - 1) = {:<8d}  '
+              'matches dimension: {}'.format(
+                  record['n_qubits'], str(algebra['component_sizes']),
+                  algebra['direct_sum_of_full_blocks'],
+                  algebra['is_direct_sum_of_full_blocks']))
+
+    print('\n  controls (same n, dimensions known independently):')
+    for record in result['per_n']:
+        row = []
+        for name in CONTROL_ANSATZE:
+            control = record['controls'][name]
+            row.append('{} {}/{} {}'.format(
+                name, control['dimension'], control['expected_dimension'],
+                'ok' if control['agrees_with_expected'] else 'MISMATCH'))
+        print('    n={:>2d}  {}'.format(record['n_qubits'], '   '.join(row)))
+
+    print('\n  circuit variants at n={}:'.format(
+        result['circuit_variants']['frozen']['n_qubits']))
+    for name, variant in result['circuit_variants'].items():
+        cells = []
+        for key in ('parameterized', 'propagated', 'full'):
+            algebra = variant['algebras'][key]
+            if algebra['is_lower_bound_only']:
+                certificate = algebra['full_su_certificate']
+                cells.append('>={} ({})'.format(
+                    algebra['dimension'],
+                    'su(2^n) by certificate = {}'.format(certificate['implied_dimension'])
+                    if certificate['certified_full_su'] else 'no certificate'))
+            else:
+                cells.append(str(algebra['dimension']))
+        print('    {:<10s}  parameterized {}   propagated {}   full {}'.format(
+            name, *cells))
+
+
 def _report_generalization_bound(result: dict) -> None:
     g = result['gate_audit']
     print('\n3.5 -- generalization bound (Caro et al. 2022)')
@@ -564,7 +978,7 @@ def _write(result: dict, path: str) -> None:
 def main():
     ap = argparse.ArgumentParser(description='Phase 3 model analysis (M3)')
     ap.add_argument('--experiment',
-                    choices=['gradient_variance', 'expressibility',
+                    choices=['dla', 'gradient_variance', 'expressibility',
                              'generalization_bound', 'both', 'all'],
                     default='all')
     ap.add_argument('--image-size', type=int, default=freeze.HEADLINE_IMAGE_SIZE,
@@ -577,7 +991,23 @@ def main():
     ap.add_argument('--n-bins', type=int, default=75)
     ap.add_argument('--split-manifest', default=HEADLINE_SPLIT_MANIFEST,
                     help='generalization bound only; supplies N')
+    ap.add_argument('--variant-image-size', type=int,
+                    default=freeze.HEADLINE_IMAGE_SIZE,
+                    help='DLA only; qubit count for the pool_none / ent_none '
+                         'block attribution')
+    ap.add_argument('--truncation-cap', type=int, default=TRUNCATION_CAP,
+                    help='DLA only; dimension cap above n={}, where exact '
+                         'enumeration stops being affordable'.format(
+                             EXACT_CLOSURE_MAX_QUBITS))
     args = ap.parse_args()
+
+    if args.experiment in ('dla', 'all'):
+        print('3.1 -- dynamical Lie algebra (closure by iterated commutators)')
+        result = run_dla(image_sizes=tuple(args.image_sizes),
+                         truncation_cap=args.truncation_cap,
+                         variant_image_size=args.variant_image_size)
+        _report_dla(result)
+        _write(result, DLA_EVIDENCE)
 
     if args.experiment in ('gradient_variance', 'both', 'all'):
         print('3.2 -- gradient variance sweep ({} inits per qubit count)'.format(args.n_inits))

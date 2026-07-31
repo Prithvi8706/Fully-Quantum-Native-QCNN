@@ -56,11 +56,38 @@ always name which), and its "characterises its scaling (Phase 8)" clause is **no
 because M8 has not run. The draft also states plainly that every number in the paper is a
 classical simulation and that M7's real-QPU point does not exist yet.
 
-With §2 closed, **§3's DLA is the next piece of work** — §4's items stay blocked on Track A.
+With §2 and §3 closed, **§5's E5 (Qiskit venv) is the next piece of work** — §4's items stay
+blocked on Track A.
 
 ---
 
-## 3. Then M3.1 — the DLA, which is the interesting one
+## 3. M3.1 — the DLA — **DONE 2026-07-31**
+
+`python -m experiments.model_analysis --experiment dla`. Evidence:
+`Results/evidence/t6_dynamical_lie_algebra.json`. Full write-up in `STATUS.md` §12.
+
+**Read that write-up before quoting anything.** Headline: exact closure at n=10, and the DLA is
+the **whole of su(2¹⁰), dimension 1,048,575**. Consequences, all of which cut against the plan's
+expectation:
+
+- **No trainability certificate exists.** This section's premise — poly DLA ⇒ no barren plateau,
+  upgrading Pesah et al. from analogy to a computed certificate — fails. The definition-of-done
+  checkbox stays unticked and needs rewording at M10, not ticking.
+- **No simulability implication either**, so `docs/simulability_statement.md` §4's open item
+  closes in the negative: the g-sim route is unavailable. That is *one route ruled out*, not a
+  hardness result, and it is written that way.
+- **It did discriminate the tension below: reconciliation (a) is refuted.** The live
+  parameterisation generates the entire su(2¹⁰), so a sparse effective-parameter count is not
+  what saves trainability. (b) and (c) survive, with a mechanism.
+- **Two architectural findings** worth carrying into M8: pooling is the model's *only trainable
+  entangler* (`pool_none` collapses the parameterised algebra to 3n), and the exponential size is
+  bought entirely by the 96 *non-trainable* conv CNOTs (`ent_none` drops all three algebras to
+  65,550).
+
+Everything below is the reasoning that set this item up; it is retained because it records what
+was expected, which is half of why the result is worth reporting.
+
+### Original framing
 
 3.2 and 3.4 left a genuine tension recorded in `STATUS.md` §12: the ansatz is
 **Haar-indistinguishable at n=10** (KL 1e-6 against a Haar reference that itself scores
@@ -180,8 +207,9 @@ artifacts exist. Evidence goes to `Results/evidence/*.json`; the manuscript is M
   backslash escaping; it corrupted `fqcnn.tex` once and bit three times. Write scripts to
   a file with the Write tool instead.
 - **Treat `estimate_cost.py` projections as lower bounds.**
-- Suite is **210 tests passing** as of 2026-07-29 (was 204 when this file was written; 3.5 added
-  six). Keep it green; it is the gate.
+- Suite is **276 tests passing** as of 2026-07-31 (was 204 when this file was written; 3.5 added
+  six, 3.1 added 66 — 58 for the Lie-closure primitive, 8 for the runner). Keep it green; it is
+  the gate.
 
 ## 8. Decisions already taken — do not re-litigate
 

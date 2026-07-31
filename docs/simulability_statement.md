@@ -4,6 +4,10 @@
 compute. This is the source text for the scope statement that M10.3 installs in the
 manuscript; it is **not** in `fqcnn.tex` yet, and must not be until M10.3.
 
+**Updated 2026-07-31:** §4's open item on the dynamical Lie algebra is closed by 3.1. The
+result does not change the statement — see that section for what it rules out and what it
+does not.
+
 Anchors: `STATUS.md` §3 (parameter audit), §12 (3.2, 3.4, 3.5), `UPGRADE_PLAN.md` 3.7.
 
 ---
@@ -83,13 +87,26 @@ artifact behind it.
 
 Two further open items bear directly on how strong the simulability admission ought to be:
 
-- **3.1, the dynamical Lie algebra, is not run**, and it is the item that could change the
-  statement qualitatively. Ten qubits is simulable for trivial reasons. Whether the *family* is
-  efficiently simulable at arbitrary n is a different question, and a polynomially-scaling DLA
-  would answer it in the affirmative via the Lie-algebraic simulation results — which would be
-  a substantive finding to report, not to bury. It would also discriminate among the three
-  recorded reconciliations of the 3.2/3.4 tension (`STATUS.md` §12). We do not know yet, and
-  the manuscript must not imply otherwise in either direction.
+- **3.1, the dynamical Lie algebra, has now run (2026-07-31), and it does not change the
+  statement.** This bullet previously recorded the open risk that a polynomially-scaling DLA
+  would imply the *family* is efficiently simulable at arbitrary n via the Lie-algebraic
+  ("g-sim") results — a substantive finding that would have had to be reported rather than
+  buried. It does not arise. The DLA of the frozen ansatz at the headline configuration is the
+  **whole of su(2¹⁰), dimension 1,048,575**, by exact closure — not a truncated enumeration
+  (`Results/evidence/t6_dynamical_lie_algebra.json`; `STATUS.md` §12).
+
+  What follows, and what does not:
+
+  - **The g-sim route is unavailable.** It requires the circuit to lie in `exp(g)` for a
+    polynomially-sized `g`, and here `g` is the full special unitary algebra. So this paper
+    makes **no** claim that the family is efficiently simulable at arbitrary n.
+  - **That is not a hardness result, and must not be written as one.** An exponential DLA
+    closes *one* efficient-simulation argument. It says nothing about the others, and the
+    shallow fixed-depth tape (327 operations, three pooling stages) is exactly the regime where
+    a tensor-network or low-entanglement simulation may well succeed. The honest position is
+    that simulability at arbitrary n is **open**, with one specific route now ruled out.
+  - **§1's admission is unaffected.** At ten qubits the model is simulable for the trivial
+    reason given there — 1,024 amplitudes — and that reason never depended on the DLA.
 - **3.4 found the ansatz Haar-indistinguishable at n=10** to within a measure that separates
   ~10× fidelity deviations. That is a statement about the output ensemble, not about
   simulation hardness, and it should not be recruited as evidence of "quantumness".

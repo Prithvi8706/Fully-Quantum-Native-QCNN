@@ -1,0 +1,57 @@
+3.1 -- dynamical Lie algebra (closure by iterated commutators)
+  n= 4 parameterized  dim       255  (255/255 of su ceiling)  blocks [4]  [0.1s]
+  n= 4 propagated     dim       255  (255/255 of su ceiling)  blocks [4]  [0.1s]
+  n= 4 full           dim       255  (255/255 of su ceiling)  blocks [4]  [0.1s]
+  n= 6 parameterized  dim       270  (270/4095 of su ceiling)  blocks [4, 2]  [0.1s]
+  n= 6 propagated     dim      4095  (4095/4095 of su ceiling)  blocks [6]  [4.0s]
+  n= 6 full           dim      4095  (4095/4095 of su ceiling)  blocks [6]  [1.6s]
+  n= 8 parameterized  dim     65535  (65535/65535 of su ceiling)  blocks [8]  [29.9s]
+  n= 8 propagated     dim     65535  (65535/65535 of su ceiling)  blocks [8]  [58.9s]
+  n= 8 full           dim     65535  (65535/65535 of su ceiling)  blocks [8]  [26.8s]
+  n=10 parameterized  dim     65550  (65550/1048575 of su ceiling)  blocks [8, 2]  [32.9s]
+  n=10 propagated     dim   1048575  (1048575/1048575 of su ceiling)  blocks [10]  [978.0s]
+  n=10 full           dim   1048575  (1048575/1048575 of su ceiling)  blocks [10]  [458.1s]
+  n=12 parameterized  dim     65790  (65790/16777215 of su ceiling)  blocks [8, 4]  [16.0s]
+  n=12 propagated     dim    120000 (lower bound)  (120000/16777215 of su ceiling)  blocks [12]  [4.8s]
+  n=12 full           dim    120000 (lower bound)  (120000/16777215 of su ceiling)  blocks [12]  [9.9s]
+  n=14 parameterized  dim     65805  (65805/268435455 of su ceiling)  blocks [8, 4, 2]  [18.8s]
+  n=14 propagated     dim    120000 (lower bound)  (120000/268435455 of su ceiling)  blocks [14]  [8.5s]
+  n=14 full           dim    120000 (lower bound)  (120000/268435455 of su ceiling)  blocks [14]  [9.3s]
+  variant frozen     (n=10)
+  variant pool_none  (n=10)
+  variant ent_none   (n=10)
+
+3.1 -- dynamical Lie algebra of the frozen ansatz
+  method             : iterated commutators to closure, exact in the Pauli basis
+  state prep         : excluded -- AmplitudeEmbedding carries the input, not the ansatz
+
+    n  su ceiling  parameterized    propagated          full
+    4         255           255           255           255
+    6        4095           270          4095          4095
+    8       65535         65535         65535         65535
+   10     1048575         65550       1048575       1048575
+   12    16777215         65790      >=120000      >=120000
+   14   268435455         65805      >=120000      >=120000
+
+  block structure of the parameterized algebra (pooling connectivity):
+    n= 4  components [4]               sum(4^|C| - 1) = 255       matches dimension: True
+    n= 6  components [4, 2]            sum(4^|C| - 1) = 270       matches dimension: True
+    n= 8  components [8]               sum(4^|C| - 1) = 65535     matches dimension: True
+    n=10  components [8, 2]            sum(4^|C| - 1) = 65550     matches dimension: True
+    n=12  components [8, 4]            sum(4^|C| - 1) = 65790     matches dimension: True
+    n=14  components [8, 4, 2]         sum(4^|C| - 1) = 65805     matches dimension: True
+
+  controls (same n, dimensions known independently):
+    n= 4  local_rotations_only 12/12 ok   transverse_field_ising 28/28 ok
+    n= 6  local_rotations_only 18/18 ok   transverse_field_ising 66/66 ok
+    n= 8  local_rotations_only 24/24 ok   transverse_field_ising 120/120 ok
+    n=10  local_rotations_only 30/30 ok   transverse_field_ising 190/190 ok
+    n=12  local_rotations_only 36/36 ok   transverse_field_ising 276/276 ok
+    n=14  local_rotations_only 42/42 ok   transverse_field_ising 378/378 ok
+
+  circuit variants at n=10:
+    frozen      parameterized 65550   propagated 1048575   full 1048575
+    pool_none   parameterized 30   propagated >=120000 (su(2^n) by certificate = 1048575)   full >=120000 (su(2^n) by certificate = 1048575)
+    ent_none    parameterized 65550   propagated 65550   full 65550
+
+  evidence -> Results\evidence\t6_dynamical_lie_algebra.json
