@@ -18,6 +18,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import os
 import tempfile
@@ -224,6 +225,16 @@ def _hours(configs, pairs, seeds, calibrations, sizes, baseline_s, jobs, with_ba
     return rows, serial_s / 3600.0, wall_s / 3600.0
 
 
+def _write_json(path: str, payload: dict) -> None:
+    if not path:
+        return
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    with open(path, 'w') as fh:
+        json.dump(payload, fh, indent=2, sort_keys=True, allow_nan=False)
+
+
 def main():
     ap = argparse.ArgumentParser(description='Project and gate the experiment grid')
     ap.add_argument('--datasets', nargs='+', default=['0,1', '3,5', '4,9', '5,8'])
@@ -239,6 +250,7 @@ def main():
     ap.add_argument('--forward-probe', type=int, default=16)
     ap.add_argument('--hours-per-night', type=float, default=HOURS_PER_NIGHT)
     ap.add_argument('--nights', type=int, default=NIGHT_BUDGET)
+    ap.add_argument('--output-json', help='Write the complete approval record as JSON')
     args = ap.parse_args()
 
     unknown = [c for c in args.configs if c not in ABLATION_CONFIGS]
@@ -270,13 +282,13 @@ def main():
             run_experiments.MANIFEST_ROOT = real_root
 
     print('\nCalibrating configs (measured on this machine)...', flush=True)
-    calibrations, unmeasurable = {}, []
+    calibrations, failures = {}, []
     for config_name in args.configs:
         try:
             cal = calibrate(config_name, args.seeds[0], args.epochs,
                             args.reps, args.forward_probe)
         except Exception as exc:
-            unmeasurable.append((config_name, repr(exc)))
+            failures.append({'kind': 'config', 'name': config_name, 'error': repr(exc)})
             print('  {:18s} NOT MEASURABLE: {}'.format(config_name, exc), flush=True)
             continue
         calibrations[config_name] = cal
@@ -287,19 +299,63 @@ def main():
                   cal['sequential_forward_s_per_sample'],
                   'batched' if cal['batched'] else 'SEQUENTIAL (memory cap)'), flush=True)
 
-    configs = [c for c in args.configs if c in calibrations]
-    if not configs:
-        ap.error('no config could be calibrated on this machine')
-
     baseline_s = 0.0
+    baseline_measurable = not with_baselines
     if with_baselines:
         print('\nCalibrating baselines...', flush=True)
         first = pair_names[0]
-        baseline_s = calibrate_baselines(
-            args.seeds[0], args.epochs, sizes[first][0], sizes[first][2])
-        print('  {:.1f}s attached to each proposed cell'.format(baseline_s))
+        try:
+            baseline_s = calibrate_baselines(
+                args.seeds[0], args.epochs, sizes[first][0], sizes[first][2])
+            baseline_measurable = True
+            print('  {:.1f}s attached to each proposed cell'.format(baseline_s))
+        except Exception as exc:
+            failures.append({'kind': 'baseline', 'name': 'all', 'error': repr(exc)})
+            print('  baselines NOT MEASURABLE: {}'.format(exc), flush=True)
 
-    rows, serial_s, wall_s = project(configs, pair_names, args.seeds,
+    requested_config_cells = len(args.configs) * len(pair_names) * len(args.seeds)
+    requested_baseline_cells = (len(pair_names) * len(args.seeds)
+                                if with_baselines else 0)
+    measurable_config_cells = len(calibrations) * len(pair_names) * len(args.seeds)
+    measurable_baseline_cells = (requested_baseline_cells if baseline_measurable else 0)
+    budget_h = args.nights * args.hours_per_night
+    payload = {
+        'schema': {'name': 'fqcnn_campaign_cost_estimate', 'version': 1},
+        'status': 'failed' if failures else 'pending',
+        'approval': {
+            'approved': False,
+            'reasons': ['unmeasurable requested cells'] if failures else [],
+            'budget_hours': budget_h,
+        },
+        'request': {
+            'datasets': args.datasets,
+            'configs': args.configs,
+            'seeds': args.seeds,
+            'samples': args.samples,
+            'epochs': args.epochs,
+            'with_baselines': with_baselines,
+        },
+        'counts': {
+            'requested_configs': len(args.configs),
+            'measurable_configs': len(calibrations),
+            'requested_cells': requested_config_cells + requested_baseline_cells,
+            'measurable_cells': measurable_config_cells + measurable_baseline_cells,
+            'failed_calibrations': len(failures),
+        },
+        'calibrations': {'configs': calibrations,
+                         'baseline_seconds_per_proposed_cell': (
+                             baseline_s if baseline_measurable else None)},
+        'failures': failures,
+        'projection': None,
+        'reduction': None,
+    }
+    if failures:
+        _write_json(args.output_json, payload)
+        print('\nVERDICT: REJECTED ({} requested calibration failure(s))'.format(
+            len(failures)))
+        return 1
+
+    rows, serial_s, wall_s = project(args.configs, pair_names, args.seeds,
                                      calibrations, sizes, baseline_s, jobs, with_baselines)
 
     print('\n{:<8s} {:<18s} {:>10s} {:>12s} {:>12s}'.format(
@@ -310,21 +366,35 @@ def main():
             ds_name, config_name, cost['epoch_s'], per_cell,
             per_cell * len(args.seeds) / 3600.0))
 
-    n_cells = len(rows) * len(args.seeds)
     serial_h, wall_h = serial_s / 3600.0, wall_s / 3600.0
-    budget_h = args.nights * args.hours_per_night
+    if not all(math.isfinite(value) for value in (serial_h, wall_h, budget_h)):
+        payload['status'] = 'failed'
+        payload['approval']['reasons'] = ['non-finite cost projection']
+        payload['failures'].append({
+            'kind': 'projection', 'name': 'campaign',
+            'error': 'projection produced a non-finite value'})
+        payload['counts']['failed_calibrations'] += 1
+        _write_json(args.output_json, payload)
+        print('\nVERDICT: REJECTED (non-finite projection)')
+        return 1
 
+    payload['projection'] = {
+        'serial_hours': serial_h,
+        'wall_hours': wall_h,
+        'workers': jobs,
+        'budget_hours': budget_h,
+        'budget_fraction': wall_h / budget_h,
+    }
     print('\n{} cells | serial {:.1f} h | {} worker(s) -> {:.1f} h wall-clock'.format(
-        n_cells, serial_h, jobs, wall_h))
+        payload['counts']['requested_cells'], serial_h, jobs, wall_h))
     print('budget: {} nights x {:.0f} h = {:.0f} h'.format(
         args.nights, args.hours_per_night, budget_h))
 
-    if unmeasurable:
-        print('\nNOT PRICED (excluded from the projection):')
-        for name, err in unmeasurable:
-            print('  - {}: {}'.format(name, err))
-
     if wall_h <= budget_h:
+        payload['status'] = 'approved'
+        payload['approval']['approved'] = True
+        payload['approval']['reasons'] = ['complete measurable request fits budget']
+        _write_json(args.output_json, payload)
         print('\nVERDICT: FITS ({:.1f} h of {:.0f} h, {:.0f}% of budget, '
               '{:.1f} nights)'.format(
                   wall_h, budget_h, 100.0 * wall_h / budget_h, wall_h / args.hours_per_night))
@@ -332,8 +402,16 @@ def main():
 
     print('\nVERDICT: OVER BUDGET by {:.1f} h'.format(wall_h - budget_h))
     steps, reduced_h = propose_reduction(
-        configs, pair_names, args.seeds, calibrations, sizes, baseline_s,
+        args.configs, pair_names, args.seeds, calibrations, sizes, baseline_s,
         jobs, with_baselines, budget_h)
+    payload['status'] = 'over_budget'
+    payload['approval']['reasons'] = ['complete measurable request exceeds budget']
+    payload['reduction'] = {
+        'steps': steps,
+        'projected_wall_hours': reduced_h,
+        'fits_budget': reduced_h <= budget_h,
+    }
+    _write_json(args.output_json, payload)
     print('mandated reduction order (seeds -> datasets -> non-pooling ablations):')
     for step in steps:
         print('  - {}'.format(step))

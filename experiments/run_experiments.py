@@ -73,20 +73,19 @@ _THREAD_LIMIT_VARS = (
 # proposed architecture so the contribution of each piece is measurable (#4).
 # image_size/encoding are per-config because feature_map needs few qubits.
 ABLATION_CONFIGS = {
-    "proposed":        dict(image_size=16, encoding="amplitude"),  # su2 / full / unitary
-    "pool_none":       dict(image_size=16, encoding="amplitude", pooling_mode="none"),
-    "pool_measurement":dict(image_size=16, encoding="amplitude", pooling_mode="measurement"),
-    "ent_one_diagonal":dict(image_size=16, encoding="amplitude", conv_entanglement="one_diagonal"),
-    "ent_none":        dict(image_size=16, encoding="amplitude", conv_entanglement="none"),
-    "kernel_ry":       dict(image_size=16, encoding="amplitude", kernel_rotations="ry"),
+    "proposed":        dict(image_size=28, encoding="amplitude"),  # su2 / full / unitary
+    "pool_none":       dict(image_size=28, encoding="amplitude", pooling_mode="none"),
+    "pool_measurement":dict(image_size=28, encoding="amplitude", pooling_mode="measurement"),
+    "ent_one_diagonal":dict(image_size=28, encoding="amplitude", conv_entanglement="one_diagonal"),
+    "ent_none":        dict(image_size=28, encoding="amplitude", conv_entanglement="none"),
+    "kernel_ry":       dict(image_size=28, encoding="amplitude", kernel_rotations="ry"),
     # Encoding ablation uses a small image so feature_map stays simulable.
     "enc_feature_map": dict(image_size=4, encoding="feature_map"),
 }
 
 # E3 pooling arms (UPGRADE_PLAN.md 2.2, roadmap M2.4). These run at the HEADLINE
 # geometry -- image_size=28 -> n=10 -- so every row of T5 describes the model the
-# paper is about. The entries above use image_size=16 -> n=8 and are blocker B3;
-# they are left alone here because widening them is M6's call, not E3's.
+# paper is about. The general amplitude arms above now share that geometry.
 #
 # 'coherent' is [ARCH -- opt-in] and ran only after the roadmap 18.2 sign-off
 # (given 2026-07-25). It is an ablation arm; promotion to headline would need a
@@ -100,6 +99,46 @@ E3_POOLING_ARMS = {
 }
 ABLATION_CONFIGS.update(E3_POOLING_ARMS)
 
+ABLATION_GEOMETRY_EXCEPTIONS = {
+    "enc_feature_map": {
+        "code": "encoding_requires_distinct_geometry",
+        "factor": "encoding_type",
+        "reference_image_size": 28,
+        "reference_n_qubits": 10,
+        "image_size": 4,
+        "n_qubits": 16,
+        "reason": "Feature-map simulation uses one qubit per pixel and is not feasible at headline geometry.",
+        "comparable_as_one_factor": False,
+    },
+}
+
+_ABLATION_FACTORS = {
+    "pool_none": "pooling_mode",
+    "pool_measurement": "pooling_mode",
+    "ent_one_diagonal": "conv_entanglement",
+    "ent_none": "conv_entanglement",
+    "kernel_ry": "kernel_rotations",
+    "enc_feature_map": "encoding_type",
+}
+
+
+def resolve_ablation(name: str) -> dict:
+    """Resolve an ablation to executable geometry and comparison metadata."""
+    cfg = build_config(ABLATION_CONFIGS[name], seed=0)
+    resolved = {
+        "name": name,
+        "image_size": cfg.image_size,
+        "n_qubits": cfg.n_qubits,
+        "encoding_type": cfg.encoding_type,
+        "pooling_mode": cfg.pooling_mode,
+        "conv_entanglement": cfg.conv_entanglement,
+        "kernel_rotations": cfg.kernel_rotations,
+        "factor": _ABLATION_FACTORS.get(name),
+    }
+    if name in ABLATION_GEOMETRY_EXCEPTIONS:
+        resolved["geometry_exception"] = ABLATION_GEOMETRY_EXCEPTIONS[name]
+    return resolved
+
 
 def build_config(overrides: dict, seed: int) -> QuantumNativeConfig:
     """Build a config from per-config overrides + seed."""
@@ -112,6 +151,14 @@ def build_config(overrides: dict, seed: int) -> QuantumNativeConfig:
             continue
         setattr(cfg, k, v)
     return cfg
+
+
+def _config_metadata(cfg: QuantumNativeConfig, config_name: str) -> dict:
+    metadata = {k: v for k, v in vars(cfg).items()
+                if isinstance(v, (int, float, str, bool, type(None)))}
+    resolved = resolve_ablation(config_name)
+    metadata["ablation"] = resolved
+    return metadata
 
 
 def prepare_split(cfg: QuantumNativeConfig, classes, dataset_dir, train_sample_size):
@@ -162,7 +209,7 @@ def prepare_split(cfg: QuantumNativeConfig, classes, dataset_dir, train_sample_s
 
 
 def run_qcnn(cfg: QuantumNativeConfig, split, use_bce: bool, log_path: str,
-             directory: str, test_sample_ids) -> dict:
+             directory: str, test_sample_ids, config_name: str) -> dict:
     """Train the QCNN on a prepared split and return its metric dict."""
     X_train, y_train, X_val, y_val, X_test, y_test = split
     model = PureQuantumNativeCNN(cfg)
@@ -171,8 +218,7 @@ def run_qcnn(cfg: QuantumNativeConfig, split, use_bce: bool, log_path: str,
 
     run_artifacts.start_run(
         directory,
-        config={k: v for k, v in vars(cfg).items()
-                if isinstance(v, (int, float, str, bool, type(None)))},
+        config=_config_metadata(cfg, config_name),
         split_id=cfg.split_id,
         seed=cfg.seed,
         environment={"python": platform.python_version(), "pennylane": qml.version()},
@@ -222,7 +268,7 @@ def run_single(config_name: str, classes, seed: int, dataset_dir: str,
     directory = run_artifacts.run_dir(_fmt_pair(classes), config_name, seed)
     test_ids = [manifest["sample_ids"][i] for i in manifest["test_idx"]]
 
-    metrics = run_qcnn(cfg, split, use_bce, log_path, directory, test_ids)
+    metrics = run_qcnn(cfg, split, use_bce, log_path, directory, test_ids, config_name)
     save_metrics_json(metrics, os.path.join(run_dir, f"seed_{seed}.json"))
 
     # Baselines share the EXACT split → fair comparison. Only needed once per
@@ -270,8 +316,7 @@ def _expected_config(config_name: str, seed: int, epochs) -> dict:
     cfg = build_config(ABLATION_CONFIGS[config_name], seed)
     if epochs is not None:
         cfg.n_epochs = epochs
-    return {k: v for k, v in vars(cfg).items()
-            if isinstance(v, (int, float, str, bool, type(None)))}
+    return _config_metadata(cfg, config_name)
 
 
 def _is_reusable_cell(pair, config_name: str, seed: int, epochs) -> bool:

@@ -4,6 +4,8 @@ Calibration is measured on the machine and cannot be asserted here; the
 projection and the mandated reduction order built on top of it can, and those
 are what decide whether a grid is approved.
 """
+import json
+
 import numpy as np
 import pytest
 
@@ -110,6 +112,71 @@ def test_reduction_never_cuts_a_pooling_arm():
 
 def sizes_of(names):
     return {n: (343, 86, 142) for n in names}
+
+
+def _run_cost_main(monkeypatch, tmp_path, calibration, *, with_baselines=False,
+                   baseline_failure=None):
+    from experiments import estimate_cost
+
+    output = tmp_path / 'cost.json'
+    monkeypatch.setattr(
+        estimate_cost, 'prepare_split',
+        lambda cfg, pair, dataset_dir, samples: (
+            (np.zeros((8, 1)), np.zeros(8), np.zeros((2, 1)), np.zeros(2),
+             np.zeros((3, 1)), np.zeros(3)), {}))
+    monkeypatch.setattr(estimate_cost, 'calibrate', calibration)
+    if baseline_failure is not None:
+        monkeypatch.setattr(
+            estimate_cost, 'calibrate_baselines',
+            lambda *args, **kwargs: (_ for _ in ()).throw(baseline_failure))
+
+    argv = [
+        'estimate_cost', '--datasets', '0,1', '--configs', 'proposed',
+        '--seeds', '0', '--samples', '10', '--epochs', '1', '--jobs', '1',
+        '--output-json', str(output),
+    ]
+    if not with_baselines:
+        argv.append('--no-baselines')
+    monkeypatch.setattr('sys.argv', argv)
+    return estimate_cost.main(), json.loads(output.read_text())
+
+
+def test_unmeasurable_requested_config_rejects_approval_and_is_recorded(
+        monkeypatch, tmp_path):
+    def fail_config(*args, **kwargs):
+        raise RuntimeError('cannot measure config')
+
+    exit_code, payload = _run_cost_main(monkeypatch, tmp_path, fail_config)
+
+    assert exit_code != 0
+    assert payload['status'] == 'failed'
+    assert payload['approval']['approved'] is False
+    assert payload['counts'] == {
+        'requested_configs': 1,
+        'measurable_configs': 0,
+        'requested_cells': 1,
+        'measurable_cells': 0,
+        'failed_calibrations': 1,
+    }
+    assert payload['failures'][0]['kind'] == 'config'
+    assert payload['failures'][0]['name'] == 'proposed'
+    assert payload['projection'] is None
+    assert 'NaN' not in json.dumps(payload) and 'Infinity' not in json.dumps(payload)
+
+
+def test_unmeasurable_requested_baselines_reject_approval_and_are_recorded(
+        monkeypatch, tmp_path):
+    exit_code, payload = _run_cost_main(
+        monkeypatch, tmp_path, lambda *args, **kwargs: dict(CAL, epochs=1),
+        with_baselines=True, baseline_failure=RuntimeError('baseline unsupported'))
+
+    assert exit_code != 0
+    assert payload['approval']['approved'] is False
+    assert payload['counts']['requested_cells'] == 2
+    assert payload['counts']['measurable_cells'] == 1
+    assert payload['counts']['failed_calibrations'] == 1
+    assert payload['failures'][0]['kind'] == 'baseline'
+    assert payload['projection'] is None
 
 
 def test_memory_cap_forces_the_sequential_path_only_for_large_circuits():
