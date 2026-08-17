@@ -19,18 +19,18 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 
 | Milestone | State | Gate | Evidence |
 |---|---|---|---|
-| **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
-| **M1 — Phase 1: affordable execution** | **COMPLETE 2026-07-26** | grid ≤7 nights **PASSED**; headline retrained clean at **98.29%** | §§3a–3e |
-| M2 — Phase 2: pooling theory (E1–E5) | **E1, E2, E3, and E4 complete**; E5 blocked on isolated Qiskit tooling | E1 exact tie; E3 complete at 75 cells; coherent extension has no significant benefit; SU(4) remains headroom | `Results/evidence/e1_pooling_equivalence.json`, `e2_dephasing.json`, `e4_information_dynamics.json`, `t5_pooling_arms.json`; §§7, 7a–7c |
-| M3 — Phase 3: model analysis | **complete for DLA, gradient variance, expressibility, generalization bound, and simulability**; effective dimension/inductive bias blocked on M5.1 | Full su(2^10), dimension 1,048,575: **no polynomial-DLA certificate**; gradients support only “no barren plateau observed through n=14” | `Results/evidence/t6_dynamical_lie_algebra.json`, `f_e_gradient_variance.json`, `t6_expressibility.json`, `t6_generalization_bound.json`, `docs/simulability_statement.md`; §12 |
-| M4 — Phase 4: harder datasets | not started | — | — |
-| M5 — Phase 5: baselines + statistics | not started | — | — |
-| M6 — Phase 6: ablation grid | not started | — | — |
-| M7 — Phase 7: noise + real QPU | not started | one real-QPU point | — |
-| M8 — Phase 8: resources + scaling | not started | — | — |
-| M9 — Phase 9: references | **DONE 2026-07-26** (preprint ratio + sentence audit remain) | 0 author-less, 0 uncited, every published entry has a DOI | `docs/paper_code_reconciliation.md`; §9 |
-| M10 — Phase 10: manuscript + venue | not started | — | — |
-| M11 — final reproduction + red team | not started | — | — |
+| **M0 — Phase 0: freeze + protocol** | `complete` | passed 2026-07-25; tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
+| **M1 — Phase 1: affordable execution** | `complete` | completed 2026-07-26; grid ≤7 nights passed; headline retrained clean at **98.29%** | §§3a–3e |
+| M2 — Phase 2: pooling theory (E1–E5) | `running` | E1, E2, E3, and E4 complete; E5 blocked on isolated Qiskit tooling; E1 exact tie; E3 complete at 75 cells; coherent extension has no significant benefit; SU(4) remains headroom | `Results/evidence/e1_pooling_equivalence.json`, `e2_dephasing.json`, `e4_information_dynamics.json`, `t5_pooling_arms.json`; §§7, 7a–7c |
+| M3 — Phase 3: model analysis | `running` | DLA, gradient variance, expressibility, generalization bound, and simulability complete; effective dimension/inductive bias blocked on M5.1; full su(2^10), dimension 1,048,575: **no polynomial-DLA certificate**; gradients support only “no barren plateau observed through n=14” | `Results/evidence/t6_dynamical_lie_algebra.json`, `f_e_gradient_variance.json`, `t6_expressibility.json`, `t6_generalization_bound.json`, `docs/simulability_statement.md`; §12 |
+| M4 — Phase 4: harder datasets | `pending` | — | — |
+| M5 — Phase 5: baselines + statistics | `pending` | — | — |
+| M6 — Phase 6: ablation grid | `pending` | — | — |
+| M7 — Phase 7: noise + real QPU | `pending` | one real-QPU point | — |
+| M8 — Phase 8: resources + scaling | `pending` | — | — |
+| M9 — Phase 9: references | `complete` | completed 2026-07-26; 0 author-less, 0 uncited, every published entry has a DOI; preprint ratio and sentence audit remain | `docs/paper_code_reconciliation.md`; §9 |
+| M10 — Phase 10: manuscript + venue | `pending` | — | — |
+| M11 — final reproduction + red team | `pending` | — | — |
 
 ## 2. Active queue and blockers
 
@@ -38,9 +38,9 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 
 | # | Blocker | Severity | Owner milestone | Status |
 |---|---|---|---|---|
-| B1 | `pool_measurement` did not implement the theorem's channel — E1 could not pass | **High** | M2.1 | **Closed 2026-07-25** — fixed; **E1 PASSES** (§7) |
-| B2 | Batched path must be proven equivalent before any grid runs | High | M1.1 | **Closed 2026-07-25** (§3a) |
-| B3 | Ablation grid runs n=8 while the frozen headline is n=10, so T4 would describe a different model | **High** | M5/M6 | Open, documented (§3d) |
+| B1 | `pool_measurement` did not implement the theorem's channel — fixed 2026-07-25; E1 passes (§7) | **High** | M2.1 | `complete` |
+| B2 | Batched path equivalence proven 2026-07-25 before grid runs (§3a) | High | M1.1 | `complete` |
+| B3 | Ablation grid runs n=8 while the frozen headline is n=10, so T4 would describe a different model; open and documented (§3d) | **High** | M5/M6 | `pending` |
 
 ## 3. M0 outcome (2026-07-25)
 
