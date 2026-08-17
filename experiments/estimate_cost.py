@@ -228,11 +228,28 @@ def _hours(configs, pairs, seeds, calibrations, sizes, baseline_s, jobs, with_ba
 def _write_json(path: str, payload: dict) -> None:
     if not path:
         return
-    directory = os.path.dirname(path)
-    if directory:
-        os.makedirs(directory, exist_ok=True)
-    with open(path, 'w') as fh:
-        json.dump(payload, fh, indent=2, sort_keys=True, allow_nan=False)
+    directory = os.path.dirname(path) or '.'
+    os.makedirs(directory, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(
+                mode='w', dir=directory, delete=False,
+                prefix='.campaign-cost-', suffix='.tmp') as fh:
+            temporary = fh.name
+            json.dump(payload, fh, indent=2, sort_keys=True, allow_nan=False)
+            fh.write('\n')
+        os.replace(temporary, path)
+    finally:
+        if temporary and os.path.exists(temporary):
+            os.remove(temporary)
+
+
+def _nonfinite_field(values: dict):
+    for name, value in values.items():
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            if not math.isfinite(value):
+                return name
+    return None
 
 
 def main():
@@ -257,6 +274,47 @@ def main():
     if unknown:
         ap.error('unknown config(s) {}; choose from {}'.format(
             ', '.join(unknown), ', '.join(sorted(ABLATION_CONFIGS))))
+
+    budget_h = args.nights * args.hours_per_night
+    if args.nights <= 0 or args.hours_per_night <= 0:
+        with_baselines = not args.no_baselines
+        requested_config_cells = len(args.configs) * len(args.datasets) * len(args.seeds)
+        requested_baseline_cells = (len(args.datasets) * len(args.seeds)
+                                    if with_baselines else 0)
+        failure = {
+            'kind': 'request', 'name': 'budget',
+            'error': 'nights and hours-per-night must both be positive',
+        }
+        payload = {
+            'schema': {'name': 'fqcnn_campaign_cost_estimate', 'version': 1},
+            'status': 'failed',
+            'approval': {
+                'approved': False,
+                'reasons': ['invalid non-positive budget'],
+                'budget_hours': budget_h,
+            },
+            'request': {
+                'datasets': args.datasets, 'configs': args.configs,
+                'seeds': args.seeds, 'samples': args.samples,
+                'epochs': args.epochs, 'with_baselines': with_baselines,
+            },
+            'counts': {
+                'requested_configs': len(args.configs),
+                'measurable_configs': 0,
+                'requested_cells': requested_config_cells + requested_baseline_cells,
+                'measurable_cells': 0,
+                'failed_calibrations': 0,
+                'total_failures': 1,
+            },
+            'calibrations': {
+                'configs': {}, 'baseline_seconds_per_proposed_cell': None},
+            'failures': [failure],
+            'projection': None,
+            'reduction': None,
+        }
+        _write_json(args.output_json, payload)
+        print('VERDICT: REJECTED (invalid non-positive budget)')
+        return 1
 
     jobs = args.jobs if args.jobs > 0 else max(1, (os.cpu_count() or 3) - 2)
     with_baselines = not args.no_baselines
@@ -291,6 +349,12 @@ def main():
             failures.append({'kind': 'config', 'name': config_name, 'error': repr(exc)})
             print('  {:18s} NOT MEASURABLE: {}'.format(config_name, exc), flush=True)
             continue
+        nonfinite = _nonfinite_field(cal)
+        if nonfinite is not None:
+            error = 'non-finite calibration field: {}'.format(nonfinite)
+            failures.append({'kind': 'config', 'name': config_name, 'error': error})
+            print('  {:18s} NOT MEASURABLE: {}'.format(config_name, error), flush=True)
+            continue
         calibrations[config_name] = cal
         print('  {:18s} n={:2d}  grad/batch {:8.3f}s  fwd/sample {:7.4f}s  '
               'seq-fwd/sample {:7.4f}s  {}'.format(
@@ -307,6 +371,8 @@ def main():
         try:
             baseline_s = calibrate_baselines(
                 args.seeds[0], args.epochs, sizes[first][0], sizes[first][2])
+            if not math.isfinite(baseline_s):
+                raise ValueError('non-finite baseline calibration')
             baseline_measurable = True
             print('  {:.1f}s attached to each proposed cell'.format(baseline_s))
         except Exception as exc:
@@ -341,6 +407,7 @@ def main():
             'requested_cells': requested_config_cells + requested_baseline_cells,
             'measurable_cells': measurable_config_cells + measurable_baseline_cells,
             'failed_calibrations': len(failures),
+            'total_failures': len(failures),
         },
         'calibrations': {'configs': calibrations,
                          'baseline_seconds_per_proposed_cell': (
@@ -373,7 +440,7 @@ def main():
         payload['failures'].append({
             'kind': 'projection', 'name': 'campaign',
             'error': 'projection produced a non-finite value'})
-        payload['counts']['failed_calibrations'] += 1
+        payload['counts']['total_failures'] += 1
         _write_json(args.output_json, payload)
         print('\nVERDICT: REJECTED (non-finite projection)')
         return 1

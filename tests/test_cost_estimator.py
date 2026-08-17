@@ -115,7 +115,7 @@ def sizes_of(names):
 
 
 def _run_cost_main(monkeypatch, tmp_path, calibration, *, with_baselines=False,
-                   baseline_failure=None):
+                   baseline_failure=None, extra_args=()):
     from experiments import estimate_cost
 
     output = tmp_path / 'cost.json'
@@ -137,6 +137,7 @@ def _run_cost_main(monkeypatch, tmp_path, calibration, *, with_baselines=False,
     ]
     if not with_baselines:
         argv.append('--no-baselines')
+    argv.extend(extra_args)
     monkeypatch.setattr('sys.argv', argv)
     return estimate_cost.main(), json.loads(output.read_text())
 
@@ -157,6 +158,7 @@ def test_unmeasurable_requested_config_rejects_approval_and_is_recorded(
         'requested_cells': 1,
         'measurable_cells': 0,
         'failed_calibrations': 1,
+        'total_failures': 1,
     }
     assert payload['failures'][0]['kind'] == 'config'
     assert payload['failures'][0]['name'] == 'proposed'
@@ -177,6 +179,74 @@ def test_unmeasurable_requested_baselines_reject_approval_and_are_recorded(
     assert payload['counts']['failed_calibrations'] == 1
     assert payload['failures'][0]['kind'] == 'baseline'
     assert payload['projection'] is None
+
+
+def test_nonfinite_calibration_is_a_structured_failure(monkeypatch, tmp_path):
+    exit_code, payload = _run_cost_main(
+        monkeypatch, tmp_path,
+        lambda *args, **kwargs: dict(CAL, grad_s_per_batch=float('nan')))
+
+    assert exit_code != 0
+    assert payload['status'] == 'failed'
+    assert payload['approval']['approved'] is False
+    assert payload['projection'] is None
+    assert payload['counts']['failed_calibrations'] == 1
+    assert payload['counts']['total_failures'] == 1
+    assert payload['failures'][0]['kind'] == 'config'
+    assert 'non-finite' in payload['failures'][0]['error']
+    assert 'NaN' not in json.dumps(payload) and 'Infinity' not in json.dumps(payload)
+
+
+def test_json_write_is_atomic_when_serialization_fails(tmp_path):
+    from experiments.estimate_cost import _write_json
+
+    output = tmp_path / 'cost.json'
+    output.write_text('{"preserved": true}\n')
+
+    with pytest.raises((TypeError, ValueError)):
+        _write_json(str(output), {'bad': object()})
+
+    assert json.loads(output.read_text()) == {'preserved': True}
+
+
+@pytest.mark.parametrize('budget_args', [
+    ('--nights', '0'),
+    ('--nights', '-1'),
+    ('--hours-per-night', '0'),
+    ('--hours-per-night', '-1'),
+])
+def test_nonpositive_budget_is_a_structured_request_failure(
+        monkeypatch, tmp_path, budget_args):
+    def calibration_must_not_run(*args, **kwargs):
+        raise AssertionError('calibration should not run for an invalid budget')
+
+    exit_code, payload = _run_cost_main(
+        monkeypatch, tmp_path, calibration_must_not_run, extra_args=budget_args)
+
+    assert exit_code != 0
+    assert payload['status'] == 'failed'
+    assert payload['approval']['approved'] is False
+    assert payload['projection'] is None
+    assert payload['counts']['failed_calibrations'] == 0
+    assert payload['counts']['total_failures'] == 1
+    assert payload['failures'][0]['kind'] == 'request'
+    assert payload['failures'][0]['name'] == 'budget'
+
+
+def test_projection_failure_does_not_increment_failed_calibrations(
+        monkeypatch, tmp_path):
+    from experiments import estimate_cost
+    monkeypatch.setattr(
+        estimate_cost, 'project',
+        lambda *args, **kwargs: ([], 3600.0, float('inf')))
+
+    exit_code, payload = _run_cost_main(
+        monkeypatch, tmp_path, lambda *args, **kwargs: dict(CAL, epochs=1))
+
+    assert exit_code != 0
+    assert payload['counts']['failed_calibrations'] == 0
+    assert payload['counts']['total_failures'] == 1
+    assert payload['failures'][0]['kind'] == 'projection'
 
 
 def test_memory_cap_forces_the_sequential_path_only_for_large_circuits():
