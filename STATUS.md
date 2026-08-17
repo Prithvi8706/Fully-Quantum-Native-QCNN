@@ -403,6 +403,7 @@ extrapolated rows are sound. Batch 32 is measured end to end, not extrapolated.
 
 | ID | Artifact | Milestone | Status |
 |---|---|---|---|
+| T0 | Repository preservation | Task 1 | **recorded** at pushed SHA `43abb754b2f18177a2c2f920c142afcbb641fcf9`; `Results/evidence/repository_preservation.json` |
 | T1 | Datasets + clean split protocol | M0.4, M4 | protocol done; table pending M4 |
 | T2 | Resource table, prep vs model, transpiled | M8.1 | not started |
 | T3 | Baselines, CIs, paired tests, cost columns | M5 | not started |
