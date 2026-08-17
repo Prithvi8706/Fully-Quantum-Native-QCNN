@@ -33,7 +33,7 @@ def _git(root: Path, *args: str) -> str:
         text=True,
         capture_output=True,
     )
-    return result.stdout.strip()
+    return result.stdout.rstrip("\r\n")
 
 
 def audit_repository(root: Path) -> dict:
