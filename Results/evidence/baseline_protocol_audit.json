@@ -5,7 +5,8 @@
     "behavioral_tests": [
       "test_logistic_selection_ignores_test_labels_but_responds_to_validation_labels",
       "test_quantum_checkpoint_uses_validation_each_epoch_and_test_once",
-      "test_baseline_result_persists_protocol_and_predictions_before_completion"
+      "test_baseline_result_persists_protocol_and_predictions_before_completion",
+      "test_protocol_audit_scopes_mutation_evidence_per_model"
     ]
   },
   "runners": {
@@ -13,17 +14,44 @@
     "run_quantum_baselines": "(*, X_train, y_train, X_val, y_val, X_test, y_test, seed=42, n_qubits=8, n_epochs=30, learning_rate=0.02, use_bce=True)"
   },
   "selection_criterion": "validation_loss",
-  "mutation_test": {
-    "test_label_mutation_preserved_selection": true,
-    "test_label_mutation_preserved_selected_parameters": true,
-    "validation_label_mutation_changed_selection": true
+  "model_evidence": {
+    "logistic": {
+      "execution": {"status": "verified", "test_evaluations": 1},
+      "mutation_behavior": {
+        "status": "verified",
+        "test_labels_preserve_selection": true,
+        "test_labels_preserve_selected_parameters": true,
+        "validation_labels_can_change_selection": true
+      }
+    },
+    "mlp": {
+      "execution": {"status": "structurally_checked", "test_evaluations": 1},
+      "mutation_behavior": {"status": "unverified"}
+    },
+    "cong": {
+      "execution": {"status": "verified", "test_evaluations": 1,
+                    "validation_evaluations": "once_per_epoch"},
+      "mutation_behavior": {"status": "unverified"}
+    },
+    "hur": {
+      "execution": {"status": "structurally_checked", "shared_trainer": "cong"},
+      "mutation_behavior": {"status": "unverified"}
+    },
+    "ttn": {
+      "execution": {"status": "structurally_checked", "shared_trainer": "cong"},
+      "mutation_behavior": {"status": "unverified"}
+    },
+    "tensorflow_cnn": {
+      "execution": {"status": "unverified", "reason": "optional dependency unavailable; not installed for audit"},
+      "validation_wiring": {"status": "structurally_checked"},
+      "mutation_behavior": {"status": "unverified"}
+    }
   },
-  "test_evaluations_per_model": 1,
-  "split_ids_verified": [
-    "split-1",
-    "split-abc"
-  ],
-  "original_test_sample_ids_persisted": true,
+  "artifact_persistence": {
+    "status": "verified",
+    "split_ids_verified": ["split-1", "split-abc"],
+    "original_test_sample_ids_persisted": true
+  },
   "quantum_geometry": {
     "default_n_qubits": 8,
     "power_of_two_constraint_preserved": true

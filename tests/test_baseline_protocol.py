@@ -1,5 +1,6 @@
 """Behavioral contract for leakage-free classical and quantum baselines."""
 import inspect
+import json
 
 import numpy as np
 import pytest
@@ -70,6 +71,21 @@ def test_logistic_selection_ignores_test_labels_but_responds_to_validation_label
                                mutated_test["selected_parameters"])
     assert first["selection"]["hyperparameters"] != mutated_val["selection"]["hyperparameters"]
     assert first["test_evaluations"] == 1
+
+
+def test_protocol_audit_scopes_mutation_evidence_per_model():
+    with open("Results/evidence/baseline_protocol_audit.json") as fh:
+        audit = json.load(fh)
+
+    assert "mutation_test" not in audit
+    evidence = audit["model_evidence"]
+    assert evidence["logistic"]["mutation_behavior"]["status"] == "verified"
+    assert evidence["mlp"]["mutation_behavior"]["status"] == "unverified"
+    assert evidence["cong"]["mutation_behavior"]["status"] == "unverified"
+    assert evidence["hur"]["mutation_behavior"]["status"] == "unverified"
+    assert evidence["ttn"]["mutation_behavior"]["status"] == "unverified"
+    assert evidence["tensorflow_cnn"]["mutation_behavior"]["status"] == "unverified"
+    assert evidence["tensorflow_cnn"]["execution"]["status"] == "unverified"
 
 
 def test_quantum_checkpoint_uses_validation_each_epoch_and_test_once(monkeypatch):
