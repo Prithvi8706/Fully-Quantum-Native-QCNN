@@ -130,6 +130,23 @@ def save_predictions(directory: str, sample_ids, y_true, raw_outputs) -> str:
     return path
 
 
+def save_baseline_result(*, directory: str, result: dict, split_id: str,
+                         sample_ids, y_test, seed: int, environment: dict) -> None:
+    """Atomically complete the provenance contract for one baseline model."""
+    start_run(directory, config={"artifact_schema_version": 1}, split_id=split_id,
+              seed=seed, environment=environment)
+    selection = dict(result["selection"])
+    selection["test_evaluations"] = int(result["test_evaluations"])
+    with open(os.path.join(directory, "selection.json"), "w") as fh:
+        json.dump(selection, fh, indent=2, sort_keys=True)
+    metrics = {k: v for k, v in result["metrics"].items()
+               if isinstance(v, (int, float, str, bool, list, type(None)))}
+    with open(os.path.join(directory, "metrics.json"), "w") as fh:
+        json.dump(metrics, fh, indent=2, sort_keys=True)
+    save_predictions(directory, sample_ids, y_test, result["raw_outputs"])
+    complete_run(directory, metrics=metrics)
+
+
 class TestEvaluationGuard:
     """Permits exactly one test-set evaluation per run (UPGRADE_PLAN.md 0.3).
 

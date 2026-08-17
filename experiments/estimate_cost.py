@@ -144,17 +144,21 @@ def calibrate_baselines(seed: int, epochs, n_train: int, n_test: int) -> float:
 
     X_tr = _synthetic_inputs(cfg, min(n_train, 64))
     y_tr = np.resize(np.array([1.0, -1.0]), len(X_tr))
-    X_te = _synthetic_inputs(cfg, min(n_test, 32), seed=2)
+    X_val = _synthetic_inputs(cfg, min(n_test, 32), seed=2)
+    y_val = np.resize(np.array([1.0, -1.0]), len(X_val))
+    X_te = _synthetic_inputs(cfg, min(n_test, 32), seed=3)
     y_te = np.resize(np.array([1.0, -1.0]), len(X_te))
+    split = dict(X_train=X_tr, y_train=y_tr, X_val=X_val, y_val=y_val,
+                 X_test=X_te, y_test=y_te)
 
     start = time.perf_counter()
-    run_classical_baselines(X_tr, y_tr, X_te, y_te, seed=seed, target_params=269)
+    run_classical_baselines(**split, seed=seed, target_params=269)
     classical_s = time.perf_counter() - start
 
     quantum_s = 0.0
     for name in _ARCHITECTURES:
         start = time.perf_counter()
-        _train_architecture(name, X_tr, y_tr, X_te, y_te, seed=seed,
+        _train_architecture(arch_name=name, **split, seed=seed,
                             n_qubits=cfg.n_qubits, n_epochs=1,
                             learning_rate=cfg.learning_rate, use_bce=True)
         one_epoch = time.perf_counter() - start

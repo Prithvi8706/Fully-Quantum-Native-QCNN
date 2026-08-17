@@ -229,20 +229,27 @@ def run_single(config_name: str, classes, seed: int, dataset_dir: str,
     # (dataset, seed); the 'proposed' config is the natural place to run them.
     if with_baselines and config_name == "proposed":
         X_train, y_train, X_val, y_val, X_test, y_test = split
-        # NOTE (Phase 5 / M5.1): these baselines still select on the data passed
-        # as their test set. They must be given X_val before any baseline number
-        # enters the manuscript.
-        base = run_classical_baselines(X_train, y_train, X_test, y_test, seed=seed,
-                                       target_params=metrics.get("n_params"))
-        # Quantum-architecture baselines (#1): published QCNN/TTN models on the
-        # IDENTICAL split / qubit count / optimiser budget as the proposed model.
+        baseline_split = dict(
+            X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val,
+            X_test=X_test, y_test=y_test)
+        base = run_classical_baselines(
+            **baseline_split, seed=seed, target_params=metrics.get("n_params"))
+        # Task 5 owns arbitrary-n baseline scheduling; this path remains on the
+        # explicitly compatible power-of-two geometry used by "proposed".
         base.update(run_quantum_baselines(
-            X_train, y_train, X_test, y_test, seed=seed, n_qubits=cfg.n_qubits,
+            **baseline_split, seed=seed, n_qubits=cfg.n_qubits,
             n_epochs=cfg.n_epochs, learning_rate=cfg.learning_rate, use_bce=use_bce))
-        for name, bm in base.items():
+        for name, result in base.items():
             bdir = os.path.join(out_dir, f"baseline_{name}")
             os.makedirs(bdir, exist_ok=True)
-            save_metrics_json(bm, os.path.join(bdir, f"seed_{seed}.json"))
+            save_metrics_json(result["metrics"], os.path.join(bdir, f"seed_{seed}.json"))
+            artifact_dir = run_artifacts.run_dir(
+                _fmt_pair(classes), f"baseline_{name}", seed)
+            run_artifacts.save_baseline_result(
+                directory=artifact_dir, result=result, split_id=manifest["id"],
+                sample_ids=test_ids, y_test=y_test, seed=seed,
+                environment={"python": platform.python_version(),
+                             "pennylane": qml.version()})
     return metrics
 
 

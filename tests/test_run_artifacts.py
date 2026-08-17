@@ -71,6 +71,40 @@ def test_per_example_predictions_are_persisted_for_paired_statistics(tmp_path):
     np.testing.assert_allclose(stored["raw_outputs"], [0.4, -0.7, 0.1])
 
 
+def test_baseline_result_persists_protocol_and_predictions_before_completion(tmp_path):
+    directory = run_artifacts.run_dir("0v1", "baseline_logistic", 4,
+                                      root=str(tmp_path))
+    result = {
+        "metrics": {"accuracy": 0.5},
+        "selection": {
+            "criterion": "validation_loss", "best_epoch": None,
+            "best_value": 0.2, "hyperparameters": {"C": 1.0},
+            "n_validation_evaluations": 2,
+        },
+        "test_evaluations": 1,
+        "raw_outputs": np.array([0.3, -0.2]),
+    }
+    run_artifacts.save_baseline_result(
+        directory=directory, result=result, split_id="split-abc",
+        sample_ids=[19, 23], y_test=[1, -1], seed=4,
+        environment={"python": "3.9.13"})
+
+    with open(os.path.join(directory, "status.json")) as fh:
+        status = json.load(fh)
+    with open(os.path.join(directory, "selection.json")) as fh:
+        selection = json.load(fh)
+    with open(os.path.join(directory, "metrics.json")) as fh:
+        metrics = json.load(fh)
+    predictions = np.load(os.path.join(directory, "predictions.npz"))
+
+    assert status["state"] == "complete"
+    assert status["split_id"] == "split-abc"
+    assert selection["criterion"] == "validation_loss"
+    assert selection["test_evaluations"] == 1
+    assert metrics == {"accuracy": 0.5}
+    np.testing.assert_array_equal(predictions["sample_ids"], [19, 23])
+
+
 def test_test_evaluation_guard_allows_exactly_one_evaluation():
     guard = run_artifacts.TestEvaluationGuard()
     assert guard.evaluate(lambda: "metrics") == "metrics"

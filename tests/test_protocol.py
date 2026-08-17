@@ -93,7 +93,14 @@ def test_seed_policy_lives_in_one_module():
 
 def test_runner_persists_per_example_predictions():
     source = _read("experiments/run_experiments.py")
-    assert "save_predictions" in source, (
+    assert "save_predictions" in source or "save_baseline_result" in source, (
         "per-example predictions are required for the paired tests in Phase 5 "
         "(UPGRADE_PLAN.md M0.5)")
     assert "run_artifacts.run_dir" in source or "run_dir(" in source
+
+
+def test_baseline_runner_has_no_known_leaked_four_split_calls():
+    source = _read("experiments/run_experiments.py")
+    assert "run_classical_baselines(X_train" not in source
+    assert "run_quantum_baselines(\n            X_train" not in source
+    assert "X_val=X_val" in source and "y_val=y_val" in source
