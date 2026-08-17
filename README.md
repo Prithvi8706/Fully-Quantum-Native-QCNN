@@ -3,14 +3,14 @@
 
 This repository implements **FQCNN**, a **fully quantum-native convolutional neural network (QCNN)** that performs data encoding, local convolution, coherence-preserving unitary pooling, and classification **entirely using unitary quantum operations, with no intermediate measurements**. Unlike hybrid models, this architecture contains no classical convolutional layers at any stage.
 
-The project has evolved from a small 4x4 prototype to a robust framework capable of classifying **high-resolution images (e.g., 28x28 MNIST)** with over **95% accuracy** using advanced encoding strategies like **Amplitude Embedding** and **Patch-based Quanvolution**.
+The frozen headline study uses 28×28 MNIST inputs (784 flattened pixels), zero-padded to 1,024 amplitudes on n=10 qubits, with an active-wire schedule of 10→5→2→1. The current n=10 study is classically simulated; no quantum-advantage claim is made.
 
 ---
 
 ## Key Features
 
 - **100% Quantum-Native**: Convolution, Pooling, and Classification are all implemented as differentiable quantum circuits.
-- **High Performance**: Achieving **95.2% accuracy** on MNIST (0 vs 1) using only quantum operations.
+- **Audited headline circuit**: 269 allocated parameter slots, 78 read on the tape, and 74 gradient-effective slots; Caro's bound uses T=222 trainable gates.
 - **Advanced Encoding**:
   - **Amplitude Encoding**: Maps full images into Hilbert space using only $\log_2(N)$ qubits.
   - **Patch-based Encoding**: Uses a sliding quantum filter (Quanvolution) to process large images efficiently.
@@ -67,15 +67,17 @@ python main.py --dataset mnist --classes 3 7 --encoding patch
 
 ## Performance Benchmarks
 
-Modern QCNN performance on MNIST (Binary Classification):
+The standalone accuracy values historically shown here were single-seed results, not distributions, and are not manuscript evidence. The protocol-clean 98.29% MNIST 0-vs-1 headline is also a single-seed result until a multi-seed distribution with confidence intervals exists. Current baseline numbers are blocked from manuscript use pending leakage and protocol repair.
 
-| Task | Encoding | Qubits | Accuracy | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **0 vs 1** | Amplitude | 8 | **95.2%** | Verified |
-| **3 vs 7** | Amplitude | 8 | **91.4%** | Verified |
-| **0 vs 1** | Patch | 16 | **94.8%** | Verified |
+Canonical evidence under `Results/evidence/` currently supports these narrower conclusions:
 
-*Results obtained using Adam optimizer with EMA and LR Warmup.*
+- E1–E4 are complete. The 75-cell pooling campaign found no significant benefit from the coherent extension; SU(4) is the remaining pooling headroom, so frozen pooling is not proven globally optimal.
+- The headline DLA is full su(2^10), dimension 1,048,575; therefore there is no polynomial-DLA trainability certificate.
+- Gradient evidence supports only “no barren plateau observed through n=14.”
+- The selected expressibility metric is Haar-indistinguishable at the available resolution.
+- Information-concentration language is not an established result.
+
+Dataset breadth, repaired baselines, the broader ablation grid, resource scaling, noise, hardware, and manuscript claims remain pending unless a canonical artifact records them.
 
 ---
 
@@ -105,16 +107,15 @@ This generates comparisons between raw images and their quantum-encoded counterp
 
 ## Reproducibility & Experiments
 
-All experiments are seed-controlled and reproducible. Use the exact pinned
-environment for matching numbers:
+Experiments provide seed controls, but full clean-checkout reproduction is not yet claimed; that remains pending until M11 passes. Use the frozen environment for matching supported numbers:
 
 ```bash
-pip install -r requirements-lock.txt     # exact tested versions (Python 3.14)
+pip install -r requirements-lock.txt     # exact tested versions (Python 3.9.13)
 # or, for a looser install:
 pip install -r requirements.txt
 ```
 
-Regenerate everything with one script:
+Exercise the current reproduction scripts with:
 
 ```bash
 ./reproduce.sh            # full study (many QCNN trainings — slow)
@@ -168,9 +169,7 @@ Every run computes the full metric suite via `QCNN/utils/metrics.py` and writes 
 precision-recall figures under `Results/Graphs/`.
 
 ### Noise robustness (NISQ)
-Two free, local noise models — uniform depolarizing and a calibrated,
-IBM-hardware-like multi-channel model (depolarizing + amplitude/phase damping +
-readout error):
+`noise_sim.py` uses a historical split and is not manuscript evidence. It provides two local noise models — uniform depolarizing and an IBM-hardware-like multi-channel model (depolarizing + amplitude/phase damping + readout error):
 
 ```bash
 python noise_sim.py --noise-model depolarizing --classes 0 1
@@ -178,9 +177,7 @@ python noise_sim.py --noise-model realistic    --classes 0 1
 ```
 
 ### Optional: real quantum hardware
-`experiments/hardware_run.py` runs the trained circuit on IBM Quantum's free
-Open Plan. It needs `pip install pennylane-qiskit qiskit-ibm-runtime` and a free
-token in `IBM_QUANTUM_TOKEN`; it skips cleanly if either is missing.
+Hardware execution is pending. Its Qiskit dependencies belong in a separate isolated environment, not the frozen `requirements-lock.txt` environment. `experiments/hardware_run.py` requires `pennylane-qiskit`, `qiskit-ibm-runtime`, and an IBM Quantum token; no hardware result or quantum-advantage claim is currently supported.
 
 ---
 

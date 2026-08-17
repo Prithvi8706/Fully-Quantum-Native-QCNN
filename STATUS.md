@@ -9,7 +9,9 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 **Track A (grid, M4→M5→M6):** `docs/superpowers/plans/2026-07-27-track-a-grid-handoff.md`
 **Track B (theory+hardware, M3/E5/M8→M7):** `docs/superpowers/plans/2026-07-27-track-b-theory-hardware-handoff.md`
 
-**Last updated:** 2026-07-31 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 276 passing
+**Last updated:** 2026-08-17 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 284 passing
+
+**State labels:** `pending` · `running` · `failed` · `complete`
 
 ---
 
@@ -19,8 +21,8 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 |---|---|---|---|
 | **M0 — Phase 0: freeze + protocol** | **PASSED 2026-07-25** | tag `phase-0-gate` | 63 tests; `docs/superpowers/plans/2026-07-25-fqcnn-phase-0-freeze-and-protocol.md` |
 | **M1 — Phase 1: affordable execution** | **COMPLETE 2026-07-26** | grid ≤7 nights **PASSED**; headline retrained clean at **98.29%** | §§3a–3e |
-| M2 — Phase 2: pooling theory (E1–E5) | **2.1, E1, E2, E3, E4, 2.7 done**; E5 blocked | **E1 agrees to ~1e-12: PASSED** (2.2e-16 at headline n=10) | `Results/evidence/`; §§7, 7a–7c |
-| M3 — Phase 3: model analysis | **3.1, 3.2, 3.4, 3.5, 3.7 done**; 3.3/3.6 blocked on M5.1 | DLA exact at n=10; **no trainability certificate — it is exponential** | `Results/evidence/t6_dynamical_lie_algebra.json`, `f_e_gradient_variance.json`, `t6_expressibility.json`, `t6_generalization_bound.json`, `docs/simulability_statement.md`; §12 |
+| M2 — Phase 2: pooling theory (E1–E5) | **E1, E2, E3, and E4 complete**; E5 blocked on isolated Qiskit tooling | E1 exact tie; E3 complete at 75 cells; coherent extension has no significant benefit; SU(4) remains headroom | `Results/evidence/e1_pooling_equivalence.json`, `e2_dephasing.json`, `e4_information_dynamics.json`, `t5_pooling_arms.json`; §§7, 7a–7c |
+| M3 — Phase 3: model analysis | **complete for DLA, gradient variance, expressibility, generalization bound, and simulability**; effective dimension/inductive bias blocked on M5.1 | Full su(2^10), dimension 1,048,575: **no polynomial-DLA certificate**; gradients support only “no barren plateau observed through n=14” | `Results/evidence/t6_dynamical_lie_algebra.json`, `f_e_gradient_variance.json`, `t6_expressibility.json`, `t6_generalization_bound.json`, `docs/simulability_statement.md`; §12 |
 | M4 — Phase 4: harder datasets | not started | — | — |
 | M5 — Phase 5: baselines + statistics | not started | — | — |
 | M6 — Phase 6: ablation grid | not started | — | — |
@@ -30,10 +32,9 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 | M10 — Phase 10: manuscript + venue | not started | — | — |
 | M11 — final reproduction + red team | not started | — | — |
 
-## 2. Active gate and blockers
+## 2. Active queue and blockers
 
-**Active gate:** M1 — the seven-night budget gate **passed** 2026-07-25 (§3d). The remaining M1
-item is the clean headline retrain, which replaces 98.86% everywhere.
+**Active queue:** repair baseline leakage, align the experiment registry to the headline n=10 geometry, and isolate Qiskit tooling for E5/hardware work. M1 is complete; dataset, baseline, ablation, resource, noise, hardware, and manuscript claims remain pending unless backed by canonical artifacts.
 
 | # | Blocker | Severity | Owner milestone | Status |
 |---|---|---|---|---|
@@ -50,6 +51,7 @@ the gate as step 0 before producing any result.
 
 | Quantity | Value | Source |
 |---|---|---|
+| Input geometry | **28×28 = 784 flattened pixels; zero-pad to 1,024 amplitudes; n=10** | `Results/headline_manifest.json` |
 | Allocated parameter slots | **269** | `tests/fixtures/effective_params.json` |
 | Syntactically read slots | **78** | same |
 | **Effective slots (\|grad\| > 1e-12)** | **74** | same |
@@ -355,8 +357,8 @@ reconciliation row 13 already marks as unsupported. Noted rather than smuggled.
 | Workstream | Required cells | Complete | Milestone |
 |---|---|---|---|
 | Clean headline retrain | 1 | **1** | M1 |
-| E1 / E2 (fixed-parameter, no training) | 2 | 0 | M2 |
-| E3 pooling arms (arms × ≥5 seeds × ≥3 datasets) | ≥75 | 0 | M2 |
+| E1 / E2 (fixed-parameter, no training) | 2 | **2** | M2 |
+| E3 pooling arms (arms × 5 seeds × 3 datasets) | 75 | **75** | M2; `Results/evidence/t5_pooling_arms.json` |
 | Datasets (hard pairs + 3 domains) | TBD at M4 | 0 | M4 |
 | Classical + quantum baselines | TBD at M5 | 0 | M5 |
 | Ablation grid | TBD at M6 | 0 | M6 |
@@ -1134,7 +1136,7 @@ in reconciliation row 11.
 - [x] Effective-parameter audit committed (269 allocated / 74 effective)
 - [x] Every equation in the paper matches the executed circuit (reconciliation table complete)
 - [x] `requirements-lock.txt` matches the real environment
-- [ ] Theorem 1 / Props 2–3 written with proofs; E1 tie confirmed to ~1e-12; E2 run
+- [x] Theorem 1 / Props 2–3 written with proofs; E1 tie confirmed to ~1e-12; E2 complete
 - [ ] ≥3 datasets × ≥5 seeds; all numbers mean ± std with CIs and paired tests
 - [ ] Every comparison row reproduced on your split or explicitly out-of-table
 - [ ] Resource table with state-prep/model split; scaling family n=4…14
@@ -1147,7 +1149,7 @@ in reconciliation row 11.
 - [ ] `reproduce.sh` regenerates every table and figure from a clean checkout
 - [ ] Bibliography: full metadata, DOIs, peer-reviewed versions, no author-less entries
 
-**7 of 15 complete.**
+**8 of 15 complete.**
 
 ## 10. Deferred items with in-code markers
 
