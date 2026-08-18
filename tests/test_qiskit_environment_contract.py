@@ -54,9 +54,17 @@ def test_environment_artifact_records_isolation_and_local_provenance():
     assert Path(artifact["hardware_environment"]["executable"]).name.lower() == "python.exe"
     assert artifact["training_environment"]["required_python_version"] == "3.9.13"
     assert artifact["training_environment"]["lock_path"] == "requirements-lock.txt"
+    assert artifact["training_environment"]["observed"] is True
+    assert artifact["training_environment"]["observed_version"] == "3.9.13"
+    assert Path(artifact["training_environment"]["executable"]).name.lower() == "python.exe"
+    assert Path(artifact["training_environment"]["executable"]) != Path(
+        artifact["hardware_environment"]["executable"]
+    )
     assert artifact["network_accessed"] is False
     assert artifact["credentials_accessed"] is False
-    assert artifact["imports"] == {"qiskit": True, "qiskit_aer": True, "qiskit_ibm_runtime": True}
+    assert set(artifact["imports"]) == {"qiskit", "qiskit_aer", "qiskit_ibm_runtime"}
+    for module in artifact["imports"].values():
+        assert module == {"status": "pass", "exception": None}
     assert set(artifact["installed_versions"]) == {"qiskit", "qiskit-aer", "qiskit-ibm-runtime"}
     assert artifact["lock"]["path"] == "requirements-qiskit-lock.txt"
     assert artifact["lock"]["sha256"] == hashlib.sha256(LOCK.read_bytes()).hexdigest()
@@ -92,6 +100,12 @@ def test_transpilation_artifact_is_tied_to_canonical_source_and_supported_basis(
     assert final_counts
     assert set(final_counts) <= ALLOWED_TRANSPILED_OPERATIONS
     assert artifact["operations"]["unsupported"] == []
+    target_validation = artifact["operations"]["target_validation"]
+    assert target_validation["uses_actual_target"] is True
+    assert target_validation["invalid"] == []
+    assert target_validation["checked_instructions"] == sum(final_counts.values()) - final_counts.get(
+        "barrier", 0
+    )
     for stage in ("logical", "decomposed", "transpiled"):
         assert set(artifact["metrics"][stage]) == {"depth", "width", "size", "operation_counts"}
     assert re.fullmatch(r"[0-9a-f]{64}", artifact["payload_sha256"])

@@ -1,12 +1,11 @@
 {
   "backend": {
     "backend_v2": true,
-    "class": "FakeCairoV2",
-    "coupling_edges": 26,
-    "name": "fake_cairo",
+    "class": "FakePeekskill",
+    "coupling_edges": 28,
+    "name": "fake_peekskill",
     "num_qubits": 27,
     "target_operations": [
-      "cx",
       "delay",
       "ecr",
       "for_loop",
@@ -29,7 +28,7 @@
   },
   "credentials_accessed": false,
   "equivalence": {
-    "limitations": "The isolated environment intentionally excludes PennyLane and pennylane-qiskit, so this smoke does not convert or prove full build_circuit unitary equivalence. It validates the documented structural fixture against the selected fake target's operation set and symmetrized coupling topology, not calibrated instruction directions.",
+    "limitations": "The isolated environment intentionally excludes PennyLane and pennylane-qiskit, so this smoke does not convert or prove full build_circuit unitary equivalence. It does validate every final non-barrier instruction and physical qarg against the selected fake BackendV2 target.",
     "method": "mechanical source/signature hashing plus classifier-tail gate-order mapping",
     "result": "limited"
   },
@@ -93,22 +92,20 @@
     "source_mapping": "Gate order and parameter indexing mirror build_circuit's classifier tail."
   },
   "layout": {
-    "final": "Layout({\n2: Qubit(QuantumRegister(27, 'q'), 2),\n3: Qubit(QuantumRegister(27, 'q'), 3),\n5: Qubit(QuantumRegister(27, 'q'), 5),\n8: Qubit(QuantumRegister(27, 'q'), 8),\n9: Qubit(QuantumRegister(27, 'q'), 9),\n10: Qubit(QuantumRegister(27, 'q'), 10),\n11: Qubit(QuantumRegister(27, 'q'), 11),\n12: Qubit(QuantumRegister(27, 'q'), 12),\n13: Qubit(QuantumRegister(27, 'q'), 13),\n14: Qubit(QuantumRegister(27, 'q'), 14),\n15: Qubit(QuantumRegister(27, 'q'), 15),\n16: Qubit(QuantumRegister(27, 'q'), 16),\n17: Qubit(QuantumRegister(27, 'q'), 17),\n18: Qubit(QuantumRegister(27, 'q'), 18),\n19: Qubit(QuantumRegister(27, 'q'), 19),\n7: Qubit(QuantumRegister(27, 'q'), 6),\n20: Qubit(QuantumRegister(27, 'q'), 20),\n21: Qubit(QuantumRegister(27, 'q'), 21),\n6: Qubit(QuantumRegister(27, 'q'), 7),\n22: Qubit(QuantumRegister(27, 'q'), 22),\n23: Qubit(QuantumRegister(27, 'q'), 23),\n1: Qubit(QuantumRegister(27, 'q'), 4),\n24: Qubit(QuantumRegister(27, 'q'), 24),\n25: Qubit(QuantumRegister(27, 'q'), 25),\n4: Qubit(QuantumRegister(27, 'q'), 1),\n26: Qubit(QuantumRegister(27, 'q'), 26),\n0: Qubit(QuantumRegister(27, 'q'), 0)\n})",
-    "initial": "Layout({\n7: Qubit(QuantumRegister(4, 'q'), 1),\n4: Qubit(QuantumRegister(4, 'q'), 2),\n6: Qubit(QuantumRegister(4, 'q'), 0),\n1: Qubit(QuantumRegister(4, 'q'), 3),\n0: Qubit(QuantumRegister(23, 'ancilla'), 0),\n2: Qubit(QuantumRegister(23, 'ancilla'), 1),\n3: Qubit(QuantumRegister(23, 'ancilla'), 2),\n5: Qubit(QuantumRegister(23, 'ancilla'), 3),\n8: Qubit(QuantumRegister(23, 'ancilla'), 4),\n9: Qubit(QuantumRegister(23, 'ancilla'), 5),\n10: Qubit(QuantumRegister(23, 'ancilla'), 6),\n11: Qubit(QuantumRegister(23, 'ancilla'), 7),\n12: Qubit(QuantumRegister(23, 'ancilla'), 8),\n13: Qubit(QuantumRegister(23, 'ancilla'), 9),\n14: Qubit(QuantumRegister(23, 'ancilla'), 10),\n15: Qubit(QuantumRegister(23, 'ancilla'), 11),\n16: Qubit(QuantumRegister(23, 'ancilla'), 12),\n17: Qubit(QuantumRegister(23, 'ancilla'), 13),\n18: Qubit(QuantumRegister(23, 'ancilla'), 14),\n19: Qubit(QuantumRegister(23, 'ancilla'), 15),\n20: Qubit(QuantumRegister(23, 'ancilla'), 16),\n21: Qubit(QuantumRegister(23, 'ancilla'), 17),\n22: Qubit(QuantumRegister(23, 'ancilla'), 18),\n23: Qubit(QuantumRegister(23, 'ancilla'), 19),\n24: Qubit(QuantumRegister(23, 'ancilla'), 20),\n25: Qubit(QuantumRegister(23, 'ancilla'), 21),\n26: Qubit(QuantumRegister(23, 'ancilla'), 22)\n})",
-    "policy": "transpiler-selected layout on the fake target coupling graph symmetrized for direction-independent topology smoke; no initial_layout supplied"
+    "final": "Layout({\n0: Qubit(QuantumRegister(27, 'q'), 0),\n1: Qubit(QuantumRegister(27, 'q'), 1),\n2: Qubit(QuantumRegister(27, 'q'), 2),\n3: Qubit(QuantumRegister(27, 'q'), 3),\n4: Qubit(QuantumRegister(27, 'q'), 4),\n5: Qubit(QuantumRegister(27, 'q'), 5),\n6: Qubit(QuantumRegister(27, 'q'), 6),\n7: Qubit(QuantumRegister(27, 'q'), 7),\n8: Qubit(QuantumRegister(27, 'q'), 8),\n9: Qubit(QuantumRegister(27, 'q'), 9),\n10: Qubit(QuantumRegister(27, 'q'), 10),\n11: Qubit(QuantumRegister(27, 'q'), 11),\n14: Qubit(QuantumRegister(27, 'q'), 14),\n16: Qubit(QuantumRegister(27, 'q'), 16),\n17: Qubit(QuantumRegister(27, 'q'), 17),\n19: Qubit(QuantumRegister(27, 'q'), 19),\n15: Qubit(QuantumRegister(27, 'q'), 18),\n20: Qubit(QuantumRegister(27, 'q'), 20),\n21: Qubit(QuantumRegister(27, 'q'), 21),\n18: Qubit(QuantumRegister(27, 'q'), 15),\n22: Qubit(QuantumRegister(27, 'q'), 22),\n23: Qubit(QuantumRegister(27, 'q'), 23),\n13: Qubit(QuantumRegister(27, 'q'), 12),\n24: Qubit(QuantumRegister(27, 'q'), 24),\n25: Qubit(QuantumRegister(27, 'q'), 25),\n12: Qubit(QuantumRegister(27, 'q'), 13),\n26: Qubit(QuantumRegister(27, 'q'), 26)\n})",
+    "initial": "Layout({\n15: Qubit(QuantumRegister(4, 'q'), 1),\n12: Qubit(QuantumRegister(4, 'q'), 2),\n18: Qubit(QuantumRegister(4, 'q'), 0),\n13: Qubit(QuantumRegister(4, 'q'), 3),\n0: Qubit(QuantumRegister(23, 'ancilla'), 0),\n1: Qubit(QuantumRegister(23, 'ancilla'), 1),\n2: Qubit(QuantumRegister(23, 'ancilla'), 2),\n3: Qubit(QuantumRegister(23, 'ancilla'), 3),\n4: Qubit(QuantumRegister(23, 'ancilla'), 4),\n5: Qubit(QuantumRegister(23, 'ancilla'), 5),\n6: Qubit(QuantumRegister(23, 'ancilla'), 6),\n7: Qubit(QuantumRegister(23, 'ancilla'), 7),\n8: Qubit(QuantumRegister(23, 'ancilla'), 8),\n9: Qubit(QuantumRegister(23, 'ancilla'), 9),\n10: Qubit(QuantumRegister(23, 'ancilla'), 10),\n11: Qubit(QuantumRegister(23, 'ancilla'), 11),\n14: Qubit(QuantumRegister(23, 'ancilla'), 12),\n16: Qubit(QuantumRegister(23, 'ancilla'), 13),\n17: Qubit(QuantumRegister(23, 'ancilla'), 14),\n19: Qubit(QuantumRegister(23, 'ancilla'), 15),\n20: Qubit(QuantumRegister(23, 'ancilla'), 16),\n21: Qubit(QuantumRegister(23, 'ancilla'), 17),\n22: Qubit(QuantumRegister(23, 'ancilla'), 18),\n23: Qubit(QuantumRegister(23, 'ancilla'), 19),\n24: Qubit(QuantumRegister(23, 'ancilla'), 20),\n25: Qubit(QuantumRegister(23, 'ancilla'), 21),\n26: Qubit(QuantumRegister(23, 'ancilla'), 22)\n})",
+    "policy": "transpiler-selected layout against the actual directed fake BackendV2 target; no initial_layout supplied"
   },
   "metrics": {
     "decomposed": {
-      "depth": 40,
+      "depth": 13,
       "operation_counts": {
-        "ecr": 5,
+        "cx": 5,
         "measure": 1,
         "reset": 4,
-        "rz": 78,
-        "sx": 37,
-        "x": 5
+        "u": 21
       },
-      "size": 130,
+      "size": 31,
       "width": 5
     },
     "logical": {
@@ -125,24 +122,22 @@
       "width": 5
     },
     "transpiled": {
-      "depth": 31,
+      "depth": 36,
       "operation_counts": {
-        "barrier": 1,
         "ecr": 11,
         "measure": 1,
         "reset": 4,
-        "rz": 33,
-        "sx": 21,
-        "x": 1
+        "rz": 39,
+        "sx": 29,
+        "x": 2
       },
-      "size": 71,
+      "size": 86,
       "width": 28
     }
   },
   "network_accessed": false,
   "operations": {
     "target_basis": [
-      "cx",
       "delay",
       "ecr",
       "for_loop",
@@ -155,18 +150,22 @@
       "sx",
       "x"
     ],
+    "target_validation": {
+      "checked_instructions": 86,
+      "invalid": [],
+      "uses_actual_target": true
+    },
     "transpiled_counts": {
-      "barrier": 1,
       "ecr": 11,
       "measure": 1,
       "reset": 4,
-      "rz": 33,
-      "sx": 21,
-      "x": 1
+      "rz": 39,
+      "sx": 29,
+      "x": 2
     },
     "unsupported": []
   },
-  "payload_sha256": "4cedd4245530652aa9ed6e060956acdd5abfb6dcd73741b9a29e60b0428b7b1a",
+  "payload_sha256": "842681f8f11b4e13e40c3a729a5dc6fcc760300e81f071d7b1d5e1845e55bde8",
   "readout": {
     "classical_bit": 0,
     "measurement_semantics": "single Z-basis measurement of canonical readout wire 0",

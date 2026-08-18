@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import importlib
 import importlib.metadata
 import inspect
 import json
@@ -14,7 +15,6 @@ from pathlib import Path
 
 from qiskit import QuantumCircuit, transpile
 from qiskit.providers import BackendV2
-from qiskit.transpiler import CouplingMap
 from qiskit_ibm_runtime import fake_provider
 
 
@@ -35,7 +35,7 @@ def _git(*args: str) -> str:
     ).stdout.strip()
 
 
-def _select_fake_backend() -> BackendV2:
+def _candidate_fake_backends() -> list[BackendV2]:
     candidates = []
     for name in dir(fake_provider):
         candidate = getattr(fake_provider, name)
@@ -50,9 +50,88 @@ def _select_fake_backend() -> BackendV2:
         operations = set(backend.target.operation_names)
         if backend.num_qubits >= 6 and {"rz", "sx", "x", "ecr", "measure"} <= operations:
             candidates.append((backend.num_qubits, name, backend))
-    if not candidates:
-        raise RuntimeError("no compatible local fake BackendV2 target is available")
-    return min(candidates, key=lambda item: (item[0], item[1]))[2]
+    return [backend for _, _, backend in sorted(candidates, key=lambda item: (item[0], item[1]))]
+
+
+def _target_validation(circuit: QuantumCircuit, backend: BackendV2) -> dict:
+    invalid = []
+    checked = 0
+    for instruction in circuit.data:
+        name = instruction.operation.name
+        if name == "barrier":
+            continue
+        checked += 1
+        qargs = tuple(circuit.find_bit(qubit).index for qubit in instruction.qubits)
+        if not backend.target.instruction_supported(operation_name=name, qargs=qargs):
+            invalid.append({"operation": name, "qargs": list(qargs)})
+    return {"uses_actual_target": True, "checked_instructions": checked, "invalid": invalid}
+
+
+def _select_fake_backend(circuit: QuantumCircuit) -> tuple[BackendV2, QuantumCircuit, dict]:
+    failures = []
+    for backend in _candidate_fake_backends():
+        try:
+            transpiled = transpile(
+                circuit, backend=backend, seed_transpiler=42, optimization_level=1
+            )
+        except Exception as exc:
+            failures.append(f"{type(backend).__name__}: {type(exc).__name__}")
+            continue
+        validation = _target_validation(transpiled, backend)
+        if not validation["invalid"]:
+            return backend, transpiled, validation
+        failures.append(f"{type(backend).__name__}: invalid target qargs")
+    raise RuntimeError(
+        "no local fake BackendV2 accepted the deterministic fixture against its actual target: "
+        + ", ".join(failures)
+    )
+
+
+def _import_statuses() -> dict:
+    statuses = {}
+    for module_name in ("qiskit", "qiskit_aer", "qiskit_ibm_runtime"):
+        try:
+            importlib.import_module(module_name)
+        except Exception as exc:
+            statuses[module_name] = {
+                "status": "fail",
+                "exception": f"{type(exc).__name__}: {exc}",
+            }
+        else:
+            statuses[module_name] = {"status": "pass", "exception": None}
+    return statuses
+
+
+def _training_environment() -> dict:
+    probe = subprocess.run(
+        [
+            "py",
+            "-3.9",
+            "-c",
+            "import json,platform,sys; print(json.dumps({'executable': sys.executable, 'version': platform.python_version()}))",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if probe.returncode == 0:
+        observed = json.loads(probe.stdout)
+        return {
+            "required_python_version": "3.9.13",
+            "lock_path": "requirements-lock.txt",
+            "observed": True,
+            "observed_version": observed["version"],
+            "executable": observed["executable"],
+            "probe_exception": None,
+        }
+    return {
+        "required_python_version": "3.9.13",
+        "lock_path": "requirements-lock.txt",
+        "observed": False,
+        "observed_version": None,
+        "executable": None,
+        "probe_exception": probe.stderr.strip() or f"py launcher exited {probe.returncode}",
+    }
 
 
 def _canonical_signature() -> tuple[str, str]:
@@ -112,24 +191,16 @@ def main() -> None:
     if ".venv-qiskit" not in str(Path(sys.executable).resolve()):
         raise RuntimeError("Task 6 smoke must run from .venv-qiskit")
 
-    backend = _select_fake_backend()
-    target_operations = sorted(backend.target.operation_names)
+    import_statuses = _import_statuses()
+    failed_imports = [name for name, result in import_statuses.items() if result["status"] != "pass"]
+    if failed_imports:
+        raise RuntimeError(f"required imports failed: {failed_imports}; {import_statuses}")
+
     circuit, parameters = _fixture()
-    decomposed = transpile(
-        circuit,
-        basis_gates=["rz", "sx", "x", "ecr"],
-        seed_transpiler=42,
-        optimization_level=0,
-    )
+    backend, transpiled, target_validation = _select_fake_backend(circuit)
+    target_operations = sorted(backend.target.operation_names)
+    decomposed = circuit.decompose(reps=10)
     target_edges = list(backend.coupling_map.get_edges()) if backend.coupling_map else []
-    symmetric_edges = sorted({tuple(edge) for edge in target_edges} | {(b, a) for a, b in target_edges})
-    transpiled = transpile(
-        decomposed,
-        basis_gates=["rz", "sx", "x", "ecr"],
-        coupling_map=CouplingMap(symmetric_edges),
-        seed_transpiler=42,
-        optimization_level=1,
-    )
     transpiled_counts = dict(sorted(transpiled.count_ops().items()))
     unsupported = sorted(set(transpiled_counts) - ALLOWED)
     if unsupported:
@@ -154,11 +225,7 @@ def main() -> None:
             "executable": str(Path(sys.executable).resolve()),
             "environment": ".venv-qiskit",
         },
-        "training_environment": {
-            "required_python_version": "3.9.13",
-            "lock_path": "requirements-lock.txt",
-            "interpreter": "separate frozen training interpreter; not invoked by this smoke",
-        },
+        "training_environment": _training_environment(),
         "platform": {
             "system": platform.system(),
             "release": platform.release(),
@@ -169,13 +236,13 @@ def main() -> None:
             package: importlib.metadata.version(package)
             for package in ("qiskit", "qiskit-aer", "qiskit-ibm-runtime")
         },
-        "imports": {"qiskit": True, "qiskit_aer": True, "qiskit_ibm_runtime": True},
+        "imports": import_statuses,
         "lock": {"path": "requirements-qiskit-lock.txt", "sha256": lock_hash},
         "git": {
             "head": _git("rev-parse", "HEAD"),
             "dirty": bool(dirty_paths),
             "dirty_paths": dirty_paths,
-            "provenance": "generated from the current checkout before the Task 6 commit",
+            "provenance": "generated from the current checkout; dirty_paths records uncommitted Task 6 changes",
         },
         "fake_backend": {"available": True, **backend_data},
         "network_accessed": False,
@@ -212,7 +279,7 @@ def main() -> None:
         "backend": backend_data,
         "transpilation": {"seed_transpiler": 42, "optimization_level": 1},
         "layout": {
-            "policy": "transpiler-selected layout on the fake target coupling graph symmetrized for direction-independent topology smoke; no initial_layout supplied",
+            "policy": "transpiler-selected layout against the actual directed fake BackendV2 target; no initial_layout supplied",
             "initial": str(getattr(layout, "initial_layout", None)),
             "final": str(getattr(layout, "final_layout", None)),
         },
@@ -220,6 +287,7 @@ def main() -> None:
             "target_basis": target_operations,
             "transpiled_counts": transpiled_counts,
             "unsupported": unsupported,
+            "target_validation": target_validation,
         },
         "metrics": {
             "logical": _metrics(circuit),
@@ -230,7 +298,7 @@ def main() -> None:
         "equivalence": {
             "result": "limited",
             "method": "mechanical source/signature hashing plus classifier-tail gate-order mapping",
-            "limitations": "The isolated environment intentionally excludes PennyLane and pennylane-qiskit, so this smoke does not convert or prove full build_circuit unitary equivalence. It validates the documented structural fixture against the selected fake target's operation set and symmetrized coupling topology, not calibrated instruction directions.",
+            "limitations": "The isolated environment intentionally excludes PennyLane and pennylane-qiskit, so this smoke does not convert or prove full build_circuit unitary equivalence. It does validate every final non-barrier instruction and physical qarg against the selected fake BackendV2 target.",
         },
         "network_accessed": False,
         "credentials_accessed": False,

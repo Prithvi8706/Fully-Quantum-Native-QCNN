@@ -3,12 +3,11 @@
   "fake_backend": {
     "available": true,
     "backend_v2": true,
-    "class": "FakeCairoV2",
-    "coupling_edges": 26,
-    "name": "fake_cairo",
+    "class": "FakePeekskill",
+    "coupling_edges": 28,
+    "name": "fake_peekskill",
     "num_qubits": 27,
     "target_operations": [
-      "cx",
       "delay",
       "ecr",
       "for_loop",
@@ -25,12 +24,11 @@
   "git": {
     "dirty": true,
     "dirty_paths": [
-      "M README.md",
-      " M RUN_GUIDE.md",
+      "M Results/evidence/qiskit_environment.json",
+      " M Results/evidence/qiskit_transpile_smoke.json",
+      " M scripts/check_qiskit_environment.py",
+      " M tests/test_qiskit_environment_contract.py",
       "?? .claude/settings.local.json",
-      "?? .venv-qiskit/",
-      "?? Results/evidence/qiskit_environment.json",
-      "?? Results/evidence/qiskit_transpile_smoke.json",
       "?? Results/headline_retrain_log.txt",
       "?? Results/headline_retrain_stdout.txt",
       "?? Results/phase3_expr_stdout.txt",
@@ -38,14 +36,10 @@
       "?? fqcnn.aux",
       "?? fqcnn.log",
       "?? fqcnn.pdf",
-      "?? kk.pdf",
-      "?? requirements-qiskit-lock.txt",
-      "?? requirements-qiskit.in",
-      "?? scripts/check_qiskit_environment.py",
-      "?? tests/test_qiskit_environment_contract.py"
+      "?? kk.pdf"
     ],
-    "head": "97d3f38e497eb5d145931e1492fb69d522cfe2df",
-    "provenance": "generated from the current checkout before the Task 6 commit"
+    "head": "17a867e734409dd7322f8b7bb44a0299a248715c",
+    "provenance": "generated from the current checkout; dirty_paths records uncommitted Task 6 changes"
   },
   "hardware_environment": {
     "environment": ".venv-qiskit",
@@ -53,9 +47,18 @@
     "python_version": "3.11.9"
   },
   "imports": {
-    "qiskit": true,
-    "qiskit_aer": true,
-    "qiskit_ibm_runtime": true
+    "qiskit": {
+      "exception": null,
+      "status": "pass"
+    },
+    "qiskit_aer": {
+      "exception": null,
+      "status": "pass"
+    },
+    "qiskit_ibm_runtime": {
+      "exception": null,
+      "status": "pass"
+    }
   },
   "installed_versions": {
     "qiskit": "1.4.6",
@@ -76,8 +79,11 @@
   "schema_version": 1,
   "status": "pass",
   "training_environment": {
-    "interpreter": "separate frozen training interpreter; not invoked by this smoke",
+    "executable": "C:\\Program Files\\Python39\\python.exe",
     "lock_path": "requirements-lock.txt",
+    "observed": true,
+    "observed_version": "3.9.13",
+    "probe_exception": null,
     "required_python_version": "3.9.13"
   }
 }
