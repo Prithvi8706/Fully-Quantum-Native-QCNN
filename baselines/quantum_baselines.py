@@ -25,8 +25,6 @@
 
 from __future__ import annotations
 
-import math
-
 import numpy as np
 import pennylane as qml
 import pennylane.numpy as pnp
@@ -94,56 +92,64 @@ def _ttn_node(p, keep: int, discard: int) -> None:
     qml.RY(p[4], wires=keep); qml.RZ(p[5], wires=keep)
 
 
-def _check_pow2(n_qubits: int) -> int:
-    """These hierarchical architectures assume a power-of-two qubit count."""
-    if n_qubits < 2 or (n_qubits & (n_qubits - 1)) != 0:
-        raise ValueError(
-            f"Quantum baselines require a power-of-two qubit count, got {n_qubits}. "
-            "(The proposed amplitude/feature_map configs always yield one.)")
-    return int(round(math.log2(n_qubits)))
+def active_wire_schedule(n_qubits: int) -> list[dict]:
+    """Return the deterministic pair-and-retire reduction schedule."""
+    if n_qubits < 2:
+        raise ValueError(f"Quantum baselines require at least 2 qubits, got {n_qubits}.")
+
+    active = list(range(n_qubits))
+    schedule = []
+    while len(active) > 1:
+        pairs = [
+            {"keep": active[i], "discard": active[i + 1]}
+            for i in range(0, len(active) - 1, 2)
+        ]
+        unpaired = (
+            [{"wire": active[-1], "treatment": "retired_without_operation"}]
+            if len(active) % 2 else []
+        )
+        output_wires = [pair["keep"] for pair in pairs]
+        schedule.append({
+            "input_wires": active,
+            "pairs": pairs,
+            "unpaired": unpaired,
+            "output_wires": output_wires,
+        })
+        active = output_wires
+    return schedule
 
 
 # ---------------------------------------------------------------------------
 # Architectures. Each exposes param_count(n) and body(cursor, n) -> readout wire.
 # ---------------------------------------------------------------------------
 def _qcnn_body(cursor: _Cursor, n_qubits: int, conv_block, conv_size: int) -> int:
-    """Shared QCNN skeleton: per layer, a shared conv over all neighbour pairs
-    then a shared pool that halves the active wires. Returns the readout wire."""
-    active = list(range(n_qubits))
-    while len(active) > 1:
-        conv_p = cursor.take(conv_size)          # shared across the layer
-        for i in range(len(active) - 1):
-            conv_block(conv_p, active[i], active[i + 1])
-        pool_p = cursor.take(3)                  # shared across the layer
-        kept = []
-        for j in range(0, len(active) - 1, 2):
-            keep, discard = active[j], active[j + 1]
-            _pool_block(pool_p, keep, discard)
-            kept.append(keep)
-        active = kept
-    return active[0]
+    """Shared QCNN skeleton using the common active-wire schedule."""
+    schedule = active_wire_schedule(n_qubits)
+    for stage in schedule:
+        conv_p = cursor.take(conv_size)
+        for pair in stage["pairs"]:
+            conv_block(conv_p, pair["keep"], pair["discard"])
+        pool_p = cursor.take(3)
+        for pair in stage["pairs"]:
+            _pool_block(pool_p, pair["keep"], pair["discard"])
+    return schedule[-1]["output_wires"][0]
 
 
 def _qcnn_param_count(n_qubits: int, conv_size: int) -> int:
-    return _check_pow2(n_qubits) * (conv_size + 3)
+    return len(active_wire_schedule(n_qubits)) * (conv_size + 3)
 
 
 def _ttn_body(cursor: _Cursor, n_qubits: int) -> int:
-    """Balanced tree: pair survivors, apply a node block, keep one per pair."""
-    active = list(range(n_qubits))
-    while len(active) > 1:
-        kept = []
-        for j in range(0, len(active) - 1, 2):
-            keep, discard = active[j], active[j + 1]
-            _ttn_node(cursor.take(6), keep, discard)
-            kept.append(keep)
-        active = kept
-    return active[0]
+    """Balanced tree using the common active-wire schedule."""
+    schedule = active_wire_schedule(n_qubits)
+    for stage in schedule:
+        for pair in stage["pairs"]:
+            _ttn_node(cursor.take(6), pair["keep"], pair["discard"])
+    return schedule[-1]["output_wires"][0]
 
 
 def _ttn_param_count(n_qubits: int) -> int:
-    _check_pow2(n_qubits)
-    return (n_qubits - 1) * 6
+    return sum(len(stage["pairs"]) for stage in active_wire_schedule(n_qubits)) * 6
 
 
 _ARCHITECTURES = {
