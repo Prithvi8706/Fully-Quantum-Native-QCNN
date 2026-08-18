@@ -6,10 +6,24 @@ This guide explains how to run the Fully Quantum-Native QCNN for various tasks, 
 
 ## Environment Setup
 
-Ensure you have the required packages installed:
+Training remains pinned to Python 3.9.13 and the frozen lock:
+
 ```bash
-pip install pennylane pennylane-lightning numpy matplotlib scikit-learn seaborn pillow
+python -m pip install -r requirements-lock.txt
 ```
+
+Keep hardware tooling in a separate Python 3.11 environment:
+
+```bash
+py -3.11 -m venv .venv-qiskit
+.venv-qiskit\Scripts\python.exe -m pip install --upgrade pip
+.venv-qiskit\Scripts\python.exe -m pip install -r requirements-qiskit-lock.txt
+.venv-qiskit\Scripts\python.exe scripts/check_qiskit_environment.py
+```
+
+The Task 6 local fake-backend smoke needs no credentials or network. Real-QPU
+submission remains a later explicit approval gate. Never add the Qiskit packages
+to the frozen training `requirements-lock.txt`.
 
 ---
 

@@ -115,6 +115,20 @@ pip install -r requirements-lock.txt     # exact tested versions (Python 3.9.13)
 pip install -r requirements.txt
 ```
 
+Hardware tooling is isolated from training. Create its Python 3.11 environment and
+validate the local fake-backend transpilation smoke with:
+
+```bash
+py -3.11 -m venv .venv-qiskit
+.venv-qiskit\Scripts\python.exe -m pip install --upgrade pip
+.venv-qiskit\Scripts\python.exe -m pip install -r requirements-qiskit-lock.txt
+.venv-qiskit\Scripts\python.exe scripts/check_qiskit_environment.py
+```
+
+Task 6 needs no credentials or network for the smoke itself. Real-QPU submission
+remains a later explicit approval gate. Do not install these Qiskit packages into
+the Python 3.9.13 training environment or modify `requirements-lock.txt`.
+
 Exercise the current reproduction scripts with:
 
 ```bash

@@ -1,0 +1,181 @@
+{
+  "backend": {
+    "backend_v2": true,
+    "class": "FakeCairoV2",
+    "coupling_edges": 26,
+    "name": "fake_cairo",
+    "num_qubits": 27,
+    "target_operations": [
+      "cx",
+      "delay",
+      "ecr",
+      "for_loop",
+      "id",
+      "if_else",
+      "measure",
+      "reset",
+      "rz",
+      "switch_case",
+      "sx",
+      "x"
+    ]
+  },
+  "canonical_source": {
+    "function": "build_circuit",
+    "function_source_sha256": "5a44532ba2857707e42a17aa7a5a226d167bd0646bc65d3df250cf4317783d2d",
+    "path": "QCNN/circuits.py",
+    "sha256": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09",
+    "signature_sha256": "230ead1d85eb349ad48bcb5f41006a610af1399e8f5bb2f33365955ffca0c4c1"
+  },
+  "credentials_accessed": false,
+  "equivalence": {
+    "limitations": "The isolated environment intentionally excludes PennyLane and pennylane-qiskit, so this smoke does not convert or prove full build_circuit unitary equivalence. It validates the documented structural fixture against the selected fake target's operation set and symmetrized coupling topology, not calibrated instruction directions.",
+    "method": "mechanical source/signature hashing plus classifier-tail gate-order mapping",
+    "result": "limited"
+  },
+  "fixture": {
+    "identity": "deterministic n=4 classifier-tail structural fixture",
+    "n_qubits": 4,
+    "parameters": {
+      "classifier": [
+        0.049087385212,
+        0.098174770425,
+        0.147262155637,
+        0.196349540849,
+        0.245436926062,
+        0.294524311274,
+        0.343611696486,
+        0.392699081699,
+        0.441786466911,
+        0.490873852123,
+        0.539961237336,
+        0.589048622548,
+        0.63813600776,
+        0.687223392973,
+        0.736310778185,
+        0.785398163397,
+        0.83448554861,
+        0.883572933822,
+        0.932660319034,
+        0.981747704247,
+        1.030835089459,
+        1.079922474671,
+        1.129009859884,
+        1.178097245096,
+        1.227184630309,
+        1.276272015521,
+        1.325359400733,
+        1.374446785946,
+        1.423534171158,
+        1.47262155637,
+        1.521708941583,
+        1.570796326795
+      ],
+      "input_amplitudes": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "source_mapping": "Gate order and parameter indexing mirror build_circuit's classifier tail."
+  },
+  "layout": {
+    "final": "Layout({\n2: Qubit(QuantumRegister(27, 'q'), 2),\n3: Qubit(QuantumRegister(27, 'q'), 3),\n5: Qubit(QuantumRegister(27, 'q'), 5),\n8: Qubit(QuantumRegister(27, 'q'), 8),\n9: Qubit(QuantumRegister(27, 'q'), 9),\n10: Qubit(QuantumRegister(27, 'q'), 10),\n11: Qubit(QuantumRegister(27, 'q'), 11),\n12: Qubit(QuantumRegister(27, 'q'), 12),\n13: Qubit(QuantumRegister(27, 'q'), 13),\n14: Qubit(QuantumRegister(27, 'q'), 14),\n15: Qubit(QuantumRegister(27, 'q'), 15),\n16: Qubit(QuantumRegister(27, 'q'), 16),\n17: Qubit(QuantumRegister(27, 'q'), 17),\n18: Qubit(QuantumRegister(27, 'q'), 18),\n19: Qubit(QuantumRegister(27, 'q'), 19),\n7: Qubit(QuantumRegister(27, 'q'), 6),\n20: Qubit(QuantumRegister(27, 'q'), 20),\n21: Qubit(QuantumRegister(27, 'q'), 21),\n6: Qubit(QuantumRegister(27, 'q'), 7),\n22: Qubit(QuantumRegister(27, 'q'), 22),\n23: Qubit(QuantumRegister(27, 'q'), 23),\n1: Qubit(QuantumRegister(27, 'q'), 4),\n24: Qubit(QuantumRegister(27, 'q'), 24),\n25: Qubit(QuantumRegister(27, 'q'), 25),\n4: Qubit(QuantumRegister(27, 'q'), 1),\n26: Qubit(QuantumRegister(27, 'q'), 26),\n0: Qubit(QuantumRegister(27, 'q'), 0)\n})",
+    "initial": "Layout({\n7: Qubit(QuantumRegister(4, 'q'), 1),\n4: Qubit(QuantumRegister(4, 'q'), 2),\n6: Qubit(QuantumRegister(4, 'q'), 0),\n1: Qubit(QuantumRegister(4, 'q'), 3),\n0: Qubit(QuantumRegister(23, 'ancilla'), 0),\n2: Qubit(QuantumRegister(23, 'ancilla'), 1),\n3: Qubit(QuantumRegister(23, 'ancilla'), 2),\n5: Qubit(QuantumRegister(23, 'ancilla'), 3),\n8: Qubit(QuantumRegister(23, 'ancilla'), 4),\n9: Qubit(QuantumRegister(23, 'ancilla'), 5),\n10: Qubit(QuantumRegister(23, 'ancilla'), 6),\n11: Qubit(QuantumRegister(23, 'ancilla'), 7),\n12: Qubit(QuantumRegister(23, 'ancilla'), 8),\n13: Qubit(QuantumRegister(23, 'ancilla'), 9),\n14: Qubit(QuantumRegister(23, 'ancilla'), 10),\n15: Qubit(QuantumRegister(23, 'ancilla'), 11),\n16: Qubit(QuantumRegister(23, 'ancilla'), 12),\n17: Qubit(QuantumRegister(23, 'ancilla'), 13),\n18: Qubit(QuantumRegister(23, 'ancilla'), 14),\n19: Qubit(QuantumRegister(23, 'ancilla'), 15),\n20: Qubit(QuantumRegister(23, 'ancilla'), 16),\n21: Qubit(QuantumRegister(23, 'ancilla'), 17),\n22: Qubit(QuantumRegister(23, 'ancilla'), 18),\n23: Qubit(QuantumRegister(23, 'ancilla'), 19),\n24: Qubit(QuantumRegister(23, 'ancilla'), 20),\n25: Qubit(QuantumRegister(23, 'ancilla'), 21),\n26: Qubit(QuantumRegister(23, 'ancilla'), 22)\n})",
+    "policy": "transpiler-selected layout on the fake target coupling graph symmetrized for direction-independent topology smoke; no initial_layout supplied"
+  },
+  "metrics": {
+    "decomposed": {
+      "depth": 40,
+      "operation_counts": {
+        "ecr": 5,
+        "measure": 1,
+        "reset": 4,
+        "rz": 78,
+        "sx": 37,
+        "x": 5
+      },
+      "size": 130,
+      "width": 5
+    },
+    "logical": {
+      "depth": 13,
+      "operation_counts": {
+        "cx": 5,
+        "initialize": 1,
+        "measure": 1,
+        "rx": 8,
+        "ry": 8,
+        "rz": 5
+      },
+      "size": 28,
+      "width": 5
+    },
+    "transpiled": {
+      "depth": 31,
+      "operation_counts": {
+        "barrier": 1,
+        "ecr": 11,
+        "measure": 1,
+        "reset": 4,
+        "rz": 33,
+        "sx": 21,
+        "x": 1
+      },
+      "size": 71,
+      "width": 28
+    }
+  },
+  "network_accessed": false,
+  "operations": {
+    "target_basis": [
+      "cx",
+      "delay",
+      "ecr",
+      "for_loop",
+      "id",
+      "if_else",
+      "measure",
+      "reset",
+      "rz",
+      "switch_case",
+      "sx",
+      "x"
+    ],
+    "transpiled_counts": {
+      "barrier": 1,
+      "ecr": 11,
+      "measure": 1,
+      "reset": 4,
+      "rz": 33,
+      "sx": 21,
+      "x": 1
+    },
+    "unsupported": []
+  },
+  "payload_sha256": "4cedd4245530652aa9ed6e060956acdd5abfb6dcd73741b9a29e60b0428b7b1a",
+  "readout": {
+    "classical_bit": 0,
+    "measurement_semantics": "single Z-basis measurement of canonical readout wire 0",
+    "wire": 0
+  },
+  "schema_version": 1,
+  "status": "pass",
+  "transpilation": {
+    "optimization_level": 1,
+    "seed_transpiler": 42
+  }
+}

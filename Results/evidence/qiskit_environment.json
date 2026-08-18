@@ -1,0 +1,83 @@
+{
+  "credentials_accessed": false,
+  "fake_backend": {
+    "available": true,
+    "backend_v2": true,
+    "class": "FakeCairoV2",
+    "coupling_edges": 26,
+    "name": "fake_cairo",
+    "num_qubits": 27,
+    "target_operations": [
+      "cx",
+      "delay",
+      "ecr",
+      "for_loop",
+      "id",
+      "if_else",
+      "measure",
+      "reset",
+      "rz",
+      "switch_case",
+      "sx",
+      "x"
+    ]
+  },
+  "git": {
+    "dirty": true,
+    "dirty_paths": [
+      "M README.md",
+      " M RUN_GUIDE.md",
+      "?? .claude/settings.local.json",
+      "?? .venv-qiskit/",
+      "?? Results/evidence/qiskit_environment.json",
+      "?? Results/evidence/qiskit_transpile_smoke.json",
+      "?? Results/headline_retrain_log.txt",
+      "?? Results/headline_retrain_stdout.txt",
+      "?? Results/phase3_expr_stdout.txt",
+      "?? Results/phase3_gradvar_stdout.txt",
+      "?? fqcnn.aux",
+      "?? fqcnn.log",
+      "?? fqcnn.pdf",
+      "?? kk.pdf",
+      "?? requirements-qiskit-lock.txt",
+      "?? requirements-qiskit.in",
+      "?? scripts/check_qiskit_environment.py",
+      "?? tests/test_qiskit_environment_contract.py"
+    ],
+    "head": "97d3f38e497eb5d145931e1492fb69d522cfe2df",
+    "provenance": "generated from the current checkout before the Task 6 commit"
+  },
+  "hardware_environment": {
+    "environment": ".venv-qiskit",
+    "executable": "C:\\Users\\prith\\Fully-Quantum-Native-QCNN\\.venv-qiskit\\Scripts\\python.exe",
+    "python_version": "3.11.9"
+  },
+  "imports": {
+    "qiskit": true,
+    "qiskit_aer": true,
+    "qiskit_ibm_runtime": true
+  },
+  "installed_versions": {
+    "qiskit": "1.4.6",
+    "qiskit-aer": "0.17.2",
+    "qiskit-ibm-runtime": "0.40.1"
+  },
+  "lock": {
+    "path": "requirements-qiskit-lock.txt",
+    "sha256": "97ea5292428d071769f500866f06f32d408f1720731b6a2e5751f14bbe9bd6a8"
+  },
+  "network_accessed": false,
+  "platform": {
+    "machine": "AMD64",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "release": "10",
+    "system": "Windows"
+  },
+  "schema_version": 1,
+  "status": "pass",
+  "training_environment": {
+    "interpreter": "separate frozen training interpreter; not invoked by this smoke",
+    "lock_path": "requirements-lock.txt",
+    "required_python_version": "3.9.13"
+  }
+}
