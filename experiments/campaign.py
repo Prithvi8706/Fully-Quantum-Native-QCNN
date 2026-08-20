@@ -255,12 +255,13 @@ def launch_gate_errors(manifest, current=None, queue_path=QUEUE_PATH):
 
 def validate_campaign(manifest, current=None):
     if current is None:
+        repository = repository_state()
         current = {
-            "git_sha": manifest.get("repository", {}).get("git_sha"),
+            "git_sha": repository["git_sha"],
             "training_lock_sha256": sha256_file(TRAINING_LOCK),
             "qiskit_lock_sha256": sha256_file(QISKIT_LOCK),
-            "dirty": manifest.get("repository", {}).get("dirty", True),
-            "dirty_policy_passed": False,
+            "dirty": repository["dirty"],
+            "dirty_policy_passed": repository["dirty_policy"]["passed"],
         }
     return launch_gate_errors(manifest, current=current)
 
