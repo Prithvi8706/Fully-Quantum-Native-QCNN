@@ -4,11 +4,12 @@
       "approved": true
     },
     "full_suite": {
-      "path": "Results\\campaigns\\baseline_mnist_n10_v1\\full_suite.json"
+      "path": "Results\\campaigns\\baseline_mnist_n10_v1\\full_suite.json",
+      "sha256": "abb671d230d7153ca85c5587e8a3b1b5d9d395b0ecb97ac1f63ae990176dc66a"
     },
     "launch": {
-      "approved": true,
-      "scope": "tooling implemented; execution still gated"
+      "approved": false,
+      "scope": "human approval required"
     }
   },
   "artifacts": {
@@ -28,7 +29,7 @@
       "wall_hours": 0.5042574738425923,
       "workers": 20
     },
-    "sha256": "62049bd9a334a6ef25240802fd640a07d9b1cd2c42343be1c8136eedc2580336"
+    "sha256": "cfd5668403fa90dfc30890787afed3b8e14b31754891ff4f485c06b58ee27f2f"
   },
   "created_at_utc": "2026-08-20T13:18:51.743186+00:00",
   "locks": {

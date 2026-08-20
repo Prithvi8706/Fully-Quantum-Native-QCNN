@@ -7,12 +7,13 @@
   "command": "python -m pytest tests/ -q",
   "exit_code": 0,
   "tests": {
-    "passed": 354,
-    "failed": 0
+    "passed": 392,
+    "failed": 0,
+    "total": 392
   },
   "git_sha": "07ba7c585c8def24b3fa127414e8db4d0699cf2e",
   "training_lock_sha256": "80549d0c4d0ee7016a58d0bf079428100de39d634aca46631a39577baf454d53",
-  "timestamp_utc": "2026-08-20T13:13:00Z",
+  "timestamp_utc": "2026-08-20T16:32:03.295186+00:00",
   "dirty_policy": {
     "passed": false,
     "reasons": [

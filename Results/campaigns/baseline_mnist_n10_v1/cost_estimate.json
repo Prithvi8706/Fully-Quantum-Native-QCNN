@@ -49,6 +49,7 @@
       "5,8"
     ],
     "epochs": 30,
+    "jobs_requested": 0,
     "samples": 400,
     "seeds": [
       0,

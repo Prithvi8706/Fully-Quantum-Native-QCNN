@@ -296,7 +296,8 @@ def main():
             'request': {
                 'datasets': args.datasets, 'configs': args.configs,
                 'seeds': args.seeds, 'samples': args.samples,
-                'epochs': args.epochs, 'with_baselines': with_baselines,
+                'epochs': args.epochs, 'jobs_requested': args.jobs,
+                'with_baselines': with_baselines,
             },
             'counts': {
                 'requested_configs': len(args.configs),
@@ -399,6 +400,7 @@ def main():
             'seeds': args.seeds,
             'samples': args.samples,
             'epochs': args.epochs,
+            'jobs_requested': args.jobs,
             'with_baselines': with_baselines,
         },
         'counts': {
