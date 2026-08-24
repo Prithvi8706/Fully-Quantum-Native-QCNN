@@ -52,27 +52,45 @@ def _manifest(tmp_path):
                        "dirty_policy": {"passed": True, "reasons": [], "raw": []}},
         "locks": {"training": {"path": "requirements-lock.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
                   "qiskit": {"path": "requirements-qiskit-lock.txt", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}},
-        "request": {"datasets": ["0,1"], "class_pairs": [[0, 1]],
-                    "configs": ["proposed"], "seeds": [0],
-                    "split_policy": "deterministic stratified manifest per dataset and seed",
-                    "samples": 400, "epochs": 30, "jobs_requested": 1,
-                    "workers_resolved": 1, "with_baselines": False,
-                    "expected_cells": 1},
+        "request": {
+            "datasets": ["0,1"],
+            "class_pairs": [[0, 1]],
+            "configs": ["proposed"],
+            "seeds": [0],
+            "split_policy": "deterministic stratified manifest per dataset and seed",
+            "samples": 400,
+            "epochs": 30,
+            "jobs_requested": 1,
+            "workers_resolved": 1,
+            "with_baselines": False,
+            "scheduler_cells": 1,
+            "baseline_side_effect_cells": 0,
+            "total_costed_cells": 1,
+        },
         "cost": {"path": str(cost_path), "sha256": campaign.sha256_file(cost_path),
                  "projected_resource_use": _cost()["projection"]},
         "output_roots": {"campaign": str(tmp_path), "experiments": str(tmp_path / "experiments"),
                          "runs": str(tmp_path / "runs"), "manifests": str(tmp_path / "manifests")},
-        "artifacts": {"manifest": str(tmp_path / "manifest.json"),
-                      "cost_estimate": str(cost_path), "launch": str(tmp_path / "launch.json"),
-                      "status": str(tmp_path / "status.json"), "failures": str(tmp_path / "failures.json")},
-        "approvals": {"full_suite": {"path": str(tmp_path / "full-suite.json")},
-                      "cost": {"approved": True}, "launch": {"approved": True}},
+        "artifacts": {
+            "manifest": str(tmp_path / "manifest.json"),
+            "cost_estimate": str(cost_path),
+            "full_suite": str(tmp_path / "full_suite.json"),
+            "approval": str(tmp_path / "approval.json"),
+            "launch": str(tmp_path / "launch.json"),
+            "status": str(tmp_path / "status.json"),
+            "failures": str(tmp_path / "failures.json"),
+            "scheduler_failures": str(tmp_path / "experiments" / "failures.json"),
+        },
+        "approval": {
+            "required": True,
+            "artifact": str(tmp_path / "approval.json"),
+        },
     }
 
 
 @pytest.mark.parametrize("path", [
     ("repository", "git_sha"), ("locks", "training"), ("request", "split_policy"),
-    ("request", "expected_cells"), ("cost", "path"), ("repository", "dirty"),
+    ("request", "scheduler_cells"), ("cost", "path"), ("repository", "dirty"),
 ])
 def test_manifest_requires_provenance_fields(tmp_path, path):
     manifest = _manifest(tmp_path)
@@ -126,7 +144,7 @@ def test_launch_refuses_dirty_tree(tmp_path):
 @pytest.mark.parametrize("present,status", [(False, "pass"), (True, "fail")])
 def test_launch_refuses_missing_or_failed_full_suite(tmp_path, present, status):
     manifest = _manifest(tmp_path)
-    suite = Path(manifest["approvals"]["full_suite"]["path"])
+    suite = Path(manifest["artifacts"]["full_suite"])
     if present:
         _suite(suite, status=status)
     errors = campaign.launch_gate_errors(manifest, current={"git_sha": "abc", "training_lock_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "qiskit_lock_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "dirty": False, "dirty_policy_passed": True})
@@ -135,7 +153,7 @@ def test_launch_refuses_missing_or_failed_full_suite(tmp_path, present, status):
 
 def test_launch_refuses_occupied_queue(tmp_path):
     manifest = _manifest(tmp_path)
-    _suite(Path(manifest["approvals"]["full_suite"]["path"]))
+    _suite(Path(manifest["artifacts"]["full_suite"]))
     queue = tmp_path / "queue.lock"
     queue.write_text("occupied")
     assert "global training/hardware queue is occupied" in campaign.launch_gate_errors(manifest, current={"git_sha": "abc", "training_lock_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "qiskit_lock_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "dirty": False, "dirty_policy_passed": True}, queue_path=queue)
@@ -143,7 +161,7 @@ def test_launch_refuses_occupied_queue(tmp_path):
 
 def test_launch_refuses_output_collision(tmp_path):
     manifest = _manifest(tmp_path)
-    _suite(Path(manifest["approvals"]["full_suite"]["path"]))
+    _suite(Path(manifest["artifacts"]["full_suite"]))
     Path(manifest["output_roots"]["experiments"]).mkdir()
     errors = campaign.launch_gate_errors(manifest, current={"git_sha": "abc", "training_lock_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "qiskit_lock_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "dirty": False, "dirty_policy_passed": True})
     assert any("output collision" in e for e in errors)
@@ -155,7 +173,7 @@ def test_baseline_n10_requires_schedule_evidence(tmp_path):
     manifest["request"]["n_qubits"] = 10
     manifest["runner"]["argv"] = campaign._expected_runner_argv(manifest["request"])
     manifest["runner"]["command"] = campaign.shlex.join(manifest["runner"]["argv"])
-    _suite(Path(manifest["approvals"]["full_suite"]["path"]))
+    _suite(Path(manifest["artifacts"]["full_suite"]))
     errors = campaign.launch_gate_errors(manifest, current={"git_sha": "abc", "training_lock_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "qiskit_lock_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "dirty": False, "dirty_policy_passed": True})
     assert any("baseline schedule evidence" in e for e in errors)
 
@@ -183,7 +201,7 @@ def test_completion_requires_every_valid_cell_and_zero_failures(tmp_path, mode):
         status = root / "0v1" / "proposed" / "seed_0" / "status.json"
         data = json.loads(status.read_text()); data["config"]["n_epochs"] = 2; status.write_text(json.dumps(data))
     elif mode == "insufficient":
-        manifest["request"]["expected_cells"] = 2
+        manifest["request"]["scheduler_cells"] = 2
     failures = [] if mode != "failed" else [{"error": "boom"}]
     assert campaign.campaign_state(manifest, launched=True, child_failures=failures) != "complete"
 
@@ -210,19 +228,56 @@ def test_validate_never_invokes_scheduler(tmp_path, monkeypatch):
 
 # Review round 1 regressions.
 def _valid_suite(manifest):
-    path = Path(manifest["approvals"]["full_suite"]["path"])
+    path = Path(manifest["artifacts"]["full_suite"])
     _suite(path)
     record = json.loads(path.read_text())
     record["tests"]["total"] = record["tests"]["passed"]
     path.write_text(json.dumps(record))
-    manifest["approvals"]["full_suite"]["sha256"] = campaign.sha256_file(path)
     return path
 
 
-def _clean_current():
-    return {"git_sha": "abc", "training_lock_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            "qiskit_lock_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "dirty": False,
-            "dirty_policy_passed": True}
+def _approval_record(manifest, *, approver="human-reviewer"):
+    return {
+        "schema": {"name": "fqcnn_campaign_launch_approval", "version": 1},
+        "approved": True,
+        "campaign": manifest["campaign"],
+        "git_sha": manifest["repository"]["git_sha"],
+        "manifest_sha256": campaign.sha256_file(
+            manifest["artifacts"]["manifest"]
+        ),
+        "cost_sha256": manifest["cost"]["sha256"],
+        "full_suite_sha256": campaign.sha256_file(
+            manifest["artifacts"]["full_suite"]
+        ),
+        "approver": approver,
+        "approved_at_utc": "2026-08-24T00:00:00+00:00",
+        "scope": {
+            key: manifest["request"][key]
+            for key in (
+                "datasets", "configs", "seeds", "samples", "epochs",
+                "jobs_requested", "workers_resolved", "with_baselines",
+                "scheduler_cells", "baseline_side_effect_cells",
+                "total_costed_cells",
+            )
+        },
+    }
+
+
+def _clean_current(manifest=None):
+    workers = 1 if manifest is None else manifest["request"]["workers_resolved"]
+    return {
+        "git_sha": "abc",
+        "branch": "dev",
+        "upstream": "origin/dev",
+        "ahead": 0,
+        "behind": 0,
+        "training_lock_sha256": "a" * 64,
+        "qiskit_lock_sha256": "b" * 64,
+        "workers_resolved": workers,
+        "dirty": False,
+        "dirty_policy_passed": True,
+        "dirty_reasons": [],
+    }
 
 
 def test_real_clean_launch_state_is_not_forced_dirty(monkeypatch):
@@ -235,7 +290,11 @@ def test_real_clean_launch_state_is_not_forced_dirty(monkeypatch):
 
 def test_first_campaign_plan_has_no_self_approval():
     manifest = json.loads(Path("Results/campaigns/baseline_mnist_n10_v1/manifest.json").read_text())
-    assert manifest["approvals"]["launch"]["approved"] is False
+    assert manifest.get("approval") == {
+        "required": True,
+        "artifact": manifest["artifacts"]["approval"],
+    }
+    assert "approved" not in manifest["approval"]
 
 
 def test_status_reads_scheduler_failure_manifest(tmp_path):
@@ -255,18 +314,23 @@ def test_status_reads_scheduler_failure_manifest(tmp_path):
 def test_full_suite_requires_exact_complete_command_and_totals(tmp_path, mutation):
     manifest = _manifest(tmp_path)
     path = _valid_suite(manifest)
+    Path(manifest["artifacts"]["manifest"]).write_text(json.dumps(manifest))
     record = json.loads(path.read_text())
     mutation(record)
     path.write_text(json.dumps(record))
-    manifest["approvals"]["full_suite"]["sha256"] = campaign.sha256_file(path)
-    assert campaign._full_suite_errors(manifest)
+    approval = _approval_record(manifest)
+    assert campaign.approval_record_errors(manifest, approval)
 
 
 def test_full_suite_hash_is_immutable_gate(tmp_path):
     manifest = _manifest(tmp_path)
     path = _valid_suite(manifest)
+    Path(manifest["artifacts"]["manifest"]).write_text(json.dumps(manifest))
+    approval = _approval_record(manifest)
     path.write_text(path.read_text() + " ")
-    assert "full-suite evidence hash mismatch" in campaign._full_suite_errors(manifest)
+    assert "full-suite evidence hash mismatch" in campaign.approval_record_errors(
+        manifest, approval
+    )
 
 
 def test_cost_request_requires_requested_jobs(tmp_path):
@@ -341,7 +405,7 @@ def test_plan_rolls_back_cost_when_manifest_build_fails(tmp_path, monkeypatch):
     lambda m: m["runner"].update(command="not the argv"),
     lambda m: m["request"].update(class_pairs=[[9, 9]]),
     lambda m: m["locks"]["training"].update(sha256=""),
-    lambda m: m["approvals"].update(launch={"approved": "yes"}),
+    lambda m: m.update(approval={"required": "yes", "artifact": "approval.json"}),
 ])
 def test_manifest_rejects_malformed_identity_shapes(tmp_path, mutation):
     manifest = _manifest(tmp_path)
@@ -425,3 +489,185 @@ def test_incompatible_existing_launch_record_is_rejected(tmp_path):
     manifest = _manifest(tmp_path)
     Path(manifest["artifacts"]["launch"]).write_text(json.dumps({"campaign": "other"}))
     assert campaign._output_errors(manifest)
+
+
+# Review round 2 regressions.
+def test_worker_payload_applies_explicit_campaign_roots_in_process(tmp_path, monkeypatch):
+    roots = {"experiments": str(tmp_path / "experiments"),
+             "runs": str(tmp_path / "runs"), "manifests": str(tmp_path / "manifests")}
+    observed = {}
+
+    def fake_run_single(*args, **kwargs):
+        observed.update(exp=campaign.run_experiments.EXP_ROOT,
+                        runs=run_artifacts.RUN_ROOT,
+                        manifests=campaign.run_experiments.MANIFEST_ROOT)
+        return {}
+
+    monkeypatch.setattr(campaign.run_experiments, "run_single", fake_run_single)
+    payload = ((0, 1), "proposed", 0, "dataset", 10, 1, True, False, roots)
+    assert campaign.run_experiments._execute_cell(payload)[-1] is None
+    assert observed == {"exp": roots["experiments"], "runs": roots["runs"],
+                        "manifests": roots["manifests"]}
+
+
+def test_approval_is_separate_immutable_attestation(tmp_path):
+    manifest = _manifest(tmp_path)
+    _valid_suite(manifest)
+    Path(manifest["artifacts"]["manifest"]).write_text(json.dumps(manifest))
+    assert not campaign.validate_manifest(manifest)
+    assert "missing launch approval record" in campaign.launch_gate_errors(
+        manifest, current=_clean_current(manifest), queue_path=tmp_path / "queue"
+    )
+    approval = _approval_record(manifest)
+    campaign.write_immutable_json(manifest["artifacts"]["approval"], approval)
+    assert not campaign.approval_record_errors(manifest, approval)
+
+
+def test_concurrent_plan_loser_does_not_delete_owner_files(tmp_path, monkeypatch):
+    monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path)
+    owned = tmp_path / campaign.FIRST_CAMPAIGN
+    owned.mkdir()
+    marker = owned / "owner.json"
+    marker.write_text("owner")
+    with pytest.raises(FileExistsError):
+        campaign.plan(campaign.FIRST_CAMPAIGN)
+    assert marker.read_text() == "owner"
+
+
+def _launch_record(manifest):
+    return {
+        "schema": {"name": "fqcnn_campaign_launch", "version": 1},
+        "campaign": manifest["campaign"],
+        "git_sha": manifest["repository"]["git_sha"],
+        "manifest_sha256": campaign.sha256_file(manifest["artifacts"]["manifest"]),
+        "approval_sha256": campaign.sha256_file(manifest["artifacts"]["approval"]),
+        "launched_at_utc": "2026-08-24T00:01:00+00:00",
+        "queue": str(campaign.QUEUE_PATH),
+        "owner_pid": 1234,
+        "owner_host": "test-host",
+    }
+
+
+def _write_launch_records(manifest):
+    _valid_suite(manifest)
+    Path(manifest["artifacts"]["manifest"]).write_text(json.dumps(manifest))
+    campaign.write_immutable_json(
+        manifest["artifacts"]["approval"], _approval_record(manifest)
+    )
+    campaign.write_immutable_json(
+        manifest["artifacts"]["launch"], _launch_record(manifest)
+    )
+
+
+def test_missing_final_failure_manifest_prevents_completion(tmp_path):
+    manifest = _manifest(tmp_path)
+    _complete_cell(Path(manifest["output_roots"]["runs"]))
+    _write_launch_records(manifest)
+    assert campaign.status_campaign(manifest)["state"] != "complete"
+
+
+def test_queue_owned_launch_is_never_complete(tmp_path, monkeypatch):
+    manifest = _manifest(tmp_path)
+    _complete_cell(Path(manifest["output_roots"]["runs"]))
+    _write_launch_records(manifest)
+    failure = Path(manifest["artifacts"]["scheduler_failures"])
+    failure.parent.mkdir(parents=True)
+    failure.write_text(json.dumps({"n_failed": 0, "failures": []}))
+    monkeypatch.setattr(campaign, "QUEUE_PATH", tmp_path / "queue")
+    campaign.QUEUE_PATH.write_text(json.dumps({"campaign": manifest["campaign"]}))
+    assert campaign.status_campaign(manifest)["state"] == "running"
+
+
+def test_malformed_failure_manifest_yields_failed_not_exception(tmp_path):
+    manifest = _manifest(tmp_path)
+    _write_launch_records(manifest)
+    failure = Path(manifest["artifacts"]["scheduler_failures"])
+    failure.parent.mkdir(parents=True)
+    failure.write_text("{")
+    assert campaign.status_campaign(manifest)["state"] == "failed"
+
+
+@pytest.mark.parametrize("record", [{}, {"schema": {"name": "fqcnn_campaign_launch", "version": 1}}])
+def test_incomplete_launch_record_does_not_start_runtime_lifecycle(tmp_path, record):
+    manifest = _manifest(tmp_path)
+    Path(manifest["artifacts"]["launch"]).write_text(json.dumps(record))
+    payload = campaign.status_campaign(manifest)
+    assert payload["state"] == "pending"
+    assert not Path(manifest["artifacts"]["status"]).exists()
+
+
+@pytest.mark.parametrize("field,value", [
+    ("datasets", ["0,1", "0,1"]),
+    ("configs", ["proposed", "proposed"]),
+    ("seeds", [0, 0]),
+])
+def test_manifest_rejects_duplicate_schedule_values_explicitly(tmp_path, field, value):
+    manifest = _manifest(tmp_path)
+    manifest["request"][field] = value
+    errors = campaign.validate_manifest(manifest)
+    assert any("duplicate" in error and field in error for error in errors)
+
+
+@pytest.mark.parametrize("mutation", [
+    lambda m: m["request"].update(datasets=[None]),
+    lambda m: m.update(approval=None),
+    lambda m: m["request"].update(samples=True),
+])
+def test_manifest_fails_closed_for_malformed_values(tmp_path, mutation):
+    manifest = _manifest(tmp_path)
+    mutation(manifest)
+    assert campaign.validate_manifest(manifest)
+
+
+@pytest.mark.parametrize("n_qubits", [None, True, 0, -1, 1.0, "10"])
+def test_baseline_campaign_requires_positive_integer_n_qubits(tmp_path, n_qubits):
+    manifest = _manifest(tmp_path)
+    manifest["request"].update(with_baselines=True, n_qubits=n_qubits)
+    assert any("n_qubits" in error for error in campaign.validate_manifest(manifest))
+
+
+def test_canonical_campaign_root_cannot_be_redirected(tmp_path, monkeypatch):
+    monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path / "canonical")
+    manifest = _manifest(tmp_path / "external")
+    assert any("canonical" in error for error in campaign.validate_manifest(manifest))
+
+
+def test_launch_rechecks_resolved_worker_count(tmp_path):
+    manifest = _manifest(tmp_path)
+    manifest["request"]["workers_resolved"] += 1
+    current = _clean_current(manifest)
+    current["workers_resolved"] = manifest["request"]["workers_resolved"] - 1
+    assert "resolved worker count changed" in campaign.launch_gate_errors(
+        manifest, current=current
+    )
+
+
+def test_repository_provenance_mismatch_blocks_launch(tmp_path):
+    manifest = _manifest(tmp_path)
+    current = _clean_current(manifest)
+    current.update(branch="other", upstream="origin/other", ahead=1, behind=0)
+    errors = campaign.launch_gate_errors(manifest, current=current)
+    assert any("repository provenance" in error for error in errors)
+
+
+def test_queue_metadata_failure_rolls_back_lease(tmp_path, monkeypatch):
+    from QCNN.utils import exclusive_queue
+    path = tmp_path / "queue"
+    monkeypatch.setattr(exclusive_queue.json, "dump", lambda *a, **k: (_ for _ in ()).throw(OSError("boom")))
+    with pytest.raises(OSError):
+        exclusive_queue.acquire(path, {"campaign": "unit"})
+    assert not path.exists()
+
+
+def test_baseline_cost_counts_are_distinct_from_scheduler_cells(tmp_path):
+    manifest = _manifest(tmp_path)
+    manifest["request"].update(
+        with_baselines=True,
+        n_qubits=10,
+        baseline_side_effect_cells=1,
+        total_costed_cells=2,
+    )
+    cost = _cost()
+    cost["request"].update(with_baselines=True, jobs_requested=1)
+    cost["counts"].update(requested_cells=2, measurable_cells=2)
+    assert not campaign.validate_cost(manifest, cost)
