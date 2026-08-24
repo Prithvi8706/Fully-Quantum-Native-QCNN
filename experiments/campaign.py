@@ -9,7 +9,6 @@ import hashlib
 import json
 import math
 import os
-import platform
 import shlex
 import subprocess
 import sys
@@ -17,7 +16,7 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from QCNN.utils import run_artifacts
+from QCNN.utils import exclusive_queue, run_artifacts
 from experiments import run_experiments
 
 CAMPAIGN_STATES = {"pending", "running", "failed", "complete"}
@@ -350,8 +349,11 @@ def _output_errors(manifest):
 
 
 def launch_gate_errors(manifest, current=None, queue_path=QUEUE_PATH):
-    errors = validate_manifest(manifest)
-    if errors:
+    manifest_errors = validate_manifest(manifest)
+    errors = list(manifest_errors)
+    if Path(queue_path).exists():
+        errors.append("global training/hardware queue is occupied")
+    if manifest_errors:
         return errors
     current = current or current_launch_state()
     repo = manifest["repository"]
@@ -375,8 +377,6 @@ def launch_gate_errors(manifest, current=None, queue_path=QUEUE_PATH):
             errors.extend(validate_cost(manifest, _load_json(cost_path)))
         except ValueError:
             errors.append("invalid cost estimate")
-    if Path(queue_path).exists():
-        errors.append("global training/hardware queue is occupied")
     errors.extend(_output_errors(manifest))
     req = manifest["request"]
     if req.get("with_baselines") and req.get("n_qubits") == 10:
@@ -515,20 +515,20 @@ def _load_campaign(name):
 
 
 def _acquire_queue(campaign_name):
-    QUEUE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(str(QUEUE_PATH), os.O_WRONLY | os.O_CREAT | os.O_EXCL)
-    with os.fdopen(fd, "w") as fh:
-        json.dump({"campaign": campaign_name, "pid": os.getpid(), "host": platform.node(),
-                   "acquired_at_utc": datetime.now(timezone.utc).isoformat()}, fh,
-                  indent=2, sort_keys=True)
-        fh.write("\n")
+    return exclusive_queue.acquire(
+        QUEUE_PATH,
+        {"kind": "campaign", "campaign": campaign_name},
+    )
 
 
 def launch(manifest):
     errors = launch_gate_errors(manifest)
     if errors:
         return errors
-    _acquire_queue(manifest["campaign"])
+    lease = exclusive_queue.acquire(
+        QUEUE_PATH,
+        {"kind": "campaign", "campaign": manifest["campaign"]},
+    )
     old_argv = sys.argv[:]
     old_roots = (run_experiments.EXP_ROOT, run_experiments.FAILURE_MANIFEST,
                  run_experiments.MANIFEST_ROOT, run_artifacts.RUN_ROOT)
@@ -540,7 +540,8 @@ def launch(manifest):
                 "campaign": manifest["campaign"], "git_sha": manifest["repository"]["git_sha"],
                 "manifest_sha256": sha256_file(manifest["artifacts"]["manifest"]),
                 "launched_at_utc": datetime.now(timezone.utc).isoformat(),
-                "queue": str(QUEUE_PATH), "owner_pid": os.getpid(), "owner_host": platform.node(),
+                "queue": str(QUEUE_PATH), "owner_pid": lease["pid"],
+                "owner_host": lease["host"],
             })
         roots = manifest["output_roots"]
         run_experiments.EXP_ROOT = roots["experiments"]
@@ -553,8 +554,7 @@ def launch(manifest):
         sys.argv = old_argv
         (run_experiments.EXP_ROOT, run_experiments.FAILURE_MANIFEST,
          run_experiments.MANIFEST_ROOT, run_artifacts.RUN_ROOT) = old_roots
-        with contextlib.suppress(OSError):
-            QUEUE_PATH.unlink()
+        exclusive_queue.release(QUEUE_PATH, lease)
     return []
 
 
@@ -573,7 +573,10 @@ def status_campaign(manifest, launched=None):
     if launched is None:
         launched = Path(manifest["artifacts"]["launch"]).exists()
     failures = _child_failures(manifest) if launched else []
-    state = campaign_state(manifest, launched, failures)
+    if launched and not failures and QUEUE_PATH.exists():
+        state = "running"
+    else:
+        state = campaign_state(manifest, launched, failures)
     payload = {"schema": {"name": "fqcnn_campaign_status", "version": 1},
                "campaign": manifest["campaign"], "state": state,
                "checked_at_utc": datetime.now(timezone.utc).isoformat(),

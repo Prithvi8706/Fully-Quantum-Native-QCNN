@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from QCNN.utils import run_artifacts
+from QCNN.utils import exclusive_queue, run_artifacts
 from experiments import campaign
 
 
@@ -678,8 +678,23 @@ def test_repository_provenance_mismatch_blocks_launch(tmp_path):
     assert any("repository provenance" in error for error in errors)
 
 
+def test_queue_acquisition_is_exclusive(tmp_path):
+    path = tmp_path / "queue.lock"
+    owner = exclusive_queue.acquire(path, {"campaign": "first"})
+    with pytest.raises(FileExistsError):
+        exclusive_queue.acquire(path, {"campaign": "second"})
+    assert exclusive_queue.is_owned(path, owner)
+
+
+def test_foreign_owner_cannot_release_live_lease(tmp_path):
+    path = tmp_path / "queue.lock"
+    owner = exclusive_queue.acquire(path, {"campaign": "first"})
+    foreign = dict(owner, lease_id="not-owner")
+    assert exclusive_queue.release(path, foreign) is False
+    assert path.exists()
+
+
 def test_queue_metadata_failure_rolls_back_lease(tmp_path, monkeypatch):
-    from QCNN.utils import exclusive_queue
     path = tmp_path / "queue"
     monkeypatch.setattr(exclusive_queue.json, "dump", lambda *a, **k: (_ for _ in ()).throw(OSError("boom")))
     with pytest.raises(OSError):
