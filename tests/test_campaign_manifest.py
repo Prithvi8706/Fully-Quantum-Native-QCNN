@@ -559,6 +559,33 @@ def _write_launch_records(manifest):
     )
 
 
+def test_launch_record_errors_accepts_valid_test_record(tmp_path):
+    manifest = _manifest(tmp_path)
+    _valid_suite(manifest)
+    Path(manifest["artifacts"]["manifest"]).write_text(json.dumps(manifest))
+    campaign.write_immutable_json(
+        manifest["artifacts"]["approval"], _approval_record(manifest)
+    )
+    assert campaign.launch_record_errors(manifest, _launch_record(manifest)) == []
+
+
+@pytest.mark.parametrize("mutation", [
+    pytest.param(lambda record: record.pop("manifest_sha256"), id="missing-identity"),
+    pytest.param(lambda record: record.update(approval_sha256="invalid"), id="malformed-identity"),
+    pytest.param(lambda record: record.update(campaign="other"), id="wrong-scope-identity"),
+])
+def test_launch_record_errors_fails_closed_for_invalid_identity(tmp_path, mutation):
+    manifest = _manifest(tmp_path)
+    _valid_suite(manifest)
+    Path(manifest["artifacts"]["manifest"]).write_text(json.dumps(manifest))
+    campaign.write_immutable_json(
+        manifest["artifacts"]["approval"], _approval_record(manifest)
+    )
+    record = _launch_record(manifest)
+    mutation(record)
+    assert campaign.launch_record_errors(manifest, record)
+
+
 def test_missing_final_failure_manifest_prevents_completion(tmp_path):
     manifest = _manifest(tmp_path)
     _complete_cell(Path(manifest["output_roots"]["runs"]))
@@ -568,13 +595,14 @@ def test_missing_final_failure_manifest_prevents_completion(tmp_path):
 
 def test_queue_owned_launch_is_never_complete(tmp_path, monkeypatch):
     manifest = _manifest(tmp_path)
+    queue = tmp_path / "queue"
+    monkeypatch.setattr(campaign, "QUEUE_PATH", queue)
     _complete_cell(Path(manifest["output_roots"]["runs"]))
     _write_launch_records(manifest)
     failure = Path(manifest["artifacts"]["scheduler_failures"])
     failure.parent.mkdir(parents=True)
     failure.write_text(json.dumps({"n_failed": 0, "failures": []}))
-    monkeypatch.setattr(campaign, "QUEUE_PATH", tmp_path / "queue")
-    campaign.QUEUE_PATH.write_text(json.dumps({"campaign": manifest["campaign"]}))
+    queue.write_text(json.dumps({"campaign": manifest["campaign"]}))
     assert campaign.status_campaign(manifest)["state"] == "running"
 
 
