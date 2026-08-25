@@ -10,6 +10,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+@contextlib.contextmanager
+def _operation_guard(path):
+    guard_path = path.with_name(path.name + ".operation.lock")
+    fd = os.open(str(guard_path), os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+    try:
+        yield
+    finally:
+        os.close(fd)
+        guard_path.unlink()
+
+
 def acquire(path, metadata: dict) -> dict:
     """Atomically acquire and persist an owner record."""
     path = Path(path)
@@ -21,15 +32,16 @@ def acquire(path, metadata: dict) -> dict:
         host=platform.node(),
         acquired_at_utc=datetime.now(timezone.utc).isoformat(),
     )
-    fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_EXCL)
-    try:
-        with os.fdopen(fd, "w") as handle:
-            json.dump(owner, handle, indent=2, sort_keys=True, allow_nan=False)
-            handle.write("\n")
-    except Exception:
-        with contextlib.suppress(OSError):
-            path.unlink()
-        raise
+    with _operation_guard(path):
+        fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+        try:
+            with os.fdopen(fd, "w") as handle:
+                json.dump(owner, handle, indent=2, sort_keys=True, allow_nan=False)
+                handle.write("\n")
+        except Exception:
+            with contextlib.suppress(OSError):
+                path.unlink()
+            raise
     return owner
 
 
@@ -79,10 +91,14 @@ def is_owned(path, owner: dict) -> bool:
 def release(path, owner: dict) -> bool:
     """Remove only the exact owner's lease."""
     path = Path(path)
-    if not is_owned(path, owner):
-        return False
     try:
-        path.unlink()
+        with _operation_guard(path):
+            if not is_owned(path, owner):
+                return False
+            try:
+                path.unlink()
+            except OSError:
+                return False
+            return True
     except OSError:
         return False
-    return True

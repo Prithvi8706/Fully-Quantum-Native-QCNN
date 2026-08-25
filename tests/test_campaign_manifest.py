@@ -694,6 +694,32 @@ def test_foreign_owner_cannot_release_live_lease(tmp_path):
     assert path.exists()
 
 
+def test_release_cannot_delete_reacquired_lease(tmp_path, monkeypatch):
+    path = tmp_path / "queue.lock"
+    owner = exclusive_queue.acquire(path, {"campaign": "first"})
+    blocked = []
+    replacement = {}
+    real_unlink = Path.unlink
+
+    def replace_before_unlink(target, *args, **kwargs):
+        if target == path and not blocked:
+            real_unlink(target)
+            try:
+                replacement.update(
+                    exclusive_queue.acquire(path, {"campaign": "second"})
+                )
+            except FileExistsError:
+                blocked.append(True)
+        return real_unlink(target, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "unlink", replace_before_unlink)
+    assert exclusive_queue.release(path, owner) is False
+    assert blocked == [True]
+    replacement.update(exclusive_queue.acquire(path, {"campaign": "second"}))
+    assert exclusive_queue.release(path, owner) is False
+    assert exclusive_queue.is_owned(path, replacement)
+
+
 def test_queue_metadata_failure_rolls_back_lease(tmp_path, monkeypatch):
     path = tmp_path / "queue"
     monkeypatch.setattr(exclusive_queue.json, "dump", lambda *a, **k: (_ for _ in ()).throw(OSError("boom")))

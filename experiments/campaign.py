@@ -525,10 +525,7 @@ def launch(manifest):
     errors = launch_gate_errors(manifest)
     if errors:
         return errors
-    lease = exclusive_queue.acquire(
-        QUEUE_PATH,
-        {"kind": "campaign", "campaign": manifest["campaign"]},
-    )
+    lease = _acquire_queue(manifest["campaign"])
     old_argv = sys.argv[:]
     old_roots = (run_experiments.EXP_ROOT, run_experiments.FAILURE_MANIFEST,
                  run_experiments.MANIFEST_ROOT, run_artifacts.RUN_ROOT)
@@ -573,10 +570,7 @@ def status_campaign(manifest, launched=None):
     if launched is None:
         launched = Path(manifest["artifacts"]["launch"]).exists()
     failures = _child_failures(manifest) if launched else []
-    if launched and not failures and QUEUE_PATH.exists():
-        state = "running"
-    else:
-        state = campaign_state(manifest, launched, failures)
+    state = campaign_state(manifest, launched, failures)
     payload = {"schema": {"name": "fqcnn_campaign_status", "version": 1},
                "campaign": manifest["campaign"], "state": state,
                "checked_at_utc": datetime.now(timezone.utc).isoformat(),
