@@ -307,6 +307,26 @@ def _fmt_pair(pair) -> str:
 # Cells: one (dataset, config, seed) unit of work. Independent by construction,
 # which is what makes both the parallelism and the resume safe (M1.3).
 # ---------------------------------------------------------------------------
+def _apply_output_roots(roots: dict) -> dict:
+    global EXP_ROOT, FAILURE_MANIFEST, MANIFEST_ROOT
+    required = {"experiments", "runs", "manifests", "failures"}
+    if not isinstance(roots, dict) or set(roots) != required:
+        raise ValueError("worker output roots have an invalid shape")
+    if any(not isinstance(value, str) or not value for value in roots.values()):
+        raise ValueError("worker output roots must be non-empty strings")
+
+    EXP_ROOT = roots["experiments"]
+    FAILURE_MANIFEST = roots["failures"]
+    MANIFEST_ROOT = roots["manifests"]
+    run_artifacts.RUN_ROOT = roots["runs"]
+    return {
+        "experiments": EXP_ROOT,
+        "runs": run_artifacts.RUN_ROOT,
+        "manifests": MANIFEST_ROOT,
+        "failures": FAILURE_MANIFEST,
+    }
+
+
 def _metrics_path(pair, config_name: str, seed: int) -> str:
     return os.path.join(EXP_ROOT, _fmt_pair(pair), config_name, f"seed_{seed}.json")
 
@@ -335,7 +355,8 @@ def _execute_cell(payload):
     Metrics are not returned: every cell's numbers are read back from its saved
     JSON so a fresh run and a resumed run aggregate from byte-identical input.
     """
-    pair, config_name, seed, dataset_dir, samples, epochs, use_bce, with_baselines = payload
+    pair, config_name, seed, dataset_dir, samples, epochs, use_bce, with_baselines, roots = payload
+    _apply_output_roots(roots)
     try:
         run_single(config_name, pair, seed, dataset_dir, samples, epochs,
                    use_bce=use_bce, out_dir=os.path.join(EXP_ROOT, _fmt_pair(pair)),
@@ -352,7 +373,16 @@ def _write_failure_manifest(failures) -> None:
         json.dump({"n_failed": len(failures), "failures": failures}, fh, indent=2)
 
 
-def main():
+def main(output_roots: dict = None):
+    if output_roots is None:
+        output_roots = {
+            "experiments": EXP_ROOT,
+            "runs": run_artifacts.RUN_ROOT,
+            "manifests": MANIFEST_ROOT,
+            "failures": FAILURE_MANIFEST,
+        }
+    roots = _apply_output_roots(output_roots)
+
     ap = argparse.ArgumentParser(description="FQCNN ablation / multi-seed study")
     ap.add_argument("--datasets", nargs="+", default=["0,1", "3,5", "4,9", "5,8"],
                     help="Class pairs as 'a,b' (default: hard MNIST pairs)")
@@ -401,7 +431,8 @@ def main():
                           f"-> reusing complete run", flush=True)
                     continue
                 pending.append((pair, config_name, seed, args.mnist_dir, args.samples,
-                                args.epochs, not args.use_mse, not args.no_baselines))
+                                args.epochs, not args.use_mse, not args.no_baselines,
+                                roots))
 
     print(f"\n{len(pending)} cells to run, {n_reused} reused, {jobs} worker(s)\n")
 

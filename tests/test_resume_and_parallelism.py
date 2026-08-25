@@ -7,7 +7,9 @@ stale number as if it were fresh. Every rejection path below exists to make that
 impossible.
 """
 import json
+import multiprocessing
 import os
+from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 import pytest
@@ -104,6 +106,25 @@ def test_run_dir_can_be_resolved_without_creating_it(tmp_path):
 
     assert run_artifacts.run_dir('0v1', 'proposed', 7, root=str(tmp_path)) == path
     assert os.path.isdir(path)
+
+
+def test_explicit_campaign_roots_survive_spawn(tmp_path):
+    from experiments import run_experiments
+
+    roots = {
+        "experiments": str(tmp_path / "campaign" / "experiments"),
+        "runs": str(tmp_path / "campaign" / "runs"),
+        "manifests": str(tmp_path / "campaign" / "manifests"),
+        "failures": str(
+            tmp_path / "campaign" / "experiments" / "failures.json"
+        ),
+    }
+    context = multiprocessing.get_context("spawn")
+    with ProcessPoolExecutor(max_workers=1, mp_context=context) as pool:
+        observed = pool.submit(
+            run_experiments._apply_output_roots, roots
+        ).result()
+    assert observed == roots
 
 
 MNIST_DIR = os.path.join('datasets', 'MNIST')

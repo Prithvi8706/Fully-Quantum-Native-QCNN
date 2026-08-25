@@ -540,13 +540,14 @@ def launch(manifest):
                 "queue": str(QUEUE_PATH), "owner_pid": lease["pid"],
                 "owner_host": lease["host"],
             })
-        roots = manifest["output_roots"]
-        run_experiments.EXP_ROOT = roots["experiments"]
-        run_experiments.FAILURE_MANIFEST = str(Path(roots["experiments"]) / "failures.json")
-        run_experiments.MANIFEST_ROOT = roots["manifests"]
-        run_artifacts.RUN_ROOT = roots["runs"]
+        roots = {
+            "experiments": manifest["output_roots"]["experiments"],
+            "runs": manifest["output_roots"]["runs"],
+            "manifests": manifest["output_roots"]["manifests"],
+            "failures": manifest["artifacts"]["scheduler_failures"],
+        }
         sys.argv = manifest["runner"]["argv"][2:]
-        run_experiments.main()
+        run_experiments.main(output_roots=roots)
     finally:
         sys.argv = old_argv
         (run_experiments.EXP_ROOT, run_experiments.FAILURE_MANIFEST,

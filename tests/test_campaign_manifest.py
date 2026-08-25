@@ -431,9 +431,18 @@ def test_approved_clean_launch_uses_scheduler_and_cleans_queue(tmp_path, monkeyp
     monkeypatch.setattr(campaign, "QUEUE_PATH", queue)
     monkeypatch.setattr(campaign, "launch_gate_errors", lambda manifest: [])
     called = []
-    monkeypatch.setattr(campaign.run_experiments, "main", lambda: called.append("scheduler"))
+    monkeypatch.setattr(
+        campaign.run_experiments,
+        "main",
+        lambda output_roots=None: called.append(output_roots),
+    )
     assert campaign.launch(manifest) == []
-    assert called == ["scheduler"]
+    assert called == [{
+        "experiments": manifest["output_roots"]["experiments"],
+        "runs": manifest["output_roots"]["runs"],
+        "manifests": manifest["output_roots"]["manifests"],
+        "failures": manifest["artifacts"]["scheduler_failures"],
+    }]
     assert Path(manifest["artifacts"]["launch"]).is_file()
     assert not queue.exists()
 
@@ -493,21 +502,29 @@ def test_incompatible_existing_launch_record_is_rejected(tmp_path):
 
 # Review round 2 regressions.
 def test_worker_payload_applies_explicit_campaign_roots_in_process(tmp_path, monkeypatch):
-    roots = {"experiments": str(tmp_path / "experiments"),
-             "runs": str(tmp_path / "runs"), "manifests": str(tmp_path / "manifests")}
+    roots = {
+        "experiments": str(tmp_path / "campaign" / "experiments"),
+        "runs": str(tmp_path / "campaign" / "runs"),
+        "manifests": str(tmp_path / "campaign" / "manifests"),
+        "failures": str(
+            tmp_path / "campaign" / "experiments" / "failures.json"
+        ),
+    }
     observed = {}
 
     def fake_run_single(*args, **kwargs):
-        observed.update(exp=campaign.run_experiments.EXP_ROOT,
-                        runs=run_artifacts.RUN_ROOT,
-                        manifests=campaign.run_experiments.MANIFEST_ROOT)
+        observed.update(
+            experiments=campaign.run_experiments.EXP_ROOT,
+            runs=run_artifacts.RUN_ROOT,
+            manifests=campaign.run_experiments.MANIFEST_ROOT,
+            failures=campaign.run_experiments.FAILURE_MANIFEST,
+        )
         return {}
 
     monkeypatch.setattr(campaign.run_experiments, "run_single", fake_run_single)
     payload = ((0, 1), "proposed", 0, "dataset", 10, 1, True, False, roots)
     assert campaign.run_experiments._execute_cell(payload)[-1] is None
-    assert observed == {"exp": roots["experiments"], "runs": roots["runs"],
-                        "manifests": roots["manifests"]}
+    assert observed == roots
 
 
 def test_approval_is_separate_immutable_attestation(tmp_path):
