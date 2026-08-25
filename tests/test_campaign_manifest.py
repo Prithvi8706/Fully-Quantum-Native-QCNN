@@ -1129,6 +1129,63 @@ def test_plan_cost_collision_preserves_foreign_file(tmp_path, monkeypatch):
     assert cost_path.read_text() == "foreign"
 
 
+def test_owned_cleanup_preserves_replacement_after_identity_verification(
+        tmp_path, monkeypatch):
+    path = tmp_path / "cost_estimate.json"
+    replacement = tmp_path / "replacement.json"
+    path.write_text("owned")
+    identity = campaign._file_identity(os.stat(str(path), follow_symlinks=False))
+    real_file_identity = campaign._file_identity
+    replaced = []
+
+    def replace_after_verification(stat_result):
+        verified = real_file_identity(stat_result)
+        if not replaced:
+            replacement.write_text("foreign")
+            os.replace(str(replacement), str(path))
+            replaced.append(True)
+        return verified
+
+    monkeypatch.setattr(campaign, "_file_identity", replace_after_verification)
+    assert campaign._unlink_if_owned(path, identity) is True
+    assert path.read_text() == "foreign"
+
+
+def test_failed_immutable_write_preserves_post_verification_replacement(
+        tmp_path, monkeypatch):
+    path = tmp_path / "manifest.json"
+    replacement = tmp_path / "replacement.json"
+    real_file_identity = campaign._file_identity
+    identity_calls = []
+
+    def replace_on_cleanup_verification(stat_result):
+        verified = real_file_identity(stat_result)
+        identity_calls.append(verified)
+        if len(identity_calls) == 2:
+            replacement.write_text("foreign")
+            os.replace(str(replacement), str(path))
+        return verified
+
+    class FailingWriter:
+        def __init__(self, fd):
+            self.fd = fd
+
+        def __enter__(self):
+            return self
+
+        def write(self, text):
+            raise OSError("write failed")
+
+        def __exit__(self, exc_type, exc, traceback):
+            os.close(self.fd)
+
+    monkeypatch.setattr(campaign, "_file_identity", replace_on_cleanup_verification)
+    monkeypatch.setattr(campaign.os, "fdopen", lambda fd, mode: FailingWriter(fd))
+    with pytest.raises(OSError, match="write failed"):
+        campaign.write_immutable_json(path, {"owned": True})
+    assert path.read_text() == "foreign"
+
+
 def test_plan_cleanup_preserves_replaced_foreign_cost(tmp_path, monkeypatch):
     monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path)
     directory = tmp_path / campaign.FIRST_CAMPAIGN

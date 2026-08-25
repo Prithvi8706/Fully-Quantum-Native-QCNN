@@ -41,18 +41,55 @@ def _file_identity(stat_result):
     return stat_result.st_dev, stat_result.st_ino
 
 
-def _unlink_if_owned(path, identity):
-    path = Path(path)
+def _restore_claimed_file(claimed, path):
+    """Restore a non-owned claim without replacing a newer canonical file."""
     try:
-        current = _file_identity(os.stat(str(path), follow_symlinks=False))
+        os.link(str(claimed), str(path), follow_symlinks=False)
     except OSError:
+        return False
+    try:
+        claimed.unlink()
+    except OSError:
+        return False
+    return True
+
+
+def _unlink_if_owned(path, identity):
+    """Atomically claim the pathname, then verify and remove only its inode."""
+    path = Path(path)
+    claim_directory = Path(tempfile.mkdtemp(
+        prefix=".campaign-cleanup-", dir=str(path.parent)
+    ))
+    claimed = claim_directory / path.name
+    try:
+        os.rename(str(path), str(claimed))
+    except OSError:
+        with contextlib.suppress(OSError):
+            claim_directory.rmdir()
+        return False
+    try:
+        current = _file_identity(
+            os.stat(str(claimed), follow_symlinks=False)
+        )
+    except OSError:
+        _restore_claimed_file(claimed, path)
+        with contextlib.suppress(OSError):
+            claim_directory.rmdir()
         return False
     if current != identity:
+        _restore_claimed_file(claimed, path)
+        with contextlib.suppress(OSError):
+            claim_directory.rmdir()
         return False
     try:
-        path.unlink()
+        claimed.unlink()
     except OSError:
+        _restore_claimed_file(claimed, path)
+        with contextlib.suppress(OSError):
+            claim_directory.rmdir()
         return False
+    with contextlib.suppress(OSError):
+        claim_directory.rmdir()
     return True
 
 
