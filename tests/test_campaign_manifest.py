@@ -139,6 +139,20 @@ def test_cost_gate_rejects_unapproved_incomplete_or_nonfinite(tmp_path, mutation
     assert any(expected in reason for reason in campaign.validate_cost(manifest, cost))
 
 
+@pytest.mark.parametrize("mutation", [
+    pytest.param(lambda record: record["schema"].update(version=True), id="schema-version-one"),
+    pytest.param(lambda record: record["request"].update(jobs_requested=True), id="jobs-requested-one"),
+    pytest.param(lambda record: record["request"].update(seeds=[False]), id="seed-zero"),
+    pytest.param(lambda record: record["counts"].update(baseline_side_effect_cells=False), id="count-zero"),
+    pytest.param(lambda record: record["counts"].update(scheduler_cells=True), id="count-one"),
+])
+def test_cost_record_rejects_boolean_integer_aliases(tmp_path, mutation):
+    manifest = _manifest(tmp_path)
+    record = _cost()
+    mutation(record)
+    assert campaign.validate_cost(manifest, record)
+
+
 def _suite(path, *, status="pass", sha="abc", dirty_passed=True):
     path.write_text(json.dumps({
         "schema": {"name": "fqcnn_full_suite_evidence", "version": 1},
@@ -723,6 +737,22 @@ def test_approval_record_mutations_fail_closed(tmp_path, mutation):
     assert campaign.approval_record_errors(manifest, record)
 
 
+@pytest.mark.parametrize("mutation", [
+    pytest.param(lambda record: record["schema"].update(version=True), id="schema-version-one"),
+    pytest.param(lambda record: record["scope"].update(jobs_requested=True), id="jobs-requested-one"),
+    pytest.param(lambda record: record["scope"].update(seeds=[False]), id="seed-zero"),
+    pytest.param(lambda record: record["scope"].update(baseline_side_effect_cells=False), id="count-zero"),
+    pytest.param(lambda record: record["scope"].update(scheduler_cells=True), id="count-one"),
+])
+def test_approval_record_rejects_boolean_integer_aliases(tmp_path, mutation):
+    manifest = _manifest(tmp_path)
+    _valid_suite(manifest)
+    Path(manifest["artifacts"]["manifest"]).write_text(json.dumps(manifest))
+    record = _approval_record(manifest)
+    mutation(record)
+    assert campaign.approval_record_errors(manifest, record)
+
+
 @pytest.mark.parametrize("field,value", [
     ("datasets", ["3,5"]),
     ("configs", ["pool_none"]),
@@ -802,6 +832,18 @@ def test_launch_record_errors_accepts_valid_test_record(tmp_path):
         manifest["artifacts"]["approval"], _approval_record(manifest)
     )
     assert campaign.launch_record_errors(manifest, _launch_record(manifest)) == []
+
+
+def test_launch_record_rejects_boolean_schema_version_alias(tmp_path):
+    manifest = _manifest(tmp_path)
+    _valid_suite(manifest)
+    Path(manifest["artifacts"]["manifest"]).write_text(json.dumps(manifest))
+    campaign.write_immutable_json(
+        manifest["artifacts"]["approval"], _approval_record(manifest)
+    )
+    record = _launch_record(manifest)
+    record["schema"]["version"] = True
+    assert campaign.launch_record_errors(manifest, record)
 
 
 @pytest.mark.parametrize("mutation", [

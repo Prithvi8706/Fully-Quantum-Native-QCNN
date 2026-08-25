@@ -188,6 +188,54 @@ def _is_sha256(value):
     return isinstance(value, str) and len(value) == 64 and all(c in "0123456789abcdef" for c in value)
 
 
+def _valid_schema(value, name):
+    return (
+        isinstance(value, dict) and set(value) == {"name", "version"} and
+        type(value.get("name")) is str and value["name"] == name and
+        type(value.get("version")) is int and value["version"] == 1
+    )
+
+
+def _strict_request_identity(value, expected, *, approval_scope=False):
+    base_fields = {
+        "datasets", "configs", "seeds", "samples", "epochs",
+        "jobs_requested", "with_baselines",
+    }
+    fields = set(base_fields)
+    if approval_scope:
+        fields.update({
+            "workers_resolved", "scheduler_cells",
+            "baseline_side_effect_cells", "total_costed_cells",
+        })
+    if not isinstance(value, dict) or set(value) != fields:
+        return False
+    if (not isinstance(value["datasets"], list) or not value["datasets"] or
+            any(type(item) is not str or not item for item in value["datasets"])):
+        return False
+    if (not isinstance(value["configs"], list) or not value["configs"] or
+            any(type(item) is not str or not item for item in value["configs"])):
+        return False
+    if (not isinstance(value["seeds"], list) or not value["seeds"] or
+            any(type(seed) is not int or seed < 0 for seed in value["seeds"])):
+        return False
+    if (type(value["samples"]) is not int or value["samples"] <= 0 or
+            type(value["epochs"]) is not int or value["epochs"] <= 0 or
+            type(value["jobs_requested"]) is not int or
+            value["jobs_requested"] < 0 or
+            type(value["with_baselines"]) is not bool):
+        return False
+    if approval_scope:
+        if (type(value["workers_resolved"]) is not int or
+                value["workers_resolved"] <= 0):
+            return False
+        for field in (
+                "scheduler_cells", "baseline_side_effect_cells",
+                "total_costed_cells"):
+            if type(value[field]) is not int or value[field] < 0:
+                return False
+    return value == expected
+
+
 def _is_safe_path_component(value):
     return (
         isinstance(value, str) and bool(value) and value not in {".", ".."} and
@@ -428,7 +476,7 @@ def validate_cost(manifest, cost):
     errors = []
     if not isinstance(cost, dict):
         return ["cost estimate must be an object"]
-    if cost.get("schema") != {"name": "fqcnn_campaign_cost_estimate", "version": 1}:
+    if not _valid_schema(cost.get("schema"), "fqcnn_campaign_cost_estimate"):
         errors.append("invalid cost estimate schema")
     if (cost.get("status") != "approved" or
             not isinstance(cost.get("approval"), dict) or
@@ -445,7 +493,7 @@ def validate_cost(manifest, cost):
         "jobs_requested": req.get("jobs_requested"),
         "with_baselines": req.get("with_baselines"),
     }
-    if cost.get("request") != expected_request:
+    if not _strict_request_identity(cost.get("request"), expected_request):
         errors.append("cost estimate request does not exactly match campaign")
 
     expected_counts = {
@@ -463,8 +511,10 @@ def validate_cost(manifest, cost):
         "total_failures": 0,
     }
     counts = cost.get("counts")
-    if (not isinstance(counts, dict) or counts != expected_counts or
-            cost.get("failures") != []):
+    if (not isinstance(counts, dict) or set(counts) != set(expected_counts) or
+            any(type(counts.get(key)) is not int or counts[key] < 0
+                for key in expected_counts) or
+            counts != expected_counts or cost.get("failures") != []):
         errors.append("cost estimate is incomplete")
 
     projection = cost.get("projection")
@@ -552,8 +602,8 @@ def approval_record_errors(manifest, record):
     }
     if set(record) != required_fields:
         errors.append("invalid approval record shape")
-    if record.get("schema") != {
-            "name": "fqcnn_campaign_launch_approval", "version": 1}:
+    if not _valid_schema(
+            record.get("schema"), "fqcnn_campaign_launch_approval"):
         errors.append("invalid approval record schema")
     if record.get("approved") is not True:
         errors.append("approval is not exactly true")
@@ -589,7 +639,8 @@ def approval_record_errors(manifest, record):
         "scheduler_cells", "baseline_side_effect_cells", "total_costed_cells",
     )
     expected_scope = {key: request.get(key) for key in scope_fields}
-    if record.get("scope") != expected_scope:
+    if not _strict_request_identity(
+            record.get("scope"), expected_scope, approval_scope=True):
         errors.append("approval scope does not exactly match campaign")
     return errors
 
@@ -619,7 +670,7 @@ def launch_record_errors(manifest, record):
     }
     if set(record) != required_fields:
         errors.append("invalid launch record shape")
-    if record.get("schema") != {"name": "fqcnn_campaign_launch", "version": 1}:
+    if not _valid_schema(record.get("schema"), "fqcnn_campaign_launch"):
         errors.append("invalid launch record schema")
     if record.get("campaign") != manifest.get("campaign"):
         errors.append("launch campaign mismatch")
