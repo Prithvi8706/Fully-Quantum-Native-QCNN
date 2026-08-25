@@ -14,6 +14,11 @@ from experiments import campaign
 REQUIRED_STATES = {"pending", "running", "failed", "complete"}
 
 
+@pytest.fixture(autouse=True)
+def _canonical_test_campaign_root(tmp_path, monkeypatch):
+    monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path.parent)
+
+
 def _cost():
     return {
         "schema": {"name": "fqcnn_campaign_cost_estimate", "version": 1},
@@ -41,7 +46,7 @@ def _manifest(tmp_path):
     cost_path.write_text(json.dumps(_cost()))
     return {
         "schema": {"name": "fqcnn_campaign_manifest", "version": 1},
-        "campaign": "unit",
+        "campaign": tmp_path.name,
         "state": "pending",
         "runner": {
             "command": "python -m experiments.run_experiments --datasets 0,1 --configs proposed --seeds 0 --samples 400 --epochs 30 --jobs 1 --no-baselines",
@@ -213,11 +218,36 @@ def test_complete_requires_unlaunched_flag_to_be_false(tmp_path):
     assert campaign.campaign_state(manifest, launched=True, child_failures=[]) == "complete"
 
 
-def test_planning_repository_snapshot_never_invokes_subprocess(monkeypatch):
-    monkeypatch.setattr(campaign.subprocess, "run", lambda *a, **k: pytest.fail("subprocess called"))
+def test_planning_repository_snapshot_uses_read_only_git_commands(monkeypatch):
+    responses = {
+        ("rev-parse", "HEAD"): "abc",
+        ("branch", "--show-current"): "dev",
+        ("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"): "origin/dev",
+        ("rev-list", "--left-right", "--count", "origin/dev...HEAD"): "0\t5",
+        ("status", "--porcelain=v1", "--untracked-files=all"): "",
+    }
+    calls = []
+
+    def fake_git(*args):
+        calls.append(args)
+        return responses[args]
+
+    monkeypatch.setattr(campaign, "_git", fake_git)
     snapshot = campaign.repository_state()
-    assert snapshot["git_sha"]
-    assert snapshot["dirty_policy"]["passed"] is False
+    assert snapshot == {
+        "git_sha": "abc",
+        "branch": "dev",
+        "upstream": "origin/dev",
+        "ahead": 5,
+        "behind": 0,
+        "training_lock_sha256": campaign.sha256_file(campaign.TRAINING_LOCK),
+        "qiskit_lock_sha256": campaign.sha256_file(campaign.QISKIT_LOCK),
+        "workers_resolved": campaign._resolved_workers(0),
+        "dirty": False,
+        "dirty_policy_passed": True,
+        "dirty_reasons": [],
+    }
+    assert calls == list(responses)
 
 
 def test_validate_never_invokes_scheduler(tmp_path, monkeypatch):
@@ -757,3 +787,181 @@ def test_baseline_cost_counts_are_distinct_from_scheduler_cells(tmp_path):
     cost["request"].update(with_baselines=True, jobs_requested=1)
     cost["counts"].update(requested_cells=2, measurable_cells=2)
     assert not campaign.validate_cost(manifest, cost)
+
+
+@pytest.mark.parametrize("mutation", [
+    pytest.param(
+        lambda m, root: m["output_roots"].update(
+            experiments=str(root / "campaign" / "child" / ".." / ".." / "outside")
+        ),
+        id="child-dot-dot-escape",
+    ),
+    pytest.param(
+        lambda m, root: m["output_roots"].update(
+            runs=m["output_roots"]["experiments"]
+        ),
+        id="aliased-output-roots",
+    ),
+    pytest.param(
+        lambda m, root: m["artifacts"].update(
+            full_suite=str(root / "outside" / "full_suite.json")
+        ),
+        id="full-suite-outside",
+    ),
+    pytest.param(
+        lambda m, root: m["artifacts"].update(
+            approval=str(root / "outside" / "approval.json")
+        ),
+        id="approval-outside",
+    ),
+    pytest.param(
+        lambda m, root: m["artifacts"].update(
+            scheduler_failures=str(root / "outside" / "failures.json")
+        ),
+        id="scheduler-failure-outside",
+    ),
+    pytest.param(
+        lambda m, root: m["artifacts"].update(
+            status=str(Path(m["output_roots"]["campaign"]) / "wrong.json")
+        ),
+        id="noncanonical-artifact-filename",
+    ),
+    pytest.param(
+        lambda m, root: m["cost"].update(
+            path=str(Path(m["output_roots"]["campaign"]) / "other-cost.json")
+        ),
+        id="cost-path-disagrees-with-artifact",
+    ),
+])
+def test_manifest_rejects_each_noncanonical_path(tmp_path, mutation):
+    canonical_root = tmp_path / "campaigns"
+    campaign_name = "unit"
+    manifest = _manifest(canonical_root / campaign_name)
+    manifest["campaign"] = campaign_name
+    mutation(manifest, tmp_path)
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", canonical_root)
+        assert campaign.validate_manifest(manifest)
+
+
+def test_manifest_rejects_supported_symlink_escape(tmp_path, monkeypatch):
+    canonical_root = tmp_path / "campaigns"
+    directory = canonical_root / "unit"
+    manifest = _manifest(directory)
+    manifest["campaign"] = "unit"
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    link = directory / "experiments"
+    try:
+        link.symlink_to(outside, target_is_directory=True)
+    except OSError as exc:
+        pytest.skip("directory symlinks are not supported: {}".format(exc))
+    monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", canonical_root)
+    assert campaign.validate_manifest(manifest)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("datasets", [None]),
+    ("datasets", ["0,1", "0,1"]),
+    ("datasets", [""]),
+    ("datasets", ["0"]),
+    ("datasets", ["0,1,2"]),
+    ("datasets", ["0,a"]),
+    ("datasets", ["0,0"]),
+    ("class_pairs", [[0, 1], [0, 1]]),
+    ("configs", ["proposed", "proposed"]),
+    ("configs", [""]),
+    ("seeds", [0, 0]),
+    ("seeds", [-1]),
+    ("samples", True),
+    ("epochs", 30.0),
+    ("jobs_requested", True),
+    ("workers_resolved", 0),
+    ("scheduler_cells", True),
+    ("with_baselines", 1),
+    ("n_qubits", 0),
+])
+def test_manifest_rejects_strict_request_shapes(tmp_path, field, value):
+    manifest = _manifest(tmp_path)
+    manifest["request"][field] = value
+    assert campaign.validate_manifest(manifest)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("scheduler_cells", 2),
+    ("baseline_side_effect_cells", 1),
+    ("total_costed_cells", 2),
+])
+def test_manifest_rejects_mismatched_request_counts(tmp_path, field, value):
+    manifest = _manifest(tmp_path)
+    manifest["request"][field] = value
+    assert campaign.validate_manifest(manifest)
+
+
+def test_plan_failure_cleans_only_invocation_owned_paths(tmp_path, monkeypatch):
+    monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path)
+    directory = tmp_path / campaign.FIRST_CAMPAIGN
+    marker = directory / "owner.json"
+    from experiments import estimate_cost
+
+    def fake_cost():
+        output = Path(os.sys.argv[os.sys.argv.index("--output-json") + 1])
+        output.write_text(json.dumps(_cost()))
+        marker.write_text("owner")
+        return 0
+
+    monkeypatch.setattr(estimate_cost, "main", fake_cost)
+    monkeypatch.setattr(
+        campaign,
+        "write_immutable_json",
+        lambda *args: (_ for _ in ()).throw(OSError("boom")),
+    )
+    snapshot = _clean_current()
+    snapshot.update(ahead=5)
+    with pytest.raises(OSError, match="boom"):
+        campaign.plan(campaign.FIRST_CAMPAIGN, repository_snapshot=snapshot)
+    assert marker.read_text() == "owner"
+    assert not (directory / "cost_estimate.json").exists()
+    assert not (directory / "manifest.json").exists()
+
+
+def test_plan_emits_canonical_scheduler_failure_path(tmp_path, monkeypatch):
+    monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path)
+    from experiments import estimate_cost
+
+    def fake_cost():
+        output = Path(os.sys.argv[os.sys.argv.index("--output-json") + 1])
+        output.write_text(json.dumps(_cost()))
+        return 0
+
+    monkeypatch.setattr(estimate_cost, "main", fake_cost)
+    snapshot = _clean_current()
+    snapshot.update(ahead=5)
+    manifest = campaign.plan(
+        campaign.FIRST_CAMPAIGN, repository_snapshot=snapshot
+    )
+    directory = (tmp_path / campaign.FIRST_CAMPAIGN).resolve()
+    assert Path(manifest["artifacts"]["scheduler_failures"]).resolve() == (
+        directory / "experiments" / "failures.json"
+    )
+    assert not campaign.validate_manifest(manifest)
+
+
+@pytest.mark.parametrize("mutation", [
+    lambda snapshot: snapshot.update(dirty=True),
+    lambda snapshot: snapshot.update(dirty_policy_passed=False),
+    lambda snapshot: snapshot.update(dirty_reasons=[" M tracked.py"]),
+    lambda snapshot: snapshot.update(branch="detached"),
+    lambda snapshot: snapshot.update(upstream="unconfigured"),
+    lambda snapshot: snapshot.update(ahead=0),
+    lambda snapshot: snapshot.update(behind=1),
+])
+def test_plan_rejects_unapproved_repository_before_evidence(
+        tmp_path, monkeypatch, mutation):
+    monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path)
+    snapshot = _clean_current()
+    snapshot.update(ahead=5)
+    mutation(snapshot)
+    with pytest.raises(RuntimeError):
+        campaign.plan(campaign.FIRST_CAMPAIGN, repository_snapshot=snapshot)
+    assert not (tmp_path / campaign.FIRST_CAMPAIGN).exists()
