@@ -96,6 +96,25 @@ def _comparable_config(config: dict) -> dict:
     return {k: v for k, v in config.items() if k != 'split_id'}
 
 
+def _same_config_identity(recorded, expected) -> bool:
+    if isinstance(recorded, dict) and isinstance(expected, dict):
+        return (
+            recorded.keys() == expected.keys()
+            and all(_same_config_identity(recorded[key], expected[key])
+                    for key in recorded)
+        )
+    if isinstance(recorded, list) and isinstance(expected, list):
+        return (
+            len(recorded) == len(expected)
+            and all(_same_config_identity(left, right)
+                    for left, right in zip(recorded, expected))
+        )
+    numeric_types = (bool, int, float)
+    if isinstance(recorded, numeric_types) or isinstance(expected, numeric_types):
+        return type(recorded) is type(expected) and recorded == expected
+    return recorded == expected
+
+
 def _valid_npz_artifacts(directory: str) -> bool:
     try:
         with np.load(os.path.join(directory, _WEIGHTS), allow_pickle=False) as weights:
@@ -137,10 +156,14 @@ def is_reusable(directory: str, config: dict = None, seed: int = None) -> bool:
     if not _valid_npz_artifacts(directory):
         return False
     try:
-        if seed is not None and int(status['seed']) != int(seed):
+        if type(status['seed']) is not int:
+            return False
+        if seed is not None and (type(seed) is not int or status['seed'] != seed):
             return False
         if config is not None:
-            if _comparable_config(status['config']) != _comparable_config(config):
+            if not _same_config_identity(
+                    _comparable_config(status['config']),
+                    _comparable_config(config)):
                 return False
     except (TypeError, ValueError, AttributeError):
         return False

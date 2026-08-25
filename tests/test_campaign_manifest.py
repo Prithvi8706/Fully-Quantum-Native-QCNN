@@ -1,6 +1,7 @@
 import copy
 import json
 import os
+import threading
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -476,6 +477,27 @@ def test_launch_record_failure_releases_queue(tmp_path, monkeypatch):
         campaign.launch(manifest)
     assert scheduler_calls == []
     assert not queue.exists()
+
+
+def test_launch_propagates_owner_release_failure(tmp_path, monkeypatch):
+    manifest = _manifest(tmp_path)
+    Path(manifest["artifacts"]["approval"]).write_text("approval")
+    lease = {
+        "kind": "campaign",
+        "campaign": manifest["campaign"],
+        "lease_id": "lease-cleanup-failed",
+        "pid": 1234,
+        "host": "test-host",
+        "acquired_at_utc": "2026-08-24T00:00:00+00:00",
+    }
+    monkeypatch.setattr(campaign, "launch_gate_errors", lambda manifest: [])
+    monkeypatch.setattr(campaign, "_acquire_queue", lambda name: lease)
+    monkeypatch.setattr(campaign, "write_immutable_json", lambda *args: None)
+    monkeypatch.setattr(campaign.run_experiments, "main", lambda **kwargs: None)
+    monkeypatch.setattr(campaign.exclusive_queue, "release", lambda *args: False)
+
+    with pytest.raises(RuntimeError, match="release campaign queue lease"):
+        campaign.launch(manifest)
 
 
 def test_status_before_launch_does_not_create_runtime_state(tmp_path):
@@ -1034,6 +1056,63 @@ def test_foreign_owner_cannot_release_live_lease(tmp_path):
     foreign = dict(owner, lease_id="not-owner")
     assert exclusive_queue.release(path, foreign) is False
     assert path.exists()
+
+
+def test_owner_release_waits_for_compliant_acquire_contention(
+        tmp_path, monkeypatch):
+    path = tmp_path / "queue.lock"
+    guard_path = path.with_name(path.name + ".operation.lock")
+    owner = exclusive_queue.acquire(path, {"campaign": "first"})
+    foreign_holds_guard = threading.Event()
+    allow_foreign_to_finish = threading.Event()
+    release_attempted_guard = threading.Event()
+    real_open = os.open
+
+    def controlled_open(target, flags, *args, **kwargs):
+        target = Path(target)
+        thread_name = threading.current_thread().name
+        if target == path and thread_name == "foreign-acquire":
+            foreign_holds_guard.set()
+            assert allow_foreign_to_finish.wait(timeout=2)
+        elif target == guard_path and thread_name == "owner-release":
+            release_attempted_guard.set()
+        return real_open(target, flags, *args, **kwargs)
+
+    monkeypatch.setattr(exclusive_queue.os, "open", controlled_open)
+    foreign_errors = []
+    release_results = []
+
+    def acquire_foreign():
+        try:
+            exclusive_queue.acquire(path, {"campaign": "foreign"})
+        except FileExistsError as exc:
+            foreign_errors.append(exc)
+
+    foreign_thread = threading.Thread(
+        target=acquire_foreign, name="foreign-acquire"
+    )
+    foreign_thread.start()
+    assert foreign_holds_guard.wait(timeout=2)
+
+    release_thread = threading.Thread(
+        target=lambda: release_results.append(exclusive_queue.release(path, owner)),
+        name="owner-release",
+    )
+    release_thread.start()
+    assert release_attempted_guard.wait(timeout=2)
+    allow_foreign_to_finish.set()
+    foreign_thread.join(timeout=2)
+    release_thread.join(timeout=2)
+
+    assert not foreign_thread.is_alive()
+    assert not release_thread.is_alive()
+    assert len(foreign_errors) == 1
+    assert release_results == [True]
+    assert not path.exists()
+
+    replacement = exclusive_queue.acquire(path, {"campaign": "replacement"})
+    assert exclusive_queue.release(path, owner) is False
+    assert exclusive_queue.is_owned(path, replacement)
 
 
 def test_release_cannot_delete_reacquired_lease(tmp_path, monkeypatch):

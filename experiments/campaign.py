@@ -1095,7 +1095,8 @@ def launch(manifest):
         sys.argv = old_argv
         (run_experiments.EXP_ROOT, run_experiments.FAILURE_MANIFEST,
          run_experiments.MANIFEST_ROOT, run_artifacts.RUN_ROOT) = old_roots
-        exclusive_queue.release(QUEUE_PATH, lease)
+        if not exclusive_queue.release(QUEUE_PATH, lease):
+            raise RuntimeError("failed to release campaign queue lease")
     return []
 
 

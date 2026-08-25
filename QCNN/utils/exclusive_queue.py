@@ -5,15 +5,23 @@ import contextlib
 import json
 import os
 import platform
+import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
 
 @contextlib.contextmanager
-def _operation_guard(path):
+def _operation_guard(path, wait=False):
     guard_path = path.with_name(path.name + ".operation.lock")
-    fd = os.open(str(guard_path), os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+    while True:
+        try:
+            fd = os.open(str(guard_path), os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+            break
+        except FileExistsError:
+            if not wait:
+                raise
+            time.sleep(0.01)
     try:
         yield
     finally:
@@ -91,14 +99,11 @@ def is_owned(path, owner: dict) -> bool:
 def release(path, owner: dict) -> bool:
     """Remove only the exact owner's lease."""
     path = Path(path)
-    try:
-        with _operation_guard(path):
-            if not is_owned(path, owner):
-                return False
-            try:
-                path.unlink()
-            except OSError:
-                return False
-            return True
-    except OSError:
-        return False
+    with _operation_guard(path, wait=True):
+        if not is_owned(path, owner):
+            return False
+        try:
+            path.unlink()
+        except OSError:
+            return False
+        return True

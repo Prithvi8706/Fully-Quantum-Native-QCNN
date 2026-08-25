@@ -60,10 +60,51 @@ def test_a_different_seed_is_not_reusable(tmp_path):
     assert not run_artifacts.is_reusable(d, config=CONFIG, seed=4)
 
 
+@pytest.mark.parametrize(
+    "expected_seed,recorded_seed",
+    [(0, False), (0, 0.5), (1, True), (1, 1.9)],
+)
+def test_boolean_and_fractional_recorded_seeds_are_not_reusable(
+        tmp_path, expected_seed, recorded_seed):
+    d = _complete_run(
+        str(tmp_path), config=dict(CONFIG, seed=expected_seed), seed=expected_seed
+    )
+    path = os.path.join(d, "status.json")
+    with open(path) as fh:
+        status = json.load(fh)
+    status["seed"] = recorded_seed
+    with open(path, "w") as fh:
+        json.dump(status, fh)
+
+    assert not run_artifacts.is_reusable(
+        d, config=dict(CONFIG, seed=expected_seed), seed=expected_seed
+    )
+
+
+@pytest.mark.parametrize("expected_seed", [False, 0.5, True, 1.9])
+def test_non_integer_expected_seeds_are_not_reusable(tmp_path, expected_seed):
+    recorded_seed = int(expected_seed)
+    d = _complete_run(
+        str(tmp_path), config=dict(CONFIG, seed=recorded_seed), seed=recorded_seed
+    )
+    assert not run_artifacts.is_reusable(
+        d, config=dict(CONFIG, seed=recorded_seed), seed=expected_seed
+    )
+
+
 def test_a_different_config_is_not_reusable(tmp_path):
     d = _complete_run(str(tmp_path))
     changed = dict(CONFIG, n_epochs=50)
     assert not run_artifacts.is_reusable(d, config=changed, seed=3)
+
+
+@pytest.mark.parametrize("expected_value,recorded_value", [(0, False), (1, True)])
+def test_boolean_numeric_config_aliases_are_not_reusable(
+        tmp_path, expected_value, recorded_value):
+    expected = dict(CONFIG, n_epochs=expected_value)
+    recorded = dict(expected, n_epochs=recorded_value)
+    d = _complete_run(str(tmp_path), config=recorded)
+    assert not run_artifacts.is_reusable(d, config=expected, seed=3)
 
 
 def test_an_ablation_switch_is_not_reusable(tmp_path):
