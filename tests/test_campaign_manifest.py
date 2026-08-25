@@ -383,7 +383,7 @@ def test_real_clean_launch_state_is_not_forced_dirty(monkeypatch):
     assert campaign.current_launch_state()["dirty_policy_passed"] is True
 
 
-def test_campaign_manifest_has_no_self_approval(tmp_path):
+def test_first_campaign_plan_has_no_self_approval(tmp_path):
     manifest = _manifest(tmp_path)
     assert manifest.get("approval") == {
         "required": True,
