@@ -310,6 +310,13 @@ def _clean_current(manifest=None):
     }
 
 
+def _reviewed_provenance(snapshot):
+    return {
+        key: snapshot[key]
+        for key in ("git_sha", "branch", "upstream", "ahead", "behind")
+    }
+
+
 def test_real_clean_launch_state_is_not_forced_dirty(monkeypatch):
     monkeypatch.setattr(campaign, "_git", lambda *args: {
         ("rev-parse", "HEAD"): "abc", ("status", "--porcelain=v1"): ""
@@ -904,22 +911,29 @@ def test_plan_failure_cleans_only_invocation_owned_paths(tmp_path, monkeypatch):
     marker = directory / "owner.json"
     from experiments import estimate_cost
 
-    def fake_cost():
+    def fake_cost(json_writer=None):
         output = Path(os.sys.argv[os.sys.argv.index("--output-json") + 1])
-        output.write_text(json.dumps(_cost()))
+        json_writer(str(output), _cost())
         marker.write_text("owner")
         return 0
 
     monkeypatch.setattr(estimate_cost, "main", fake_cost)
-    monkeypatch.setattr(
-        campaign,
-        "write_immutable_json",
-        lambda *args: (_ for _ in ()).throw(OSError("boom")),
-    )
+    real_write = campaign.write_immutable_json
+
+    def fail_manifest(path, payload):
+        if Path(path).name == "manifest.json":
+            raise OSError("boom")
+        return real_write(path, payload)
+
+    monkeypatch.setattr(campaign, "write_immutable_json", fail_manifest)
     snapshot = _clean_current()
     snapshot.update(ahead=5)
     with pytest.raises(OSError, match="boom"):
-        campaign.plan(campaign.FIRST_CAMPAIGN, repository_snapshot=snapshot)
+        campaign.plan(
+            campaign.FIRST_CAMPAIGN,
+            repository_snapshot=snapshot,
+            provenance_policy=_reviewed_provenance(snapshot),
+        )
     assert marker.read_text() == "owner"
     assert not (directory / "cost_estimate.json").exists()
     assert not (directory / "manifest.json").exists()
@@ -929,16 +943,18 @@ def test_plan_emits_canonical_scheduler_failure_path(tmp_path, monkeypatch):
     monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path)
     from experiments import estimate_cost
 
-    def fake_cost():
+    def fake_cost(json_writer=None):
         output = Path(os.sys.argv[os.sys.argv.index("--output-json") + 1])
-        output.write_text(json.dumps(_cost()))
+        json_writer(str(output), _cost())
         return 0
 
     monkeypatch.setattr(estimate_cost, "main", fake_cost)
     snapshot = _clean_current()
     snapshot.update(ahead=5)
     manifest = campaign.plan(
-        campaign.FIRST_CAMPAIGN, repository_snapshot=snapshot
+        campaign.FIRST_CAMPAIGN,
+        repository_snapshot=snapshot,
+        provenance_policy=_reviewed_provenance(snapshot),
     )
     directory = (tmp_path / campaign.FIRST_CAMPAIGN).resolve()
     assert Path(manifest["artifacts"]["scheduler_failures"]).resolve() == (
@@ -951,6 +967,7 @@ def test_plan_emits_canonical_scheduler_failure_path(tmp_path, monkeypatch):
     lambda snapshot: snapshot.update(dirty=True),
     lambda snapshot: snapshot.update(dirty_policy_passed=False),
     lambda snapshot: snapshot.update(dirty_reasons=[" M tracked.py"]),
+    lambda snapshot: snapshot.update(git_sha="other"),
     lambda snapshot: snapshot.update(branch="detached"),
     lambda snapshot: snapshot.update(upstream="unconfigured"),
     lambda snapshot: snapshot.update(ahead=0),
@@ -961,7 +978,186 @@ def test_plan_rejects_unapproved_repository_before_evidence(
     monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path)
     snapshot = _clean_current()
     snapshot.update(ahead=5)
+    provenance_policy = _reviewed_provenance(snapshot)
     mutation(snapshot)
     with pytest.raises(RuntimeError):
+        campaign.plan(
+            campaign.FIRST_CAMPAIGN,
+            repository_snapshot=snapshot,
+            provenance_policy=provenance_policy,
+        )
+    assert not (tmp_path / campaign.FIRST_CAMPAIGN).exists()
+
+
+def test_plan_requires_explicit_reviewed_provenance_policy(tmp_path, monkeypatch):
+    monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path)
+    snapshot = _clean_current()
+    with pytest.raises(RuntimeError, match="provenance policy"):
         campaign.plan(campaign.FIRST_CAMPAIGN, repository_snapshot=snapshot)
     assert not (tmp_path / campaign.FIRST_CAMPAIGN).exists()
+
+
+def test_plan_cli_requires_reviewed_provenance_policy(monkeypatch):
+    monkeypatch.setattr(
+        os.sys,
+        "argv",
+        ["campaign", "plan", "--campaign", campaign.FIRST_CAMPAIGN],
+    )
+    with pytest.raises(SystemExit) as exc:
+        campaign.main()
+    assert exc.value.code == 2
+
+
+def test_plan_accepts_exact_event_policy_without_compiled_divergence(
+        tmp_path, monkeypatch):
+    monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path)
+    from experiments import estimate_cost
+
+    def fake_cost(json_writer=None):
+        output = Path(os.sys.argv[os.sys.argv.index("--output-json") + 1])
+        json_writer(str(output), _cost())
+        return 0
+
+    monkeypatch.setattr(estimate_cost, "main", fake_cost)
+    snapshot = _clean_current()
+    snapshot.update(git_sha="def", branch="release", upstream="origin/release",
+                    ahead=12, behind=3)
+    manifest = campaign.plan(
+        campaign.FIRST_CAMPAIGN,
+        repository_snapshot=snapshot,
+        provenance_policy=_reviewed_provenance(snapshot),
+    )
+    assert manifest["repository"]["git_sha"] == "def"
+    assert manifest["repository"]["ahead"] == 12
+    assert manifest["repository"]["behind"] == 3
+
+
+def _retarget_manifest_paths(manifest, directory, campaign_name):
+    manifest["campaign"] = campaign_name
+    manifest["output_roots"] = {
+        "campaign": str(directory),
+        "experiments": str(directory / "experiments"),
+        "runs": str(directory / "runs"),
+        "manifests": str(directory / "manifests"),
+    }
+    manifest["artifacts"] = {
+        "manifest": str(directory / "manifest.json"),
+        "cost_estimate": str(directory / "cost_estimate.json"),
+        "full_suite": str(directory / "full_suite.json"),
+        "approval": str(directory / "approval.json"),
+        "launch": str(directory / "launch.json"),
+        "status": str(directory / "status.json"),
+        "failures": str(directory / "failures.json"),
+        "scheduler_failures": str(directory / "experiments" / "failures.json"),
+    }
+    manifest["cost"]["path"] = manifest["artifacts"]["cost_estimate"]
+    manifest["approval"]["artifact"] = manifest["artifacts"]["approval"]
+
+
+@pytest.mark.parametrize("campaign_name", ["../outside", "ABSOLUTE"])
+def test_manifest_campaign_name_cannot_move_root_outside(
+        tmp_path, monkeypatch, campaign_name):
+    root = tmp_path / "campaigns"
+    outside = tmp_path / "outside"
+    manifest = _manifest(tmp_path / "fixture")
+    if campaign_name == "ABSOLUTE":
+        campaign_name = str(outside.resolve())
+    _retarget_manifest_paths(manifest, outside, campaign_name)
+    monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", root)
+    errors = campaign.validate_manifest(manifest)
+    assert any("campaign" in error for error in errors)
+
+
+@pytest.mark.parametrize("field", ["manifest", "status", "scheduler_failures"])
+def test_manifest_rejects_lexical_artifact_alias(tmp_path, field):
+    manifest = _manifest(tmp_path)
+    canonical = Path(manifest["artifacts"][field])
+    manifest["artifacts"][field] = str(
+        canonical.parent / "alias" / ".." / canonical.name
+    )
+    assert campaign.validate_manifest(manifest)
+
+
+@pytest.mark.parametrize("identity", ["cost", "approval"])
+def test_manifest_rejects_lexical_identity_alias(tmp_path, identity):
+    manifest = _manifest(tmp_path)
+    if identity == "cost":
+        canonical = Path(manifest["artifacts"]["cost_estimate"])
+        manifest["cost"]["path"] = str(
+            canonical.parent / "alias" / ".." / canonical.name
+        )
+    else:
+        canonical = Path(manifest["artifacts"]["approval"])
+        manifest["approval"]["artifact"] = str(
+            canonical.parent / "alias" / ".." / canonical.name
+        )
+    assert campaign.validate_manifest(manifest)
+
+
+def test_manifest_rejects_differently_named_artifact_symlink(tmp_path):
+    manifest = _manifest(tmp_path)
+    canonical = Path(manifest["artifacts"]["status"])
+    canonical.write_text("canonical")
+    alias = canonical.with_name("status-alias.json")
+    try:
+        alias.symlink_to(canonical)
+    except OSError as exc:
+        pytest.skip("file symlinks are not supported: {}".format(exc))
+    manifest["artifacts"]["status"] = str(alias)
+    assert campaign.validate_manifest(manifest)
+
+
+def test_plan_cost_collision_preserves_foreign_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path)
+    directory = tmp_path / campaign.FIRST_CAMPAIGN
+    cost_path = directory / "cost_estimate.json"
+    from experiments import estimate_cost
+
+    def fake_cost(json_writer=None):
+        cost_path.write_text("foreign")
+        json_writer(str(cost_path), _cost())
+        return 0
+
+    monkeypatch.setattr(estimate_cost, "main", fake_cost)
+    snapshot = _clean_current()
+    with pytest.raises(FileExistsError):
+        campaign.plan(
+            campaign.FIRST_CAMPAIGN,
+            repository_snapshot=snapshot,
+            provenance_policy=_reviewed_provenance(snapshot),
+        )
+    assert cost_path.read_text() == "foreign"
+
+
+def test_plan_cleanup_preserves_replaced_foreign_cost(tmp_path, monkeypatch):
+    monkeypatch.setattr(campaign, "CAMPAIGN_ROOT", tmp_path)
+    directory = tmp_path / campaign.FIRST_CAMPAIGN
+    cost_path = directory / "cost_estimate.json"
+    replacement_path = directory / "replacement.json"
+    from experiments import estimate_cost
+
+    def fake_cost(json_writer=None):
+        json_writer(str(cost_path), _cost())
+        replacement = _cost()
+        replacement["foreign"] = True
+        replacement_path.write_text(json.dumps(replacement))
+        os.replace(str(replacement_path), str(cost_path))
+        return 0
+
+    monkeypatch.setattr(estimate_cost, "main", fake_cost)
+    real_write = campaign.write_immutable_json
+
+    def fail_manifest(path, payload):
+        if Path(path).name == "manifest.json":
+            raise OSError("manifest failed")
+        return real_write(path, payload)
+
+    monkeypatch.setattr(campaign, "write_immutable_json", fail_manifest)
+    snapshot = _clean_current()
+    with pytest.raises(OSError, match="manifest failed"):
+        campaign.plan(
+            campaign.FIRST_CAMPAIGN,
+            repository_snapshot=snapshot,
+            provenance_policy=_reviewed_provenance(snapshot),
+        )
+    assert json.loads(cost_path.read_text())["foreign"] is True

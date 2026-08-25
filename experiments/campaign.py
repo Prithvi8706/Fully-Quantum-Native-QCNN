@@ -27,10 +27,6 @@ FIRST_CAMPAIGN = "baseline_mnist_n10_v1"
 FIRST_DATASETS = ["0,1", "3,5", "4,9", "5,8"]
 FIRST_CONFIGS = ["proposed"]
 FIRST_SEEDS = list(range(10))
-APPROVED_BRANCH = "dev"
-APPROVED_UPSTREAM = "origin/dev"
-APPROVED_AHEAD = 5
-APPROVED_BEHIND = 0
 
 
 def sha256_file(path) -> str:
@@ -41,18 +37,38 @@ def sha256_file(path) -> str:
     return digest.hexdigest()
 
 
-def write_immutable_json(path, payload) -> None:
+def _file_identity(stat_result):
+    return stat_result.st_dev, stat_result.st_ino
+
+
+def _unlink_if_owned(path, identity):
+    path = Path(path)
+    try:
+        current = _file_identity(os.stat(str(path), follow_symlinks=False))
+    except OSError:
+        return False
+    if current != identity:
+        return False
+    try:
+        path.unlink()
+    except OSError:
+        return False
+    return True
+
+
+def write_immutable_json(path, payload):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n"
     fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+    identity = _file_identity(os.fstat(fd))
     try:
         with os.fdopen(fd, "w") as fh:
             fh.write(text)
     except Exception:
-        with contextlib.suppress(OSError):
-            path.unlink()
+        _unlink_if_owned(path, identity)
         raise
+    return identity
 
 
 def _atomic_json(path, payload) -> None:
@@ -140,13 +156,22 @@ def _is_sha256(value):
     return isinstance(value, str) and len(value) == 64 and all(c in "0123456789abcdef" for c in value)
 
 
+def _is_safe_path_component(value):
+    return (
+        isinstance(value, str) and bool(value) and value not in {".", ".."} and
+        not Path(value).is_absolute() and len(Path(value).parts) == 1 and
+        "/" not in value and "\\" not in value and
+        all(character.isalnum() or character in "._-" for character in value)
+    )
+
+
 def validate_manifest(manifest):
     errors = []
     if not isinstance(manifest, dict):
         return ["manifest must be an object"]
     if manifest.get("schema") != {"name": "fqcnn_campaign_manifest", "version": 1}:
         errors.append("invalid manifest schema")
-    if not isinstance(manifest.get("campaign"), str) or not manifest.get("campaign"):
+    if not _is_safe_path_component(manifest.get("campaign")):
         errors.append("invalid campaign name")
     if manifest.get("state") not in CAMPAIGN_STATES:
         errors.append("invalid campaign state")
@@ -301,44 +326,59 @@ def _path_errors(manifest):
         return ["invalid output/artifact paths"]
     errors = []
     try:
-        canonical = (CAMPAIGN_ROOT / manifest["campaign"]).resolve()
-        campaign_root = Path(roots["campaign"]).resolve()
-        if campaign_root != canonical:
+        campaign_name = manifest["campaign"]
+        if not _is_safe_path_component(campaign_name):
+            return ["campaign path is not a safe component"]
+        configured_campaign = CAMPAIGN_ROOT / campaign_name
+        resolved_base = CAMPAIGN_ROOT.resolve()
+        resolved_campaign = resolved_base / campaign_name
+        if resolved_campaign.parent != resolved_base:
+            errors.append("campaign root must be beneath canonical campaign root")
+
+        if roots["campaign"] != str(configured_campaign):
+            errors.append("campaign root path string is not canonical")
+        if Path(roots["campaign"]).resolve() != resolved_campaign:
             errors.append("campaign root is not canonical")
 
-        expected_roots = {
-            "experiments": canonical / "experiments",
-            "runs": canonical / "runs",
-            "manifests": canonical / "manifests",
+        configured_roots = {
+            "experiments": configured_campaign / "experiments",
+            "runs": configured_campaign / "runs",
+            "manifests": configured_campaign / "manifests",
         }
         resolved_roots = {}
-        for name, expected in expected_roots.items():
+        for name, configured in configured_roots.items():
+            if roots[name] != str(configured):
+                errors.append("output root path string mismatch: " + name)
             resolved = Path(roots[name]).resolve()
             resolved_roots[name] = resolved
-            if resolved != expected:
+            if resolved != resolved_campaign / name:
                 errors.append("output root path mismatch: " + name)
         if len(set(resolved_roots.values())) != len(resolved_roots):
             errors.append("output roots must not alias")
 
-        expected_artifacts = {
-            "manifest": canonical / "manifest.json",
-            "cost_estimate": canonical / "cost_estimate.json",
-            "full_suite": canonical / "full_suite.json",
-            "approval": canonical / "approval.json",
-            "launch": canonical / "launch.json",
-            "status": canonical / "status.json",
-            "failures": canonical / "failures.json",
-            "scheduler_failures": canonical / "experiments" / "failures.json",
+        configured_artifacts = {
+            "manifest": configured_campaign / "manifest.json",
+            "cost_estimate": configured_campaign / "cost_estimate.json",
+            "full_suite": configured_campaign / "full_suite.json",
+            "approval": configured_campaign / "approval.json",
+            "launch": configured_campaign / "launch.json",
+            "status": configured_campaign / "status.json",
+            "failures": configured_campaign / "failures.json",
+            "scheduler_failures": configured_campaign / "experiments" / "failures.json",
         }
-        for name, expected in expected_artifacts.items():
-            if Path(artifacts[name]).resolve() != expected:
+        resolved_artifacts = {
+            name: resolved_campaign / configured.relative_to(configured_campaign)
+            for name, configured in configured_artifacts.items()
+        }
+        for name, configured in configured_artifacts.items():
+            if artifacts[name] != str(configured):
+                errors.append("artifact path string mismatch: " + name)
+            if Path(artifacts[name]).resolve() != resolved_artifacts[name]:
                 errors.append("artifact path mismatch: " + name)
-        if Path(manifest["cost"]["path"]).resolve() != Path(
-                artifacts["cost_estimate"]).resolve():
-            errors.append("cost path does not match cost artifact path")
-        if Path(manifest["approval"]["artifact"]).resolve() != Path(
-                artifacts["approval"]).resolve():
-            errors.append("approval path does not match approval artifact path")
+        if manifest["cost"]["path"] != artifacts["cost_estimate"]:
+            errors.append("cost path does not exactly match cost artifact path")
+        if manifest["approval"]["artifact"] != artifacts["approval"]:
+            errors.append("approval path does not exactly match approval artifact path")
     except (KeyError, OSError, TypeError, ValueError):
         errors.append("invalid output/artifact paths")
     return errors
@@ -540,7 +580,7 @@ def _cost_command(path):
             "--output-json", str(path)]
 
 
-def _validate_planning_snapshot(snapshot):
+def _validate_planning_snapshot(snapshot, provenance_policy):
     required = {
         "git_sha": str,
         "branch": str,
@@ -568,18 +608,30 @@ def _validate_planning_snapshot(snapshot):
         raise RuntimeError("repository snapshot is incomplete")
     if snapshot["dirty"] or not snapshot["dirty_policy_passed"] or snapshot["dirty_reasons"]:
         raise RuntimeError("working tree is dirty")
-    approved = (
-        APPROVED_BRANCH, APPROVED_UPSTREAM, APPROVED_AHEAD, APPROVED_BEHIND
-    )
-    recorded = (
-        snapshot["branch"], snapshot["upstream"], snapshot["ahead"],
-        snapshot["behind"],
-    )
-    if recorded != approved:
-        raise RuntimeError("repository divergence is not approved")
+
+    policy_types = {
+        "git_sha": str,
+        "branch": str,
+        "upstream": str,
+        "ahead": int,
+        "behind": int,
+    }
+    if (not isinstance(provenance_policy, dict) or
+            set(provenance_policy) != set(policy_types)):
+        raise RuntimeError("reviewed provenance policy is required")
+    for key, expected_type in policy_types.items():
+        if type(provenance_policy[key]) is not expected_type:
+            raise RuntimeError("reviewed provenance policy has an invalid field: " + key)
+    if (not provenance_policy["git_sha"] or not provenance_policy["branch"] or
+            not provenance_policy["upstream"] or provenance_policy["ahead"] < 0 or
+            provenance_policy["behind"] < 0):
+        raise RuntimeError("reviewed provenance policy is incomplete")
+    if any(snapshot[key] != provenance_policy[key] for key in policy_types):
+        raise RuntimeError("reviewed provenance policy does not match repository snapshot")
 
 
-def plan(campaign_name: str, repository_snapshot: dict = None) -> dict:
+def plan(campaign_name: str, repository_snapshot: dict = None,
+         provenance_policy: dict = None) -> dict:
     if campaign_name != FIRST_CAMPAIGN:
         raise ValueError("only the reviewed first campaign is supported")
     directory = CAMPAIGN_ROOT / campaign_name
@@ -596,14 +648,23 @@ def plan(campaign_name: str, repository_snapshot: dict = None) -> dict:
             if repository_snapshot is not None
             else repository_state()
         )
-        _validate_planning_snapshot(snapshot)
+        _validate_planning_snapshot(snapshot, provenance_policy)
         from experiments import estimate_cost
+        cost_identity = None
+
+        def publish_cost(path, payload):
+            nonlocal cost_identity
+            if Path(path) != cost_path:
+                raise RuntimeError("cost publisher received a noncanonical path")
+            if cost_identity is not None:
+                raise RuntimeError("cost publisher was invoked more than once")
+            cost_identity = write_immutable_json(cost_path, payload)
+            owned_paths.append((cost_path, cost_identity))
+
         sys.argv = ["estimate_cost"] + _cost_command(cost_path)[3:]
-        try:
-            rc = estimate_cost.main()
-        finally:
-            if cost_path.exists():
-                owned_paths.append(cost_path)
+        rc = estimate_cost.main(json_writer=publish_cost)
+        if cost_identity is None:
+            raise RuntimeError("cost estimate was not published exclusively")
         if rc != 0:
             raise RuntimeError("cost estimate was not approved")
 
@@ -683,14 +744,13 @@ def plan(campaign_name: str, repository_snapshot: dict = None) -> dict:
             raise RuntimeError(
                 "planned manifest is invalid: " + "; ".join(manifest_errors)
             )
-        write_immutable_json(manifest_path, manifest)
-        owned_paths.append(manifest_path)
+        manifest_identity = write_immutable_json(manifest_path, manifest)
+        owned_paths.append((manifest_path, manifest_identity))
         return manifest
     except Exception:
         if created_directory:
-            for path in reversed(owned_paths):
-                with contextlib.suppress(OSError):
-                    path.unlink()
+            for path, identity in reversed(owned_paths):
+                _unlink_if_owned(path, identity)
             with contextlib.suppress(OSError):
                 directory.rmdir()
         raise
@@ -774,12 +834,18 @@ def status_campaign(manifest, launched=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="action", required=True)
-    for action in ("plan", "validate", "launch", "status"):
+    plan_command = sub.add_parser("plan")
+    plan_command.add_argument("--campaign", required=True)
+    plan_command.add_argument("--provenance-policy", required=True)
+    for action in ("validate", "launch", "status"):
         command = sub.add_parser(action)
         command.add_argument("--campaign", required=True)
     args = parser.parse_args()
     if args.action == "plan":
-        manifest = plan(args.campaign)
+        manifest = plan(
+            args.campaign,
+            provenance_policy=_load_json(args.provenance_policy),
+        )
         print("planned {} at {}".format(args.campaign, manifest["artifacts"]["manifest"]))
         return 0
     manifest = _load_campaign(args.campaign)

@@ -252,7 +252,8 @@ def _nonfinite_field(values: dict):
     return None
 
 
-def main():
+def main(json_writer=None):
+    write_json = json_writer or _write_json
     ap = argparse.ArgumentParser(description='Project and gate the experiment grid')
     ap.add_argument('--datasets', nargs='+', default=['0,1', '3,5', '4,9', '5,8'])
     ap.add_argument('--configs', nargs='+', default=list(ABLATION_CONFIGS.keys()))
@@ -313,7 +314,7 @@ def main():
             'projection': None,
             'reduction': None,
         }
-        _write_json(args.output_json, payload)
+        write_json(args.output_json, payload)
         print('VERDICT: REJECTED (invalid non-positive budget)')
         return 1
 
@@ -419,7 +420,7 @@ def main():
         'reduction': None,
     }
     if failures:
-        _write_json(args.output_json, payload)
+        write_json(args.output_json, payload)
         print('\nVERDICT: REJECTED ({} requested calibration failure(s))'.format(
             len(failures)))
         return 1
@@ -443,7 +444,7 @@ def main():
             'kind': 'projection', 'name': 'campaign',
             'error': 'projection produced a non-finite value'})
         payload['counts']['total_failures'] += 1
-        _write_json(args.output_json, payload)
+        write_json(args.output_json, payload)
         print('\nVERDICT: REJECTED (non-finite projection)')
         return 1
 
@@ -463,7 +464,7 @@ def main():
         payload['status'] = 'approved'
         payload['approval']['approved'] = True
         payload['approval']['reasons'] = ['complete measurable request fits budget']
-        _write_json(args.output_json, payload)
+        write_json(args.output_json, payload)
         print('\nVERDICT: FITS ({:.1f} h of {:.0f} h, {:.0f}% of budget, '
               '{:.1f} nights)'.format(
                   wall_h, budget_h, 100.0 * wall_h / budget_h, wall_h / args.hours_per_night))
@@ -480,7 +481,7 @@ def main():
         'projected_wall_hours': reduced_h,
         'fits_budget': reduced_h <= budget_h,
     }
-    _write_json(args.output_json, payload)
+    write_json(args.output_json, payload)
     print('mandated reduction order (seeds -> datasets -> non-pooling ablations):')
     for step in steps:
         print('  - {}'.format(step))
