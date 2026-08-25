@@ -42,10 +42,12 @@ def _write_status(directory: str, payload: dict) -> None:
 
 def _read_status(directory: str) -> dict:
     path = os.path.join(directory, _STATUS)
-    if not os.path.exists(path):
+    try:
+        with open(path) as fh:
+            payload = json.load(fh)
+    except (OSError, ValueError):
         return {}
-    with open(path) as fh:
-        return json.load(fh)
+    return payload if isinstance(payload, dict) else {}
 
 
 def start_run(directory: str, config: dict, split_id: str, seed: int, environment: dict) -> None:
@@ -89,7 +91,32 @@ def _comparable_config(config: dict) -> dict:
     run, so a pre-run preview of the same cell cannot carry it; the status file
     records it as a top-level field regardless.
     """
+    if not isinstance(config, dict):
+        raise TypeError('config must be an object')
     return {k: v for k, v in config.items() if k != 'split_id'}
+
+
+def _valid_npz_artifacts(directory: str) -> bool:
+    try:
+        with np.load(os.path.join(directory, _WEIGHTS), allow_pickle=False) as weights:
+            if not weights.files:
+                return False
+            for name in weights.files:
+                values = np.asarray(weights[name])
+                if values.size == 0 or not np.all(np.isfinite(values)):
+                    return False
+        with np.load(os.path.join(directory, _PREDICTIONS), allow_pickle=False) as predictions:
+            required = ('sample_ids', 'y_true', 'raw_outputs')
+            if any(name not in predictions.files for name in required):
+                return False
+            arrays = [np.asarray(predictions[name]) for name in required]
+            if any(values.ndim != 1 for values in arrays):
+                return False
+            if len({len(values) for values in arrays}) != 1:
+                return False
+    except (OSError, ValueError, TypeError, KeyError, EOFError):
+        return False
+    return True
 
 
 def is_reusable(directory: str, config: dict = None, seed: int = None) -> bool:
@@ -107,14 +134,16 @@ def is_reusable(directory: str, config: dict = None, seed: int = None) -> bool:
         return False
     if not isinstance(status.get('metrics'), dict) or not status['metrics']:
         return False
-    for artifact in (_WEIGHTS, _PREDICTIONS):
-        if not os.path.exists(os.path.join(directory, artifact)):
-            return False
-    if seed is not None and int(status['seed']) != int(seed):
+    if not _valid_npz_artifacts(directory):
         return False
-    if config is not None:
-        if _comparable_config(status['config']) != _comparable_config(config):
+    try:
+        if seed is not None and int(status['seed']) != int(seed):
             return False
+        if config is not None:
+            if _comparable_config(status['config']) != _comparable_config(config):
+                return False
+    except (TypeError, ValueError, AttributeError):
+        return False
     return True
 
 

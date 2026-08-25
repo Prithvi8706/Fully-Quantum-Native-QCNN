@@ -166,13 +166,8 @@ def repository_state():
 
 
 def current_launch_state():
-    """Recheck exact revision and cleanliness immediately before launch."""
-    raw = [line for line in _git("status", "--porcelain=v1").splitlines() if line]
-    return {"git_sha": _git("rev-parse", "HEAD"),
-            "training_lock_sha256": sha256_file(TRAINING_LOCK),
-            "qiskit_lock_sha256": sha256_file(QISKIT_LOCK),
-            "dirty": bool(raw), "dirty_policy_passed": not raw,
-            "dirty_reasons": raw}
+    """Recapture the complete repository and worker state before launch."""
+    return repository_state()
 
 
 def expected_config(config_name, seed, epochs):
@@ -231,8 +226,13 @@ def validate_manifest(manifest):
         if not isinstance(repo.get("dirty"), bool):
             errors.append("invalid repository dirty state")
         policy = repo.get("dirty_policy")
-        if not isinstance(policy, dict) or not isinstance(policy.get("passed"), bool):
+        if (not isinstance(policy, dict) or
+                set(policy) != {"passed", "reasons", "raw"} or
+                policy.get("passed") is not True or
+                policy.get("reasons") != [] or policy.get("raw") != []):
             errors.append("invalid dirty policy")
+        if repo.get("dirty") is True:
+            errors.append("working tree is dirty")
     locks = manifest.get("locks")
     if not isinstance(locks, dict):
         errors.append("missing manifest field: locks")
@@ -322,7 +322,10 @@ def validate_manifest(manifest):
         errors.append("invalid request n_qubits")
 
     scheduler_cells = len(datasets) * len(configs) * len(seeds)
-    baseline_side_effect_cells = len(datasets) * len(seeds) if with_baselines else 0
+    baseline_side_effect_cells = (
+        len(datasets) * len(seeds)
+        if with_baselines and "proposed" in configs else 0
+    )
     total_costed_cells = scheduler_cells + baseline_side_effect_cells
     expected_counts = {
         "scheduler_cells": scheduler_cells,
@@ -423,38 +426,67 @@ def _path_errors(manifest):
 
 def validate_cost(manifest, cost):
     errors = []
+    if not isinstance(cost, dict):
+        return ["cost estimate must be an object"]
     if cost.get("schema") != {"name": "fqcnn_campaign_cost_estimate", "version": 1}:
         errors.append("invalid cost estimate schema")
-    if cost.get("status") != "approved" or cost.get("approval", {}).get("approved") is not True:
+    if (cost.get("status") != "approved" or
+            not isinstance(cost.get("approval"), dict) or
+            cost["approval"].get("approved") is not True):
         errors.append("cost estimate is not approved")
-    counts = cost.get("counts", {})
-    expected = manifest.get("request", {}).get("expected_cells")
-    if (counts.get("requested_cells") != expected or counts.get("measurable_cells") != expected or
-            counts.get("total_failures") != 0 or cost.get("failures")):
-        errors.append("cost estimate is incomplete")
+
     req = manifest.get("request", {})
-    expected_request = {"datasets": req.get("datasets"), "configs": req.get("configs"),
-                        "seeds": req.get("seeds"), "samples": req.get("samples"),
-                        "epochs": req.get("epochs"), "jobs_requested": req.get("jobs_requested"),
-                        "with_baselines": req.get("with_baselines")}
+    expected_request = {
+        "datasets": req.get("datasets"),
+        "configs": req.get("configs"),
+        "seeds": req.get("seeds"),
+        "samples": req.get("samples"),
+        "epochs": req.get("epochs"),
+        "jobs_requested": req.get("jobs_requested"),
+        "with_baselines": req.get("with_baselines"),
+    }
     if cost.get("request") != expected_request:
         errors.append("cost estimate request does not exactly match campaign")
+
+    expected_counts = {
+        "requested_configs": len(req.get("configs", [])),
+        "measurable_configs": len(req.get("configs", [])),
+        "scheduler_cells": req.get("scheduler_cells"),
+        "baseline_side_effect_cells": req.get("baseline_side_effect_cells"),
+        "total_costed_cells": req.get("total_costed_cells"),
+        "measurable_scheduler_cells": req.get("scheduler_cells"),
+        "measurable_baseline_side_effect_cells": req.get(
+            "baseline_side_effect_cells"
+        ),
+        "measurable_total_costed_cells": req.get("total_costed_cells"),
+        "failed_calibrations": 0,
+        "total_failures": 0,
+    }
+    counts = cost.get("counts")
+    if (not isinstance(counts, dict) or counts != expected_counts or
+            cost.get("failures") != []):
+        errors.append("cost estimate is incomplete")
+
     projection = cost.get("projection")
     if not isinstance(projection, dict):
         errors.append("cost estimate has no projection")
     else:
-        for key in ("serial_hours", "wall_hours", "budget_hours", "budget_fraction"):
+        for key in ("serial_hours", "wall_hours", "budget_fraction"):
             value = projection.get(key)
             if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
                 errors.append("invalid or non-finite cost projection field: " + key)
+        budget = projection.get("budget_hours")
+        if type(budget) not in (int, float) or not math.isfinite(budget) or budget <= 0:
+            errors.append("invalid or non-finite cost projection field: budget_hours")
         workers = projection.get("workers")
         if type(workers) is not int or workers <= 0:
             errors.append("invalid cost projection field: workers")
         elif workers != req.get("workers_resolved"):
             errors.append("cost worker policy does not match campaign")
         wall = projection.get("wall_hours")
-        budget = projection.get("budget_hours")
-        if type(wall) in (int, float) and type(budget) in (int, float) and not isinstance(wall, bool) and not isinstance(budget, bool) and wall > budget:
+        if (type(wall) in (int, float) and not isinstance(wall, bool) and
+                type(budget) in (int, float) and not isinstance(budget, bool) and
+                math.isfinite(wall) and math.isfinite(budget) and wall > budget):
             errors.append("cost estimate is over budget")
     return errors
 
@@ -464,16 +496,28 @@ def _load_json(path):
         return json.load(fh)
 
 
+def _valid_aware_timestamp(value):
+    if not isinstance(value, str) or not value:
+        return False
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return parsed.tzinfo is not None and parsed.utcoffset() is not None
+
+
 def _full_suite_errors(manifest):
-    evidence = manifest.get("approvals", {}).get("full_suite", {})
-    path = Path(evidence.get("path", ""))
+    try:
+        path = Path(manifest["artifacts"]["full_suite"])
+    except (KeyError, TypeError):
+        return ["missing full-suite evidence"]
     if not path.is_file():
         return ["missing full-suite evidence"]
-    if not _is_sha256(evidence.get("sha256")) or sha256_file(path) != evidence.get("sha256"):
-        return ["full-suite evidence hash mismatch"]
     try:
         record = _load_json(path)
     except (OSError, ValueError):
+        return ["invalid full-suite evidence"]
+    if not isinstance(record, dict):
         return ["invalid full-suite evidence"]
     errors = []
     if record.get("schema") != {"name": "fqcnn_full_suite_evidence", "version": 1}:
@@ -481,18 +525,165 @@ def _full_suite_errors(manifest):
     if record.get("command") != "python -m pytest tests/ -q":
         errors.append("full-suite evidence command mismatch")
     tests = record.get("tests", {})
-    if (type(tests.get("passed")) is not int or tests.get("passed", 0) <= 0 or
+    if (not isinstance(tests, dict) or
+            type(tests.get("passed")) is not int or tests.get("passed", 0) <= 0 or
             tests.get("failed") != 0 or tests.get("total") != tests.get("passed")):
         errors.append("full-suite evidence totals are incomplete")
     if record.get("status") != "pass" or record.get("exit_code") != 0:
         errors.append("full-suite evidence did not pass")
     if record.get("git_sha") != manifest.get("repository", {}).get("git_sha"):
         errors.append("full-suite evidence Git SHA mismatch")
-    if record.get("training_lock_sha256") != manifest.get("locks", {}).get("training", {}).get("sha256"):
+    if (record.get("training_lock_sha256") !=
+            manifest.get("locks", {}).get("training", {}).get("sha256")):
         errors.append("full-suite evidence training-lock mismatch")
     if record.get("dirty_policy", {}).get("passed") is not True:
         errors.append("full-suite evidence dirty policy failed")
     return errors
+
+
+def approval_record_errors(manifest, record):
+    if not isinstance(record, dict):
+        return ["approval record must be an object"]
+    errors = []
+    required_fields = {
+        "schema", "approved", "campaign", "git_sha", "manifest_sha256",
+        "cost_sha256", "full_suite_sha256", "approver", "approved_at_utc",
+        "scope",
+    }
+    if set(record) != required_fields:
+        errors.append("invalid approval record shape")
+    if record.get("schema") != {
+            "name": "fqcnn_campaign_launch_approval", "version": 1}:
+        errors.append("invalid approval record schema")
+    if record.get("approved") is not True:
+        errors.append("approval is not exactly true")
+    if record.get("campaign") != manifest.get("campaign"):
+        errors.append("approval campaign mismatch")
+    if record.get("git_sha") != manifest.get("repository", {}).get("git_sha"):
+        errors.append("approval Git SHA mismatch")
+
+    artifacts = manifest.get("artifacts", {})
+    manifest_path = Path(artifacts.get("manifest", ""))
+    if (not manifest_path.is_file() or
+            record.get("manifest_sha256") != sha256_file(manifest_path)):
+        errors.append("approval manifest hash mismatch")
+    cost_path = Path(artifacts.get("cost_estimate", ""))
+    if (not cost_path.is_file() or
+            record.get("cost_sha256") != manifest.get("cost", {}).get("sha256") or
+            record.get("cost_sha256") != sha256_file(cost_path)):
+        errors.append("approval cost hash mismatch")
+    suite_path = Path(artifacts.get("full_suite", ""))
+    if (not suite_path.is_file() or
+            record.get("full_suite_sha256") != sha256_file(suite_path)):
+        errors.append("full-suite evidence hash mismatch")
+    errors.extend(_full_suite_errors(manifest))
+
+    if not isinstance(record.get("approver"), str) or not record["approver"].strip():
+        errors.append("missing approval approver")
+    if not _valid_aware_timestamp(record.get("approved_at_utc")):
+        errors.append("invalid approval timestamp")
+    request = manifest.get("request", {})
+    scope_fields = (
+        "datasets", "configs", "seeds", "samples", "epochs",
+        "jobs_requested", "workers_resolved", "with_baselines",
+        "scheduler_cells", "baseline_side_effect_cells", "total_costed_cells",
+    )
+    expected_scope = {key: request.get(key) for key in scope_fields}
+    if record.get("scope") != expected_scope:
+        errors.append("approval scope does not exactly match campaign")
+    return errors
+
+
+def _approval_errors(manifest):
+    path_errors = _path_errors(manifest)
+    if path_errors:
+        return path_errors
+    path = Path(manifest["artifacts"]["approval"])
+    if not path.is_file():
+        return ["missing launch approval record"]
+    try:
+        record = _load_json(path)
+    except (OSError, ValueError):
+        return ["invalid launch approval record"]
+    return approval_record_errors(manifest, record)
+
+
+def launch_record_errors(manifest, record):
+    if not isinstance(record, dict):
+        return ["launch record must be an object"]
+    errors = []
+    required_fields = {
+        "schema", "campaign", "git_sha", "manifest_sha256", "cost_sha256",
+        "full_suite_sha256", "approval_sha256", "queue", "queue_lease_id",
+        "owner_pid", "owner_host", "launched_at_utc",
+    }
+    if set(record) != required_fields:
+        errors.append("invalid launch record shape")
+    if record.get("schema") != {"name": "fqcnn_campaign_launch", "version": 1}:
+        errors.append("invalid launch record schema")
+    if record.get("campaign") != manifest.get("campaign"):
+        errors.append("launch campaign mismatch")
+    if record.get("git_sha") != manifest.get("repository", {}).get("git_sha"):
+        errors.append("launch Git SHA mismatch")
+
+    artifacts = manifest.get("artifacts", {})
+    identities = (
+        ("manifest_sha256", artifacts.get("manifest"), None),
+        ("cost_sha256", artifacts.get("cost_estimate"),
+         manifest.get("cost", {}).get("sha256")),
+        ("full_suite_sha256", artifacts.get("full_suite"), None),
+        ("approval_sha256", artifacts.get("approval"), None),
+    )
+    for field, path_value, expected in identities:
+        path = Path(path_value or "")
+        if (not path.is_file() or not _is_sha256(record.get(field)) or
+                record.get(field) != sha256_file(path) or
+                (expected is not None and record.get(field) != expected)):
+            errors.append("launch {} mismatch".format(field))
+    if record.get("queue") != str(QUEUE_PATH):
+        errors.append("launch queue path mismatch")
+    if (not isinstance(record.get("queue_lease_id"), str) or
+            not record["queue_lease_id"]):
+        errors.append("invalid launch queue lease")
+    if type(record.get("owner_pid")) is not int or record["owner_pid"] <= 0:
+        errors.append("invalid launch owner PID")
+    if not isinstance(record.get("owner_host"), str) or not record["owner_host"]:
+        errors.append("invalid launch owner host")
+    if not _valid_aware_timestamp(record.get("launched_at_utc")):
+        errors.append("invalid launch timestamp")
+    errors.extend(_approval_errors(manifest))
+    return errors
+
+
+def _load_valid_launch_record(manifest):
+    try:
+        path = Path(manifest["artifacts"]["launch"])
+    except (KeyError, TypeError):
+        return None
+    if not path.is_file():
+        return None
+    try:
+        record = _load_json(path)
+    except (OSError, ValueError):
+        return None
+    return record if not launch_record_errors(manifest, record) else None
+
+
+def _build_launch_record(manifest, approval_sha256, queue_owner):
+    return {
+        "schema": {"name": "fqcnn_campaign_launch", "version": 1},
+        "campaign": manifest["campaign"],
+        "git_sha": manifest["repository"]["git_sha"],
+        "manifest_sha256": sha256_file(manifest["artifacts"]["manifest"]),
+        "cost_sha256": manifest["cost"]["sha256"],
+        "full_suite_sha256": sha256_file(manifest["artifacts"]["full_suite"]),
+        "approval_sha256": approval_sha256,
+        "queue": str(QUEUE_PATH),
+        "queue_lease_id": queue_owner["lease_id"],
+        "owner_pid": queue_owner["pid"],
+        "owner_host": queue_owner["host"],
+        "launched_at_utc": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 def _output_errors(manifest):
@@ -500,18 +691,9 @@ def _output_errors(manifest):
     roots = manifest["output_roots"]
     launch_path = Path(artifacts["launch"])
     if launch_path.exists():
-        try:
-            record = _load_json(launch_path)
-            manifest_path = Path(artifacts["manifest"])
-            if (record.get("schema") != {"name": "fqcnn_campaign_launch", "version": 1} or
-                    record.get("campaign") != manifest["campaign"] or
-                    record.get("git_sha") != manifest["repository"]["git_sha"] or
-                    not manifest_path.is_file() or
-                    record.get("manifest_sha256") != sha256_file(manifest_path)):
-                return ["artifact collision: incompatible existing launch artifact"]
-        except (OSError, ValueError):
-            return ["artifact collision: incompatible existing launch artifact"]
-        return []
+        if _load_valid_launch_record(manifest) is not None:
+            return ["campaign already launched; use status/resume behavior"]
+        return ["artifact collision: incompatible existing launch artifact"]
     errors = []
     for name in ("experiments", "runs", "manifests"):
         if Path(roots[name]).exists():
@@ -522,24 +704,35 @@ def _output_errors(manifest):
     return errors
 
 
-def launch_gate_errors(manifest, current=None, queue_path=QUEUE_PATH):
+def launch_gate_errors(manifest, current=None, queue_path=None):
     manifest_errors = validate_manifest(manifest)
     errors = list(manifest_errors)
+    queue_path = QUEUE_PATH if queue_path is None else queue_path
     if Path(queue_path).exists():
         errors.append("global training/hardware queue is occupied")
     if manifest_errors:
         return errors
-    current = current or current_launch_state()
+    current = current_launch_state() if current is None else current
+    if not isinstance(current, dict):
+        return errors + ["invalid current launch state"]
     repo = manifest["repository"]
     locks = manifest["locks"]
-    if current["git_sha"] != repo["git_sha"]:
+    if current.get("git_sha") != repo["git_sha"]:
         errors.append("wrong Git SHA")
-    if current["training_lock_sha256"] != locks["training"]["sha256"]:
+    provenance_fields = ("branch", "upstream", "ahead", "behind")
+    if any(current.get(key) != repo.get(key) for key in provenance_fields):
+        errors.append("repository provenance changed")
+    if current.get("training_lock_sha256") != locks["training"]["sha256"]:
         errors.append("wrong training lock hash")
-    if current["qiskit_lock_sha256"] != locks["qiskit"]["sha256"]:
+    if current.get("qiskit_lock_sha256") != locks["qiskit"]["sha256"]:
         errors.append("wrong Qiskit lock hash")
-    if current.get("dirty") or not current.get("dirty_policy_passed") or repo.get("dirty"):
+    if current.get("workers_resolved") != manifest["request"]["workers_resolved"]:
+        errors.append("resolved worker count changed")
+    if (current.get("dirty") is not False or
+            current.get("dirty_policy_passed") is not True or
+            current.get("dirty_reasons") != [] or repo.get("dirty")):
         errors.append("working tree is dirty")
+
     errors.extend(_full_suite_errors(manifest))
     cost_path = Path(manifest["cost"]["path"])
     if not cost_path.is_file():
@@ -549,30 +742,23 @@ def launch_gate_errors(manifest, current=None, queue_path=QUEUE_PATH):
             errors.append("cost estimate hash mismatch")
         try:
             errors.extend(validate_cost(manifest, _load_json(cost_path)))
-        except ValueError:
+        except (OSError, ValueError):
             errors.append("invalid cost estimate")
+    errors.extend(_approval_errors(manifest))
     errors.extend(_output_errors(manifest))
     req = manifest["request"]
     if req.get("with_baselines") and req.get("n_qubits") == 10:
         evidence = manifest.get("approvals", {}).get("baseline_schedule", {})
         if evidence.get("validated") is not True:
             errors.append("missing validated baseline schedule evidence")
-    if manifest.get("approvals", {}).get("launch", {}).get("approved") is not True:
-        errors.append("missing launch approval record")
     return errors
 
 
 def validate_campaign(manifest, current=None):
-    if current is None:
-        repository = repository_state()
-        current = {
-            "git_sha": repository["git_sha"],
-            "training_lock_sha256": sha256_file(TRAINING_LOCK),
-            "qiskit_lock_sha256": sha256_file(QISKIT_LOCK),
-            "dirty": repository["dirty"],
-            "dirty_policy_passed": repository["dirty_policy"]["passed"],
-        }
-    return launch_gate_errors(manifest, current=current)
+    return launch_gate_errors(
+        manifest,
+        current=current if current is not None else current_launch_state(),
+    )
 
 
 def _cells(manifest):
@@ -584,20 +770,40 @@ def _cells(manifest):
                 yield dataset_id, config, seed
 
 
-def campaign_state(manifest, launched, child_failures):
-    if not launched:
-        return "pending"
-    if child_failures:
-        return "failed"
+def _valid_cell_count(manifest):
     valid = 0
     for dataset, config, seed in _cells(manifest):
         directory = run_artifacts.run_dir(
-            dataset, config, seed, root=manifest["output_roots"]["runs"], create=False)
+            dataset, config, seed,
+            root=manifest["output_roots"]["runs"], create=False,
+        )
         if run_artifacts.is_reusable(
-                directory, config=expected_config(config, seed, manifest["request"]["epochs"]),
+                directory,
+                config=expected_config(config, seed, manifest["request"]["epochs"]),
                 seed=seed):
             valid += 1
-    return "complete" if valid == manifest["request"]["expected_cells"] else "running"
+    return valid
+
+
+def campaign_state(manifest, launch_record=None, failure_evidence=None,
+                   queue_owned=False):
+    if launch_record is None:
+        return "pending"
+    if queue_owned:
+        return "running"
+    evidence = failure_evidence or {
+        "available": False, "valid": False, "failures": [], "errors": []
+    }
+    if evidence.get("available") and not evidence.get("valid"):
+        return "failed"
+    if evidence.get("valid") and evidence.get("failures"):
+        return "failed"
+    expected = manifest["request"]["scheduler_cells"]
+    if (_valid_cell_count(manifest) == expected and
+            evidence.get("available") and evidence.get("valid") and
+            evidence.get("failures") == []):
+        return "complete"
+    return "running"
 
 
 def _runner_argv():
@@ -810,21 +1016,22 @@ def launch(manifest):
     errors = launch_gate_errors(manifest)
     if errors:
         return errors
+    # Mutable approval, repository, worker, output, and queue inputs are checked
+    # again at the final boundary immediately before the atomic queue claim.
+    errors = launch_gate_errors(manifest)
+    if errors:
+        return errors
+
     lease = _acquire_queue(manifest["campaign"])
     old_argv = sys.argv[:]
     old_roots = (run_experiments.EXP_ROOT, run_experiments.FAILURE_MANIFEST,
                  run_experiments.MANIFEST_ROOT, run_artifacts.RUN_ROOT)
     try:
-        launch_path = Path(manifest["artifacts"]["launch"])
-        if not launch_path.exists():
-            write_immutable_json(launch_path, {
-                "schema": {"name": "fqcnn_campaign_launch", "version": 1},
-                "campaign": manifest["campaign"], "git_sha": manifest["repository"]["git_sha"],
-                "manifest_sha256": sha256_file(manifest["artifacts"]["manifest"]),
-                "launched_at_utc": datetime.now(timezone.utc).isoformat(),
-                "queue": str(QUEUE_PATH), "owner_pid": lease["pid"],
-                "owner_host": lease["host"],
-            })
+        approval_sha256 = sha256_file(manifest["artifacts"]["approval"])
+        write_immutable_json(
+            manifest["artifacts"]["launch"],
+            _build_launch_record(manifest, approval_sha256, lease),
+        )
         roots = {
             "experiments": manifest["output_roots"]["experiments"],
             "runs": manifest["output_roots"]["runs"],
@@ -841,30 +1048,107 @@ def launch(manifest):
     return []
 
 
-def _child_failures(manifest):
-    scheduler_path = Path(manifest["output_roots"]["experiments"]) / "failures.json"
-    if not scheduler_path.is_file():
-        return []
-    payload = _load_json(scheduler_path)
-    failures = payload.get("failures", [])
-    if not isinstance(failures, list) or payload.get("n_failed") != len(failures):
-        return [{"error": "invalid scheduler failure manifest"}]
-    return failures
+def _scheduler_failure_evidence(manifest):
+    path = Path(manifest["artifacts"]["scheduler_failures"])
+    if not path.is_file():
+        return {
+            "available": False,
+            "valid": False,
+            "failures": [],
+            "errors": ["missing final scheduler failure manifest"],
+        }
+    invalid = {
+        "available": True,
+        "valid": False,
+        "failures": [{"error": "invalid scheduler failure manifest"}],
+        "errors": ["invalid scheduler failure manifest"],
+    }
+    try:
+        payload = _load_json(path)
+    except (OSError, ValueError):
+        return invalid
+    if not isinstance(payload, dict):
+        return invalid
+    failures = payload.get("failures")
+    if (not isinstance(failures, list) or
+            type(payload.get("n_failed")) is not int or
+            payload["n_failed"] != len(failures) or
+            set(payload) != {"n_failed", "failures"}):
+        return invalid
+    return {
+        "available": True,
+        "valid": True,
+        "failures": failures,
+        "errors": [],
+    }
 
 
-def status_campaign(manifest, launched=None):
-    if launched is None:
-        launched = Path(manifest["artifacts"]["launch"]).exists()
-    failures = _child_failures(manifest) if launched else []
-    state = campaign_state(manifest, launched, failures)
-    payload = {"schema": {"name": "fqcnn_campaign_status", "version": 1},
-               "campaign": manifest["campaign"], "state": state,
-               "checked_at_utc": datetime.now(timezone.utc).isoformat(),
-               "child_failures": len(failures)}
-    if launched:
-        _atomic_json(manifest["artifacts"]["status"], payload)
-        _atomic_json(manifest["artifacts"]["failures"],
-                     {"n_failed": len(failures), "failures": failures})
+def _campaign_queue_status(manifest, launch_record):
+    if not Path(QUEUE_PATH).exists():
+        return False, []
+    try:
+        owner = exclusive_queue.read(QUEUE_PATH)
+    except (OSError, TypeError, ValueError):
+        return False, ["invalid global training/hardware queue evidence"]
+    expected = {
+        "campaign": manifest["campaign"],
+        "lease_id": launch_record["queue_lease_id"],
+        "pid": launch_record["owner_pid"],
+        "host": launch_record["owner_host"],
+    }
+    if all(owner.get(key) == value for key, value in expected.items()):
+        return True, []
+    return False, ["global training/hardware queue is owned by another launch"]
+
+
+def status_campaign(manifest):
+    launch_record = _load_valid_launch_record(manifest)
+    if launch_record is None:
+        return {
+            "schema": {"name": "fqcnn_campaign_status", "version": 1},
+            "campaign": manifest["campaign"],
+            "state": "pending",
+            "checked_at_utc": datetime.now(timezone.utc).isoformat(),
+            "valid_cells": 0,
+            "expected_cells": manifest["request"]["scheduler_cells"],
+            "queue_owned": False,
+            "scheduler_failure_available": False,
+            "scheduler_failure_valid": False,
+            "scheduler_failure_count": 0,
+            "errors": [],
+        }
+
+    evidence = _scheduler_failure_evidence(manifest)
+    queue_owned, queue_errors = _campaign_queue_status(manifest, launch_record)
+    valid_cells = _valid_cell_count(manifest)
+    state = campaign_state(
+        manifest,
+        launch_record=launch_record,
+        failure_evidence=evidence,
+        queue_owned=queue_owned,
+    )
+    errors = list(queue_errors) + list(evidence["errors"])
+    if queue_errors:
+        state = "failed"
+    payload = {
+        "schema": {"name": "fqcnn_campaign_status", "version": 1},
+        "campaign": manifest["campaign"],
+        "state": state,
+        "checked_at_utc": datetime.now(timezone.utc).isoformat(),
+        "valid_cells": valid_cells,
+        "expected_cells": manifest["request"]["scheduler_cells"],
+        "queue_owned": queue_owned,
+        "scheduler_failure_available": evidence["available"],
+        "scheduler_failure_valid": evidence["valid"],
+        "scheduler_failure_count": len(evidence["failures"]),
+        "errors": errors,
+    }
+    _atomic_json(manifest["artifacts"]["status"], payload)
+    _atomic_json(
+        manifest["artifacts"]["failures"],
+        {"n_failed": len(evidence["failures"]),
+         "failures": evidence["failures"], "errors": errors},
+    )
     return payload
 
 

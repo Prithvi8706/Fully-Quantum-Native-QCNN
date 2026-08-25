@@ -281,7 +281,7 @@ def main(json_writer=None):
         with_baselines = not args.no_baselines
         requested_config_cells = len(args.configs) * len(args.datasets) * len(args.seeds)
         requested_baseline_cells = (len(args.datasets) * len(args.seeds)
-                                    if with_baselines else 0)
+                                    if with_baselines and 'proposed' in args.configs else 0)
         failure = {
             'kind': 'request', 'name': 'budget',
             'error': 'nights and hours-per-night must both be positive',
@@ -303,8 +303,12 @@ def main(json_writer=None):
             'counts': {
                 'requested_configs': len(args.configs),
                 'measurable_configs': 0,
-                'requested_cells': requested_config_cells + requested_baseline_cells,
-                'measurable_cells': 0,
+                'scheduler_cells': requested_config_cells,
+                'baseline_side_effect_cells': requested_baseline_cells,
+                'total_costed_cells': requested_config_cells + requested_baseline_cells,
+                'measurable_scheduler_cells': 0,
+                'measurable_baseline_side_effect_cells': 0,
+                'measurable_total_costed_cells': 0,
                 'failed_calibrations': 0,
                 'total_failures': 1,
             },
@@ -366,8 +370,9 @@ def main(json_writer=None):
                   'batched' if cal['batched'] else 'SEQUENTIAL (memory cap)'), flush=True)
 
     baseline_s = 0.0
-    baseline_measurable = not with_baselines
-    if with_baselines:
+    baseline_requested = with_baselines and 'proposed' in args.configs
+    baseline_measurable = not baseline_requested
+    if baseline_requested:
         print('\nCalibrating baselines...', flush=True)
         first = pair_names[0]
         try:
@@ -383,7 +388,7 @@ def main(json_writer=None):
 
     requested_config_cells = len(args.configs) * len(pair_names) * len(args.seeds)
     requested_baseline_cells = (len(pair_names) * len(args.seeds)
-                                if with_baselines else 0)
+                                if baseline_requested else 0)
     measurable_config_cells = len(calibrations) * len(pair_names) * len(args.seeds)
     measurable_baseline_cells = (requested_baseline_cells if baseline_measurable else 0)
     budget_h = args.nights * args.hours_per_night
@@ -407,8 +412,14 @@ def main(json_writer=None):
         'counts': {
             'requested_configs': len(args.configs),
             'measurable_configs': len(calibrations),
-            'requested_cells': requested_config_cells + requested_baseline_cells,
-            'measurable_cells': measurable_config_cells + measurable_baseline_cells,
+            'scheduler_cells': requested_config_cells,
+            'baseline_side_effect_cells': requested_baseline_cells,
+            'total_costed_cells': requested_config_cells + requested_baseline_cells,
+            'measurable_scheduler_cells': measurable_config_cells,
+            'measurable_baseline_side_effect_cells': measurable_baseline_cells,
+            'measurable_total_costed_cells': (
+                measurable_config_cells + measurable_baseline_cells
+            ),
             'failed_calibrations': len(failures),
             'total_failures': len(failures),
         },
@@ -456,7 +467,7 @@ def main(json_writer=None):
         'budget_fraction': wall_h / budget_h,
     }
     print('\n{} cells | serial {:.1f} h | {} worker(s) -> {:.1f} h wall-clock'.format(
-        payload['counts']['requested_cells'], serial_h, jobs, wall_h))
+        payload['counts']['total_costed_cells'], serial_h, jobs, wall_h))
     print('budget: {} nights x {:.0f} h = {:.0f} h'.format(
         args.nights, args.hours_per_night, budget_h))
 

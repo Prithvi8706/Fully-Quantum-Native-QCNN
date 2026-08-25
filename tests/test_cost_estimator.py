@@ -129,6 +129,9 @@ def _run_cost_main(monkeypatch, tmp_path, calibration, *, with_baselines=False,
         monkeypatch.setattr(
             estimate_cost, 'calibrate_baselines',
             lambda *args, **kwargs: (_ for _ in ()).throw(baseline_failure))
+    elif with_baselines:
+        monkeypatch.setattr(
+            estimate_cost, 'calibrate_baselines', lambda *args, **kwargs: 2.0)
 
     argv = [
         'estimate_cost', '--datasets', '0,1', '--configs', 'proposed',
@@ -140,6 +143,41 @@ def _run_cost_main(monkeypatch, tmp_path, calibration, *, with_baselines=False,
     argv.extend(extra_args)
     monkeypatch.setattr('sys.argv', argv)
     return estimate_cost.main(), json.loads(output.read_text())
+
+
+def _expected_counts(*, baseline_cells=0, measurable_scheduler=1,
+                     measurable_baseline=0, failed=0, total_failures=0):
+    return {
+        'requested_configs': 1,
+        'measurable_configs': int(measurable_scheduler == 1),
+        'scheduler_cells': 1,
+        'baseline_side_effect_cells': baseline_cells,
+        'total_costed_cells': 1 + baseline_cells,
+        'measurable_scheduler_cells': measurable_scheduler,
+        'measurable_baseline_side_effect_cells': measurable_baseline,
+        'measurable_total_costed_cells': measurable_scheduler + measurable_baseline,
+        'failed_calibrations': failed,
+        'total_failures': total_failures,
+    }
+
+
+@pytest.mark.parametrize('with_baselines, expected', [
+    (False, _expected_counts()),
+    (True, _expected_counts(baseline_cells=1, measurable_baseline=1)),
+])
+def test_success_payload_separates_scheduler_and_baseline_cost_cells(
+        monkeypatch, tmp_path, with_baselines, expected):
+    exit_code, payload = _run_cost_main(
+        monkeypatch, tmp_path,
+        lambda *args, **kwargs: dict(CAL, epochs=1),
+        with_baselines=with_baselines,
+    )
+
+    assert exit_code == 0
+    assert payload['status'] == 'approved'
+    assert payload['counts'] == expected
+    assert 'requested_cells' not in payload['counts']
+    assert 'measurable_cells' not in payload['counts']
 
 
 def test_unmeasurable_requested_config_rejects_approval_and_is_recorded(
@@ -155,8 +193,12 @@ def test_unmeasurable_requested_config_rejects_approval_and_is_recorded(
     assert payload['counts'] == {
         'requested_configs': 1,
         'measurable_configs': 0,
-        'requested_cells': 1,
-        'measurable_cells': 0,
+        'scheduler_cells': 1,
+        'baseline_side_effect_cells': 0,
+        'total_costed_cells': 1,
+        'measurable_scheduler_cells': 0,
+        'measurable_baseline_side_effect_cells': 0,
+        'measurable_total_costed_cells': 0,
         'failed_calibrations': 1,
         'total_failures': 1,
     }
@@ -174,9 +216,18 @@ def test_unmeasurable_requested_baselines_reject_approval_and_are_recorded(
 
     assert exit_code != 0
     assert payload['approval']['approved'] is False
-    assert payload['counts']['requested_cells'] == 2
-    assert payload['counts']['measurable_cells'] == 1
-    assert payload['counts']['failed_calibrations'] == 1
+    assert payload['counts'] == {
+        'requested_configs': 1,
+        'measurable_configs': 1,
+        'scheduler_cells': 1,
+        'baseline_side_effect_cells': 1,
+        'total_costed_cells': 2,
+        'measurable_scheduler_cells': 1,
+        'measurable_baseline_side_effect_cells': 0,
+        'measurable_total_costed_cells': 1,
+        'failed_calibrations': 1,
+        'total_failures': 1,
+    }
     assert payload['failures'][0]['kind'] == 'baseline'
     assert payload['projection'] is None
 
@@ -190,8 +241,8 @@ def test_nonfinite_calibration_is_a_structured_failure(monkeypatch, tmp_path):
     assert payload['status'] == 'failed'
     assert payload['approval']['approved'] is False
     assert payload['projection'] is None
-    assert payload['counts']['failed_calibrations'] == 1
-    assert payload['counts']['total_failures'] == 1
+    assert payload['counts'] == _expected_counts(
+        measurable_scheduler=0, failed=1, total_failures=1)
     assert payload['failures'][0]['kind'] == 'config'
     assert 'non-finite' in payload['failures'][0]['error']
     assert 'NaN' not in json.dumps(payload) and 'Infinity' not in json.dumps(payload)
@@ -227,8 +278,8 @@ def test_nonpositive_budget_is_a_structured_request_failure(
     assert payload['status'] == 'failed'
     assert payload['approval']['approved'] is False
     assert payload['projection'] is None
-    assert payload['counts']['failed_calibrations'] == 0
-    assert payload['counts']['total_failures'] == 1
+    assert payload['counts'] == _expected_counts(
+        measurable_scheduler=0, total_failures=1)
     assert payload['failures'][0]['kind'] == 'request'
     assert payload['failures'][0]['name'] == 'budget'
 
@@ -244,8 +295,7 @@ def test_projection_failure_does_not_increment_failed_calibrations(
         monkeypatch, tmp_path, lambda *args, **kwargs: dict(CAL, epochs=1))
 
     assert exit_code != 0
-    assert payload['counts']['failed_calibrations'] == 0
-    assert payload['counts']['total_failures'] == 1
+    assert payload['counts'] == _expected_counts(total_failures=1)
     assert payload['failures'][0]['kind'] == 'projection'
 
 

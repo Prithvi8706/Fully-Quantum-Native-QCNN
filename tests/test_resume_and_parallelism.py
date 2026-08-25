@@ -99,6 +99,65 @@ def test_an_older_schema_is_not_reusable(tmp_path):
     assert not run_artifacts.is_reusable(d, config=CONFIG, seed=3)
 
 
+@pytest.mark.parametrize('payload', ['{"state":', '[]'])
+def test_malformed_status_json_is_not_reusable(tmp_path, payload):
+    d = _complete_run(str(tmp_path))
+    with open(os.path.join(d, 'status.json'), 'w') as fh:
+        fh.write(payload)
+    assert run_artifacts.is_reusable(d, config=CONFIG, seed=3) is False
+
+
+@pytest.mark.parametrize('field,value', [('config', []), ('seed', 'not-an-integer')])
+def test_malformed_status_identity_is_not_reusable(tmp_path, field, value):
+    d = _complete_run(str(tmp_path))
+    path = os.path.join(d, 'status.json')
+    with open(path) as fh:
+        status = json.load(fh)
+    status[field] = value
+    with open(path, 'w') as fh:
+        json.dump(status, fh)
+    assert run_artifacts.is_reusable(d, config=CONFIG, seed=3) is False
+
+
+@pytest.mark.parametrize('artifact', ['weights.npz', 'predictions.npz'])
+def test_corrupt_npz_artifact_is_not_reusable(tmp_path, artifact):
+    d = _complete_run(str(tmp_path))
+    with open(os.path.join(d, artifact), 'wb') as fh:
+        fh.write(b'not an npz archive')
+    assert run_artifacts.is_reusable(d, config=CONFIG, seed=3) is False
+
+
+@pytest.mark.parametrize('missing', ['sample_ids', 'y_true', 'raw_outputs'])
+def test_predictions_missing_required_array_are_not_reusable(tmp_path, missing):
+    d = _complete_run(str(tmp_path))
+    arrays = {
+        'sample_ids': np.asarray([0, 1]),
+        'y_true': np.asarray([1, -1]),
+        'raw_outputs': np.asarray([0.4, -0.6]),
+    }
+    del arrays[missing]
+    np.savez(os.path.join(d, 'predictions.npz'), **arrays)
+    assert run_artifacts.is_reusable(d, config=CONFIG, seed=3) is False
+
+
+@pytest.mark.parametrize('raw_outputs', [np.asarray([0.4]), np.asarray([[0.4], [-0.6]])])
+def test_prediction_array_shapes_must_match(tmp_path, raw_outputs):
+    d = _complete_run(str(tmp_path))
+    np.savez(
+        os.path.join(d, 'predictions.npz'),
+        sample_ids=np.asarray([0, 1]),
+        y_true=np.asarray([1, -1]),
+        raw_outputs=raw_outputs,
+    )
+    assert run_artifacts.is_reusable(d, config=CONFIG, seed=3) is False
+
+
+def test_nonfinite_weights_are_not_reusable(tmp_path):
+    d = _complete_run(str(tmp_path))
+    np.savez(run_artifacts.weights_path(d), w=np.asarray([0.0, np.nan]))
+    assert run_artifacts.is_reusable(d, config=CONFIG, seed=3) is False
+
+
 def test_run_dir_can_be_resolved_without_creating_it(tmp_path):
     """A resume check must not litter empty directories for cells it skips."""
     path = run_artifacts.run_dir('0v1', 'proposed', 7, root=str(tmp_path), create=False)
