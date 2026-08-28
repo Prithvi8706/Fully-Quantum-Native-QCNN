@@ -87,6 +87,9 @@ def compute_classification_metrics(y_true: np.ndarray, raw_outputs: np.ndarray,
     fn = int(np.sum((predictions == -1) & (y_true == 1)))
 
     accuracy = float(np.mean(predictions == y_true))
+    positive_recall = tp / (tp + fn) if tp + fn else 0.0
+    negative_recall = tn / (tn + fp) if tn + fp else 0.0
+    balanced_accuracy = float((positive_recall + negative_recall) / 2.0)
     precision = float(precision_score(y_bin, pred_bin, zero_division=0))
     recall = float(recall_score(y_bin, pred_bin, zero_division=0))
     f1 = float(f1_score(y_bin, pred_bin, zero_division=0))
@@ -101,6 +104,7 @@ def compute_classification_metrics(y_true: np.ndarray, raw_outputs: np.ndarray,
 
     return {
         "accuracy": accuracy,
+        "balanced_accuracy": balanced_accuracy,
         "precision": precision,
         "recall": recall,
         "f1": f1,
@@ -116,7 +120,7 @@ def compute_classification_metrics(y_true: np.ndarray, raw_outputs: np.ndarray,
 
 # Keys worth aggregating across seeds (scalars only — drop arrays/counts handled separately).
 _SCALAR_METRIC_KEYS = (
-    "accuracy", "precision", "recall", "f1", "roc_auc", "pr_auc",
+    "accuracy", "balanced_accuracy", "precision", "recall", "f1", "roc_auc", "pr_auc",
     "prediction_bias", "prediction_variance",
 )
 

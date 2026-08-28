@@ -1,5 +1,7 @@
 # FQCNN — Q1 Upgrade Plan (v2)
 
+> **Scope amendment — 2026-08-27:** The architecture-freeze, evaluation-integrity, and evidence-honesty rules in this document remain binding. Its maximal Phases 4–10 are compressed, not abandoned, for the current Q1-targeted submission. Use `docs/superpowers/plans/2026-08-27-q1-journal-fast-track.md`; reduced studies must meet that plan's minimum evidence bar, and excluded claims must be removed or disclosed as future work.
+
 **Status:** planning document only. Nothing here has been executed.
 **Target:** raise `fqcnn.tex` + this repo to Q1-journal level (IEEE TQE, Quantum Machine
 Intelligence, EPJ Quantum Technology, Phys. Rev. Applied class).
@@ -270,12 +272,13 @@ pooling step "measure discarded qubit *b* in the computational basis; apply U_m 
 register — by the unitary block `V = Σ_m |m⟩⟨m|_b ⊗ U_m` with *b* simply left idle afterwards
 (deferred-measurement principle; cite Nielsen & Chuang). Consequences, all favorable and all
 true of the frozen model:
-  1. Coherent unitary pooling **loses nothing** relative to measurement pooling — it simulates
-     the entire class at zero overhead.
+  1. Coherent unitary pooling **loses nothing** relative to measurement pooling on the retained
+     register — it simulates the corresponding class in the frozen construction; resource cost
+     is measured rather than assumed.
   2. It does so while eliminating mid-circuit measurement, qubit reset, and classical
      feed-forward — capabilities that are limited, slow (µs-scale vs ns-scale), or absent on
-     current devices. The advantage is *architectural and hardware-real*, and now *proved* rather
-     than asserted.
+     current devices. The advantage asserted here is architectural and simulation-scoped; no
+     hardware performance is implied.
   3. The global state remains pure through the entire pipeline — the literal, defensible meaning
      of "fully coherent," and the property this plan is required to maintain.
 

@@ -2,8 +2,10 @@
 
 **Governing rule:** `UPGRADE_PLAN.md` §A1 — where `fqcnn.tex` and the executed code
 disagree, the paper moves to match the code. This table records the disposition of
-every mismatch found in Phase 0. Phase 10 (M10.3) applies these dispositions to the
-manuscript; no `.tex` edit is made here.
+every mismatch found in Phase 0. The 2026-08-27 Q1 fast-track correction pass applies
+the architecture, parameter-count, differentiation, locality, and scope dispositions
+directly; remaining numerical and citation items stay explicitly pending until their
+canonical artifacts are complete.
 
 **Evidence sources:** `tests/fixtures/headline_signature.json` (executed topology),
 `tests/fixtures/effective_params.json` (gradient audit),
@@ -75,10 +77,10 @@ backed by a test in `tests/test_pooling_equivalence.py`:
 |---|---|---|
 | Theorem 1 | `test_e1_unitary_and_measurement_pooling_agree_exactly` | E1: 2.2e-16 at headline n=10 with archived weights |
 | Proposition 2 | `test_swap_witnesses_strict_containment` | trace distance 1/2 for the SWAP witness |
-| Proposition 3 | `test_e2_dephasing_discarded_wires_changes_nothing` | E2: 1.3e-14 readout, 0.0 exact Δaccuracy |
+| Proposition 3 | `test_e2_dephasing_discarded_wires_changes_nothing` | E2: 5.86e-14 maximum readout delta, 0.0 exact Δaccuracy |
 
 Controls that keep the null results falsifiable: `test_pool_none_actually_differs` (>1e-6) and
-`test_e2_control_dephasing_kept_wires_does_change_things` (1.1e-01, twelve orders above the
+`test_e2_control_dephasing_kept_wires_does_change_things` (0.4094, many orders above the
 effect on compressed wires).
 
 ## Single-circuit statement (verified)
@@ -192,3 +194,16 @@ the manuscript, and this is one seed. 98.29% therefore becomes the reference num
 internally, but the paper's three `approx 98\%` claims stay as they are until Phase 5 produces
 mean +/- std with a 95% CI over >= 5 seeds. Substituting one single-run figure for another would
 reintroduce the class of problem this row exists to fix.
+
+## Q1 fast-track alignment pass (2026-08-27)
+
+The manuscript was corrected to match the frozen implementation on the highest-risk
+structural points: the main amplitude path now describes global amplitude state
+preparation only; convolution locality is stated in register-index space rather than
+image space; allocated, tape-reaching, and effective parameter counts are separated;
+and simulator gradients are identified as adjoint/backpropagation, with
+parameter-shift retained only as a hardware cost model. Legacy one-seed figures and
+heterogeneous literature percentages are labelled as historical/contextual rather
+than Q1 evidence. The validated five-seed comparison table is sourced from
+`Results/evidence/q1_comparison.json`; local-noise and pooling-transfer claims remain
+gated on their respective artifacts.

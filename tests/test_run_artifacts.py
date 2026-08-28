@@ -83,6 +83,7 @@ def test_baseline_result_persists_protocol_and_predictions_before_completion(tmp
         },
         "test_evaluations": 1,
         "raw_outputs": np.array([0.3, -0.2]),
+        "selected_parameters": np.array([0.1, 0.2]),
     }
     run_artifacts.save_baseline_result(
         directory=directory, result=result, split_id="split-abc",
@@ -103,6 +104,8 @@ def test_baseline_result_persists_protocol_and_predictions_before_completion(tmp
     assert selection["test_evaluations"] == 1
     assert metrics == {"accuracy": 0.5}
     np.testing.assert_array_equal(predictions["sample_ids"], [19, 23])
+    assert run_artifacts.is_reusable(
+        directory, config={"artifact_schema_version": 1}, seed=4)
 
 
 def test_test_evaluation_guard_allows_exactly_one_evaluation():

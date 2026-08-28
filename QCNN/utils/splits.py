@@ -22,8 +22,10 @@ def manifest_id(manifest: dict) -> str:
     """Stable identity of a split, over its indices and provenance."""
     payload = {
         'dataset_id': manifest['dataset_id'],
+        'class_mapping': manifest['class_mapping'],
         'seed': manifest['seed'],
         'fractions': list(manifest['fractions']),
+        'sample_ids': manifest['sample_ids'],
         'train_idx': manifest['train_idx'],
         'val_idx': manifest['val_idx'],
         'test_idx': manifest['test_idx'],
@@ -79,13 +81,23 @@ def make_split_manifest(labels, seed, dataset_id, class_mapping, sample_ids=None
         stratify=labels[holdout_idx],
     )
 
+    canonical_sample_ids = []
+    for sample_id in sample_ids:
+        if isinstance(sample_id, bool) or not isinstance(sample_id, (int, str)):
+            raise ValueError('sample IDs must be non-empty strings or integers')
+        if isinstance(sample_id, str) and not sample_id:
+            raise ValueError('sample IDs must be non-empty strings or integers')
+        canonical_sample_ids.append(sample_id)
+    if len(set(canonical_sample_ids)) != len(canonical_sample_ids):
+        raise ValueError('sample IDs must be unique')
+
     manifest = {
         'dataset_id': dataset_id,
         'class_mapping': class_mapping,
         'seed': int(seed),
         'fractions': list(SPLIT_FRACTIONS),
         'n_total': int(n_total),
-        'sample_ids': [int(s) for s in sample_ids],
+        'sample_ids': canonical_sample_ids,
         'train_idx': sorted(int(i) for i in train_idx),
         'val_idx': sorted(int(i) for i in val_idx),
         'test_idx': sorted(int(i) for i in test_idx),
@@ -97,6 +109,17 @@ def make_split_manifest(labels, seed, dataset_id, class_mapping, sample_ids=None
 
 def verify_manifest(manifest: dict) -> None:
     """Raise ``ValueError`` unless the split is disjoint and exhaustive."""
+    sample_ids = manifest.get('sample_ids')
+    if not isinstance(sample_ids, list) or len(sample_ids) != manifest['n_total']:
+        raise ValueError('sample IDs must contain one entry per sample')
+    for sample_id in sample_ids:
+        if isinstance(sample_id, bool) or not isinstance(sample_id, (int, str)):
+            raise ValueError('sample IDs must be non-empty strings or integers')
+        if isinstance(sample_id, str) and not sample_id:
+            raise ValueError('sample IDs must be non-empty strings or integers')
+    if len(set(sample_ids)) != len(sample_ids):
+        raise ValueError('sample IDs must be unique')
+
     train = set(manifest['train_idx'])
     val = set(manifest['val_idx'])
     test = set(manifest['test_idx'])

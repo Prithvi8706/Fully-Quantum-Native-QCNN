@@ -1,5 +1,7 @@
 # FQCNN Q1 Upgrade Execution Design
 
+> **Scope amendment — 2026-08-27:** This design remains authoritative for the frozen architecture and completed evidence. Its unfinished work is compressed into the Q1-targeted minimum evidence gates in `docs/superpowers/plans/2026-08-27-q1-journal-fast-track.md`.
+
 **Date:** 2026-07-23
 **Status:** Approved design
 **Governing specification:** `UPGRADE_PLAN.md` (v2)

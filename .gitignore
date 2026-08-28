@@ -29,8 +29,21 @@ training_summary.txt
 datasets/images/*
 datasets/*.*
 datasets/MNIST/
+datasets/FashionMNIST/
+datasets/KMNIST/
 graphify-out/
 # Per-run trainer transcripts from the experiment grid: chatty, large, and
 # regenerable. The per-seed metric JSONs and split manifests beside them ARE
 # evidence and stay tracked.
 Results/experiments/**/*.log
+# Temporary Q1 command transcripts are reproducible and are not evidence.
+Results/evidence/*.log
+# Q1 fast-track per-run artifacts are regenerable and may contain large binary
+# weights/prediction archives; commit their validated metric/evidence JSON only.
+Results/q1_comparison/runs/
+# Q1 campaign transcripts are regenerable and may include host-specific paths.
+Results/q1_comparison/experiments/**/*.log
+Results/q1_pooling_transfer/runs/
+# Q1 transfer transcripts are reproducible and are not evidence.
+Results/q1_pooling_transfer/experiments/**/*.log
+Results/smoke/

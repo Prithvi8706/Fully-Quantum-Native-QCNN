@@ -28,10 +28,8 @@ from __future__ import annotations
 import argparse
 import contextlib
 import csv
-import io
 import json
 import os
-import random
 import sys
 import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -42,6 +40,7 @@ import numpy as np
 import pennylane as qml
 
 from QCNN.utils import run_artifacts
+from QCNN.utils import dataset_registry
 from QCNN.utils import splits as split_service
 from QCNN.utils.run_artifacts import TestEvaluationGuard
 from QCNN.utils.seeding import seed_everything
@@ -161,25 +160,61 @@ def _config_metadata(cfg: QuantumNativeConfig, config_name: str) -> dict:
     return metadata
 
 
-def prepare_split(cfg: QuantumNativeConfig, classes, dataset_dir, train_sample_size):
+def _total_samples_for_train_budget(train_sample_size: int) -> int:
+    """Return the smallest pool whose frozen split contains the train budget."""
+    target = int(train_sample_size)
+    if target < 1:
+        raise ValueError("train_sample_size must be positive")
+    train_fraction = float(split_service.SPLIT_FRACTIONS[0])
+    # ``make_split_manifest`` uses integer rounding for the partition sizes.
+    # Account for that half-row margin, then verify both sides so this remains
+    # correct if the frozen fraction is ever changed.
+    total_needed = max(1, int(np.floor((target - 0.5) / train_fraction)))
+    while int(round(train_fraction * total_needed)) < target:
+        total_needed += 1
+    while total_needed > 1 and int(round(train_fraction * (total_needed - 1))) >= target:
+        total_needed -= 1
+    return total_needed
+
+
+def prepare_split(cfg: QuantumNativeConfig, classes, dataset_dir, train_sample_size,
+                  dataset_key=None):
     """
     Load + preprocess the dataset and produce a deterministic train/test split.
     Mirrors main.py's pipeline so QCNN and baselines see the same representation.
     """
     seed_everything(cfg.seed)
-    X, y = load_dataset(
-        source=dataset_dir,
-        dataset_type="idx",
-        n_qubits=cfg.n_qubits,
-        image_size=cfg.image_size,
-        normalization=cfg.preprocessing_mode,
-        encoding_type=cfg.encoding_type,
-        classes=classes,
-    )
+    if dataset_key is None:
+        X, y = load_dataset(
+            source=dataset_dir,
+            dataset_type="idx",
+            n_qubits=cfg.n_qubits,
+            image_size=cfg.image_size,
+            normalization=cfg.preprocessing_mode,
+            encoding_type=cfg.encoding_type,
+            classes=classes,
+        )
+        sample_ids = list(range(len(y)))
+        dataset_id = "idx_{}v{}".format(classes[0], classes[1])
+    else:
+        X, y, sample_ids = dataset_registry.load_binary_quantum(
+            dataset_key,
+            classes,
+            data_root=dataset_dir,
+            n_qubits=cfg.n_qubits,
+            image_size=cfg.image_size,
+            normalization=cfg.preprocessing_mode,
+            encoding_type=cfg.encoding_type,
+        )
+        dataset_id = "{}_{}v{}".format(dataset_key, classes[0], classes[1])
 
-    # Optional stratified subsample to keep quantum simulation tractable.
+    # Optional stratified subsample to keep quantum simulation tractable.  The
+    # public ``--samples`` argument is a training-example budget, so choose the
+    # smallest pre-split pool whose frozen 60% training partition can contain
+    # that many rows.  The previous implementation divided by 0.70 (a legacy
+    # assumption) and silently produced 343 training rows for ``--samples 400``.
     if train_sample_size is not None:
-        total_needed = int(train_sample_size / 0.7)
+        total_needed = _total_samples_for_train_budget(train_sample_size)
         if total_needed < len(X):
             idx_pos = np.where(y == 1)[0]
             idx_neg = np.where(y == -1)[0]
@@ -191,12 +226,14 @@ def prepare_split(cfg: QuantumNativeConfig, classes, dataset_dir, train_sample_s
             ])
             np.random.shuffle(sel)
             X, y = X[sel], y[sel]
+            sample_ids = [sample_ids[int(index)] for index in sel]
 
     manifest = split_service.make_split_manifest(
         y,
         seed=cfg.seed,
-        dataset_id="idx_{}v{}_n{}".format(classes[0], classes[1], len(y)),
+        dataset_id="{}_n{}".format(dataset_id, len(y)),
         class_mapping=split_service.class_mapping_for(classes),
+        sample_ids=sample_ids,
     )
     split_service.save_manifest(manifest, os.path.join(
         MANIFEST_ROOT, "{}_seed{}.json".format(manifest["dataset_id"], cfg.seed)))
@@ -250,14 +287,21 @@ def run_qcnn(cfg: QuantumNativeConfig, split, use_bce: bool, log_path: str,
 
 def run_single(config_name: str, classes, seed: int, dataset_dir: str,
                train_sample_size: int, epochs: int, use_bce: bool,
-               out_dir: str, with_baselines: bool) -> dict:
+               out_dir: str, with_baselines: bool, dataset_key=None,
+               evidence_role="scientific", classical_baselines=None,
+               quantum_baselines=None) -> dict:
     """Run one (config, dataset, seed). Returns the QCNN metric dict."""
     overrides = ABLATION_CONFIGS[config_name]
     cfg = build_config(overrides, seed)
     if epochs is not None:
         cfg.n_epochs = epochs
+    cfg.evidence_role = evidence_role
 
-    split, manifest = prepare_split(cfg, classes, dataset_dir, train_sample_size)
+    if dataset_key is None:
+        split, manifest = prepare_split(cfg, classes, dataset_dir, train_sample_size)
+    else:
+        split, manifest = prepare_split(
+            cfg, classes, dataset_dir, train_sample_size, dataset_key=dataset_key)
 
     run_dir = os.path.join(out_dir, config_name)
     os.makedirs(run_dir, exist_ok=True)
@@ -265,7 +309,8 @@ def run_single(config_name: str, classes, seed: int, dataset_dir: str,
 
     # Clean-protocol artifacts live under Results/runs/, kept separate from the
     # historical Results/experiments/ tree produced under the leaked protocol.
-    directory = run_artifacts.run_dir(_fmt_pair(classes), config_name, seed)
+    task_name = _fmt_task(dataset_key, classes, evidence_role)
+    directory = run_artifacts.run_dir(task_name, config_name, seed)
     test_ids = [manifest["sample_ids"][i] for i in manifest["test_idx"]]
 
     metrics = run_qcnn(cfg, split, use_bce, log_path, directory, test_ids, config_name)
@@ -279,18 +324,20 @@ def run_single(config_name: str, classes, seed: int, dataset_dir: str,
             X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val,
             X_test=X_test, y_test=y_test)
         base = run_classical_baselines(
-            **baseline_split, seed=seed, target_params=metrics.get("n_params"))
+            **baseline_split, seed=seed, target_params=metrics.get("n_params"),
+            baselines=classical_baselines)
         # Task 5 owns arbitrary-n baseline scheduling; this path remains on the
         # explicitly compatible power-of-two geometry used by "proposed".
         base.update(run_quantum_baselines(
             **baseline_split, seed=seed, n_qubits=cfg.n_qubits,
-            n_epochs=cfg.n_epochs, learning_rate=cfg.learning_rate, use_bce=use_bce))
+            n_epochs=cfg.n_epochs, learning_rate=cfg.learning_rate, use_bce=use_bce,
+            baselines=quantum_baselines))
         for name, result in base.items():
             bdir = os.path.join(out_dir, f"baseline_{name}")
             os.makedirs(bdir, exist_ok=True)
             save_metrics_json(result["metrics"], os.path.join(bdir, f"seed_{seed}.json"))
             artifact_dir = run_artifacts.run_dir(
-                _fmt_pair(classes), f"baseline_{name}", seed)
+                task_name, f"baseline_{name}", seed)
             run_artifacts.save_baseline_result(
                 directory=artifact_dir, result=result, split_id=manifest["id"],
                 sample_ids=test_ids, y_test=y_test, seed=seed,
@@ -301,6 +348,30 @@ def run_single(config_name: str, classes, seed: int, dataset_dir: str,
 
 def _fmt_pair(pair) -> str:
     return f"{pair[0]}v{pair[1]}"
+
+
+def _fmt_task(dataset_key, pair, evidence_role="scientific") -> str:
+    """Filesystem-safe task identity; smoke cells cannot mix with evidence."""
+    name = _fmt_pair(pair) if dataset_key is None else f"{dataset_key}_{_fmt_pair(pair)}"
+    return f"smoke__{name}" if evidence_role == "smoke" else name
+
+
+def _parse_task(value: str):
+    """Parse ``dataset:low,high`` into a registered binary task."""
+    try:
+        dataset_key, pair_text = value.split(":", 1)
+        pair = tuple(int(item) for item in pair_text.split(","))
+    except (TypeError, ValueError) as exc:
+        raise argparse.ArgumentTypeError(
+            "task must use dataset:low,high (for example fashion_mnist:0,6)"
+        ) from exc
+    if dataset_key not in dataset_registry.DATASETS:
+        raise argparse.ArgumentTypeError(
+            "unknown dataset {}; choose from {}".format(
+                dataset_key, ", ".join(sorted(dataset_registry.DATASETS))))
+    if len(pair) != 2 or pair[0] == pair[1] or any(value < 0 or value > 9 for value in pair):
+        raise argparse.ArgumentTypeError("task classes must be two distinct digits from 0 to 9")
+    return dataset_key, pair
 
 
 # ---------------------------------------------------------------------------
@@ -327,26 +398,41 @@ def _apply_output_roots(roots: dict) -> dict:
     }
 
 
-def _metrics_path(pair, config_name: str, seed: int) -> str:
-    return os.path.join(EXP_ROOT, _fmt_pair(pair), config_name, f"seed_{seed}.json")
+def _metrics_path(pair, config_name: str, seed: int, dataset_key=None,
+                  evidence_role="scientific") -> str:
+    return os.path.join(
+        EXP_ROOT, _fmt_task(dataset_key, pair, evidence_role), config_name,
+        f"seed_{seed}.json")
 
 
-def _expected_config(config_name: str, seed: int, epochs) -> dict:
+def _expected_config(config_name: str, seed: int, epochs,
+                     evidence_role="scientific") -> dict:
     """The config dict run_qcnn would record, computed without loading data."""
     cfg = build_config(ABLATION_CONFIGS[config_name], seed)
     if epochs is not None:
         cfg.n_epochs = epochs
+    cfg.evidence_role = evidence_role
     return _config_metadata(cfg, config_name)
 
 
-def _is_reusable_cell(pair, config_name: str, seed: int, epochs) -> bool:
+def _is_reusable_cell(pair, config_name: str, seed: int, epochs,
+                      dataset_key=None, evidence_role="scientific",
+                      required_baselines=()) -> bool:
     """Skip only a cell this invocation would otherwise reproduce exactly."""
-    if not os.path.exists(_metrics_path(pair, config_name, seed)):
+    if not os.path.exists(_metrics_path(
+            pair, config_name, seed, dataset_key, evidence_role)):
         return False
     directory = run_artifacts.run_dir(
-        _fmt_pair(pair), config_name, seed, create=False)
-    return run_artifacts.is_reusable(
-        directory, config=_expected_config(config_name, seed, epochs), seed=seed)
+        _fmt_task(dataset_key, pair, evidence_role), config_name, seed, create=False)
+    if not run_artifacts.is_reusable(directory, config=_expected_config(
+            config_name, seed, epochs, evidence_role), seed=seed):
+        return False
+    task_name = _fmt_task(dataset_key, pair, evidence_role)
+    return all(run_artifacts.is_reusable(
+        run_artifacts.run_dir(
+            task_name, f"baseline_{name}", seed, create=False),
+        config={"artifact_schema_version": 1}, seed=seed)
+        for name in required_baselines)
 
 
 def _execute_cell(payload):
@@ -355,15 +441,30 @@ def _execute_cell(payload):
     Metrics are not returned: every cell's numbers are read back from its saved
     JSON so a fresh run and a resumed run aggregate from byte-identical input.
     """
-    pair, config_name, seed, dataset_dir, samples, epochs, use_bce, with_baselines, roots = payload
+    if len(payload) == 9:
+        pair, config_name, seed, dataset_dir, samples, epochs, use_bce, with_baselines, roots = payload
+        dataset_key, evidence_role = None, "scientific"
+        classical_baselines, quantum_baselines = None, None
+    elif len(payload) == 11:
+        (pair, config_name, seed, dataset_dir, samples, epochs, use_bce,
+         with_baselines, roots, dataset_key, evidence_role) = payload
+        classical_baselines, quantum_baselines = None, None
+    else:
+        (pair, config_name, seed, dataset_dir, samples, epochs, use_bce,
+         with_baselines, roots, dataset_key, evidence_role, classical_baselines,
+         quantum_baselines) = payload
     _apply_output_roots(roots)
+    task_name = _fmt_task(dataset_key, pair, evidence_role)
     try:
         run_single(config_name, pair, seed, dataset_dir, samples, epochs,
-                   use_bce=use_bce, out_dir=os.path.join(EXP_ROOT, _fmt_pair(pair)),
-                   with_baselines=with_baselines)
-        return pair, config_name, seed, None
+                   use_bce=use_bce, out_dir=os.path.join(EXP_ROOT, task_name),
+                   with_baselines=with_baselines, dataset_key=dataset_key,
+                   evidence_role=evidence_role,
+                   classical_baselines=classical_baselines,
+                   quantum_baselines=quantum_baselines)
+        return dataset_key, pair, config_name, seed, evidence_role, None
     except Exception:
-        return pair, config_name, seed, traceback.format_exc()
+        return dataset_key, pair, config_name, seed, evidence_role, traceback.format_exc()
 
 
 def _write_failure_manifest(failures) -> None:
@@ -374,6 +475,7 @@ def _write_failure_manifest(failures) -> None:
 
 
 def main(output_roots: dict = None):
+    using_default_roots = output_roots is None
     if output_roots is None:
         output_roots = {
             "experiments": EXP_ROOT,
@@ -381,27 +483,38 @@ def main(output_roots: dict = None):
             "manifests": MANIFEST_ROOT,
             "failures": FAILURE_MANIFEST,
         }
-    roots = _apply_output_roots(output_roots)
-
     ap = argparse.ArgumentParser(description="FQCNN ablation / multi-seed study")
     ap.add_argument("--datasets", nargs="+", default=["0,1", "3,5", "4,9", "5,8"],
                     help="Class pairs as 'a,b' (default: hard MNIST pairs)")
+    ap.add_argument("--task", action="append", type=_parse_task,
+                    help="Registered task as dataset:low,high; repeat for multiple tasks")
     ap.add_argument("--configs", nargs="+", default=list(ABLATION_CONFIGS.keys()),
                     help="Ablation configs to run (default: all)")
     ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
     ap.add_argument("--samples", type=int, default=400, help="Train sample size")
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--mnist-dir", default=DEFAULT_MNIST_DIR)
+    ap.add_argument("--data-root", default="datasets",
+                    help="Root containing registered dataset directories")
     ap.add_argument("--use-mse", action="store_true")
     ap.add_argument("--no-baselines", action="store_true")
+    ap.add_argument("--classical-baselines", nargs="+", choices=("logistic", "mlp"),
+                    default=["logistic", "mlp"])
+    ap.add_argument("--quantum-baselines", nargs="+", choices=("cong", "hur", "ttn"),
+                    default=["ttn"])
     ap.add_argument("--quick", action="store_true",
                     help="Tiny smoke run: 1 pair, proposed+pool_none, 2 seeds, 60 samples")
+    ap.add_argument("--smoke", action="store_true",
+                    help="Three-family validation only: proposed, seed 0, 60 samples, 2 epochs")
     ap.add_argument("--jobs", type=int, default=1,
                     help="Parallel worker processes over (dataset, config, seed) cells. "
                          "0 = physical cores - 2. Each worker is pinned to one CPU thread.")
     ap.add_argument("--force", action="store_true",
                     help="Re-run every cell, including complete ones (default: resume)")
     args = ap.parse_args()
+
+    if args.quick and args.smoke:
+        ap.error("--quick and --smoke are mutually exclusive")
 
     if args.quick:
         args.datasets = ["0,1"]
@@ -410,41 +523,106 @@ def main(output_roots: dict = None):
         args.samples = 60
         args.epochs = 2
 
+    if args.smoke:
+        if args.task is None:
+            args.task = [
+                ("mnist", (0, 1)),
+                ("fashion_mnist", (0, 6)),
+                ("kmnist", (2, 3)),
+            ]
+        args.configs = ["proposed"]
+        args.seeds = [0]
+        args.samples = 60
+        args.epochs = 2
+        args.no_baselines = True
+
+        if using_default_roots:
+            smoke_root = os.path.join("Results", "smoke", "q1_datasets")
+            output_roots = {
+                "experiments": os.path.join(smoke_root, "experiments"),
+                "runs": os.path.join(smoke_root, "runs"),
+                "manifests": os.path.join(smoke_root, "manifests"),
+                "failures": os.path.join(smoke_root, "experiments", "failures.json"),
+            }
+
+    if args.task is not None and not args.smoke and using_default_roots:
+        comparison_root = os.path.join("Results", "q1_comparison")
+        output_roots = {
+            "experiments": os.path.join(comparison_root, "experiments"),
+            "runs": os.path.join(comparison_root, "runs"),
+            "manifests": os.path.join(comparison_root, "manifests"),
+            "failures": os.path.join(
+                comparison_root, "experiments", "failures.json"),
+        }
+
+    roots = _apply_output_roots(output_roots)
+
     unknown = [c for c in args.configs if c not in ABLATION_CONFIGS]
     if unknown:
         ap.error("unknown config(s) {}; choose from {}".format(
             ", ".join(unknown), ", ".join(sorted(ABLATION_CONFIGS))))
 
-    pairs = [tuple(int(c) for c in d.split(",")) for d in args.datasets]
+    evidence_role = "smoke" if args.smoke else "scientific"
+    if args.task is not None:
+        tasks = [
+            {
+                "dataset_key": dataset_key,
+                "pair": pair,
+                "dataset_dir": args.data_root,
+                "evidence_role": evidence_role,
+            }
+            for dataset_key, pair in args.task
+        ]
+    else:
+        tasks = [
+            {
+                "dataset_key": None,
+                "pair": tuple(int(c) for c in value.split(",")),
+                "dataset_dir": args.mnist_dir,
+                "evidence_role": evidence_role,
+            }
+            for value in args.datasets
+        ]
     os.makedirs(EXP_ROOT, exist_ok=True)
 
     jobs = args.jobs if args.jobs > 0 else max(1, (os.cpu_count() or 3) - 2)
 
     # Schedule: enumerate every cell, then split into reusable and pending.
     pending, n_reused = [], 0
-    for pair in pairs:
+    for task in tasks:
+        pair = task["pair"]
+        dataset_key = task["dataset_key"]
+        role = task["evidence_role"]
+        task_name = _fmt_task(dataset_key, pair, role)
+        required_baselines = (
+            tuple(args.classical_baselines) + tuple(args.quantum_baselines)
+            if not args.no_baselines else ())
         for config_name in args.configs:
             for seed in args.seeds:
-                if not args.force and _is_reusable_cell(pair, config_name, seed, args.epochs):
+                if not args.force and _is_reusable_cell(
+                        pair, config_name, seed, args.epochs, dataset_key, role,
+                        required_baselines if config_name == "proposed" else ()):
                     n_reused += 1
-                    print(f"  [{_fmt_pair(pair)}] {config_name} seed={seed} "
+                    print(f"  [{task_name}] {config_name} seed={seed} "
                           f"-> reusing complete run", flush=True)
                     continue
-                pending.append((pair, config_name, seed, args.mnist_dir, args.samples,
+                pending.append((pair, config_name, seed, task["dataset_dir"], args.samples,
                                 args.epochs, not args.use_mse, not args.no_baselines,
-                                roots))
+                                roots, dataset_key, role, args.classical_baselines,
+                                args.quantum_baselines))
 
     print(f"\n{len(pending)} cells to run, {n_reused} reused, {jobs} worker(s)\n")
 
     failures = []
 
-    def record(pair, config_name, seed, error):
-        label = f"[{_fmt_pair(pair)}] {config_name} seed={seed}"
+    def record(dataset_key, pair, config_name, seed, role, error):
+        task_name = _fmt_task(dataset_key, pair, role)
+        label = f"[{task_name}] {config_name} seed={seed}"
         if error is None:
             print(f"  {label} -> done", flush=True)
             return
         print(f"  {label} -> FAILED\n{error}", flush=True)
-        failures.append({"dataset": _fmt_pair(pair), "config": config_name,
+        failures.append({"dataset": task_name, "config": config_name,
                          "seed": int(seed), "error": error})
 
     if jobs > 1 and pending:
@@ -461,12 +639,15 @@ def main(output_roots: dict = None):
     # Aggregate in schedule order, from disk, so a resumed sweep and a fresh one
     # produce the same summary regardless of completion order (M1.3 exit check).
     summary_rows = []
-    for pair in pairs:
-        ds_name = _fmt_pair(pair)
+    for task in tasks:
+        pair = task["pair"]
+        dataset_key = task["dataset_key"]
+        role = task["evidence_role"]
+        ds_name = _fmt_task(dataset_key, pair, role)
         for config_name in args.configs:
             per_seed = []
             for seed in args.seeds:
-                path = _metrics_path(pair, config_name, seed)
+                path = _metrics_path(pair, config_name, seed, dataset_key, role)
                 if os.path.exists(path):
                     with open(path) as fh:
                         per_seed.append(json.load(fh))
@@ -479,7 +660,9 @@ def main(output_roots: dict = None):
                 summary_rows.append((ds_name, config_name, agg))
 
     # Aggregate baselines (collected under baseline_* dirs) into the summary too.
-    _append_baseline_rows(pairs, args.seeds, summary_rows)
+    _append_baseline_rows([_fmt_task(
+        task["dataset_key"], task["pair"], task["evidence_role"])
+        for task in tasks], args.seeds, summary_rows)
 
     _write_summary_csv(summary_rows, os.path.join(EXP_ROOT, "summary.csv"))
     print(f"\nWrote summary to {os.path.join(EXP_ROOT, 'summary.csv')}")
@@ -490,10 +673,10 @@ def main(output_roots: dict = None):
         sys.exit(1)
 
 
-def _append_baseline_rows(pairs, seeds, summary_rows):
+def _append_baseline_rows(tasks, seeds, summary_rows):
     """Aggregate the per-seed baseline JSONs that run_single saved."""
-    for pair in pairs:
-        ds_name = _fmt_pair(pair)
+    for task in tasks:
+        ds_name = task if isinstance(task, str) else _fmt_pair(task)
         ds_dir = os.path.join(EXP_ROOT, ds_name)
         if not os.path.isdir(ds_dir):
             continue
@@ -511,7 +694,8 @@ def _append_baseline_rows(pairs, seeds, summary_rows):
                 summary_rows.append((ds_name, entry, aggregate_metrics(dicts)))
 
 
-_SUMMARY_METRICS = ("accuracy", "precision", "recall", "f1", "roc_auc", "pr_auc")
+_SUMMARY_METRICS = (
+    "accuracy", "balanced_accuracy", "precision", "recall", "f1", "roc_auc", "pr_auc")
 
 
 def _write_summary_csv(rows, path):

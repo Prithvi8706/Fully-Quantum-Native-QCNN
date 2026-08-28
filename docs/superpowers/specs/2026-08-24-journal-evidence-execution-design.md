@@ -1,5 +1,7 @@
 # Journal Evidence Execution Design
 
+> **Scope amendment — 2026-08-27:** Task 7 has been completed on `origin/dev`. The former twelve-workstream execution of Tasks 8–19 is compressed by `docs/superpowers/plans/2026-08-27-q1-journal-fast-track.md`. The material below is retained as the maximal design; the active plan preserves a Q1-worthy evidence target in seven focused workdays plus two bounded unattended compute windows.
+
 ## Goal
 
 Finish roadmap Tasks 7–19 and produce a journal-ready paper around the existing FQCNN model. Improve the evidence, reproducibility, statistical support, figures, tables, citations, and manuscript package without changing the canonical FQCNN architecture.

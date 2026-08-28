@@ -1,5 +1,7 @@
 # FQCNN Roadmap Execution Implementation Plan
 
+> **Scope amendment — 2026-08-27:** Tasks 8–19 in this maximal roadmap are no longer executed as twelve separate workstreams. Use `docs/superpowers/plans/2026-08-27-q1-journal-fast-track.md`, which preserves the Q1 target through compressed evidence gates. Completed prerequisite and Task 7 history remain authoritative; unchecked boxes below block only when the fast-track plan retains their evidence requirement.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Execute the remaining FQCNN roadmap in dependency order, first removing local protocol blockers and safely launching reproducible long-running work, then completing empirical, hardware, manuscript, and reproduction gates.

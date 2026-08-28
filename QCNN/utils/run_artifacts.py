@@ -120,10 +120,16 @@ def _valid_npz_artifacts(directory: str) -> bool:
         with np.load(os.path.join(directory, _WEIGHTS), allow_pickle=False) as weights:
             if not weights.files:
                 return False
+            has_parameter_value = False
             for name in weights.files:
                 values = np.asarray(weights[name])
-                if values.size == 0 or not np.all(np.isfinite(values)):
+                if values.size == 0:
+                    continue
+                has_parameter_value = True
+                if not np.all(np.isfinite(values)):
                     return False
+            if not has_parameter_value:
+                return False
         with np.load(os.path.join(directory, _PREDICTIONS), allow_pickle=False) as predictions:
             required = ('sample_ids', 'y_true', 'raw_outputs')
             if any(name not in predictions.files for name in required):
@@ -195,6 +201,8 @@ def save_baseline_result(*, directory: str, result: dict, split_id: str,
                if isinstance(v, (int, float, str, bool, list, type(None)))}
     with open(os.path.join(directory, "metrics.json"), "w") as fh:
         json.dump(metrics, fh, indent=2, sort_keys=True)
+    selected_parameters = np.asarray(result.get("selected_parameters", []), dtype=float)
+    np.savez(weights_path(directory), selected_parameters=selected_parameters)
     save_predictions(directory, sample_ids, y_test, result["raw_outputs"])
     complete_run(directory, metrics=metrics)
 

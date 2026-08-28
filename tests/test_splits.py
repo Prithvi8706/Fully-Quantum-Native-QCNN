@@ -97,10 +97,52 @@ def test_apply_manifest_returns_matching_features_and_labels(labels):
     np.testing.assert_array_equal(X_tr[:, 0], 4.0 * np.array(manifest["train_idx"]))
 
 
+def test_source_stable_string_sample_ids_round_trip(labels, tmp_path):
+    sample_ids = [f"fashion_mnist:train:{index:05d}" for index in range(len(labels))]
+    manifest = splits.make_split_manifest(
+        labels, seed=0, dataset_id="fashion-unit", class_mapping={},
+        sample_ids=sample_ids,
+    )
+    path = tmp_path / "split.json"
+    splits.save_manifest(manifest, str(path))
+    loaded = splits.load_manifest(str(path))
+    assert loaded["sample_ids"] == sample_ids
+    assert loaded["id"] == manifest["id"]
+
+
+def test_source_sample_ids_are_part_of_manifest_identity(labels):
+    first = [f"mnist:train:{index:05d}" for index in range(len(labels))]
+    second = [f"fashion_mnist:train:{index:05d}" for index in range(len(labels))]
+    a = splits.make_split_manifest(
+        labels, seed=0, dataset_id="binary-unit", class_mapping={}, sample_ids=first,
+    )
+    b = splits.make_split_manifest(
+        labels, seed=0, dataset_id="binary-unit", class_mapping={}, sample_ids=second,
+    )
+    assert a["train_idx"] == b["train_idx"]
+    assert a["id"] != b["id"]
+
+
+@pytest.mark.parametrize("sample_ids", [["same"] * 200, [""] * 200, [True] * 200])
+def test_invalid_source_sample_ids_are_rejected(labels, sample_ids):
+    with pytest.raises(ValueError, match="sample IDs"):
+        splits.make_split_manifest(
+            labels, seed=0, dataset_id="unit", class_mapping={},
+            sample_ids=sample_ids,
+        )
+
+
 def test_verify_manifest_rejects_an_overlapping_split(labels):
     manifest = splits.make_split_manifest(labels, seed=0, dataset_id="unit", class_mapping={})
     manifest["val_idx"] = manifest["val_idx"] + [manifest["train_idx"][0]]
     with pytest.raises(ValueError, match="disjoint"):
+        splits.verify_manifest(manifest)
+
+
+def test_verify_manifest_rejects_corrupt_source_ids(labels):
+    manifest = splits.make_split_manifest(labels, seed=0, dataset_id="unit", class_mapping={})
+    manifest["sample_ids"][1] = manifest["sample_ids"][0]
+    with pytest.raises(ValueError, match="sample IDs"):
         splits.verify_manifest(manifest)
 
 

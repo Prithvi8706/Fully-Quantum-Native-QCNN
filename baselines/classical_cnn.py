@@ -108,13 +108,18 @@ def run_mlp_baseline(*, X_train, y_train, X_val, y_val, X_test, y_test,
 
 
 def run_classical_baselines(*, X_train, y_train, X_val, y_val, X_test, y_test,
-                            seed: int = 42, target_params: int | None = None) -> dict:
+                            seed: int = 42, target_params: int | None = None,
+                            baselines=None) -> dict:
     common = dict(X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val,
                   X_test=X_test, y_test=y_test, seed=seed)
-    return {
-        "logistic": run_logistic_baseline(**common),
-        "mlp": run_mlp_baseline(**common, target_params=target_params),
+    runners = {
+        "logistic": lambda: run_logistic_baseline(**common),
+        "mlp": lambda: run_mlp_baseline(**common, target_params=target_params),
     }
+    selected = tuple(runners) if baselines is None else tuple(baselines)
+    if len(set(selected)) != len(selected) or any(name not in runners for name in selected):
+        raise ValueError("classical baselines must be unique choices from logistic, mlp")
+    return {name: runners[name]() for name in selected}
 
 
 def build_baseline_cnn(input_shape=(4, 4, 1)):

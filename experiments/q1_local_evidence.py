@@ -1,0 +1,1307 @@
+"""Bounded, local-only resource and noise evidence for the Q1 study.
+
+This module is intentionally executable with the isolated ``.venv-qiskit``
+environment.  The training environment contains the canonical PennyLane model;
+the Qiskit environment deliberately does not.  Consequently this file builds
+one small Qiskit representation of the *same frozen gate schedule* for
+transpilation and Aer checks.  It never defines an alternative training model,
+contacts a provider, reads a token, or submits a job.
+
+The four subcommands correspond to Work Package D in the fast-track plan::
+
+    .venv-qiskit\\Scripts\\python -m experiments.q1_local_evidence resources
+    .venv-qiskit\\Scripts\\python -m experiments.q1_local_evidence pooling
+    .venv-qiskit\\Scripts\\python -m experiments.q1_local_evidence noise \
+        --tasks mnist:3,5 fashion_mnist:0,6 --seeds 0 1 2 --samples 25
+    .venv-qiskit\\Scripts\\python -m experiments.q1_local_evidence rehearse
+
+All emitted artifacts state their local target, layout policy, lock hash,
+source hash, and limitations.  Local Aer noise is evidence about the declared
+noise model; it is not device validation and must not be written as QPU data.
+"""
+from __future__ import annotations
+
+import argparse
+import gzip
+import hashlib
+import json
+import math
+from pathlib import Path
+import struct
+import subprocess
+import sys
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+
+import numpy as np
+
+
+ROOT = Path(__file__).resolve().parents[1]
+EVIDENCE_ROOT = ROOT / "Results" / "evidence"
+LOCK_PATH = ROOT / "requirements-qiskit-lock.txt"
+CANONICAL_SOURCE = ROOT / "QCNN" / "circuits.py"
+
+DEFAULT_BACKEND = "FakePeekskill"
+DEFAULT_SEED_TRANSPILER = 42
+DEFAULT_OPTIMIZATION_LEVEL = 1
+DEFAULT_SHOTS = 128
+RESOURCE_QUBITS = (4, 6, 8, 10)
+POOLING_ARMS = ("none", "measurement", "unitary", "coherent", "su4")
+NOISE_LEVELS = (0.0, 0.005, 0.01, 0.02)
+TARGET_BASIS = ("rz", "sx", "x", "ecr", "measure", "barrier", "reset")
+DATASET_DIRECTORIES = {
+    "mnist": "MNIST",
+    "fashion_mnist": "FashionMNIST",
+    "kmnist": "KMNIST",
+}
+IDX_FILENAMES = {
+    "mnist": {
+        ("train", "images"): "train-images.idx3-ubyte",
+        ("train", "labels"): "train-labels.idx1-ubyte",
+        ("test", "images"): "t10k-images.idx3-ubyte",
+        ("test", "labels"): "t10k-labels.idx1-ubyte",
+    },
+    "fashion_mnist": {
+        ("train", "images"): "train-images-idx3-ubyte.gz",
+        ("train", "labels"): "train-labels-idx1-ubyte.gz",
+        ("test", "images"): "t10k-images-idx3-ubyte.gz",
+        ("test", "labels"): "t10k-labels-idx1-ubyte.gz",
+    },
+    "kmnist": {
+        ("train", "images"): "train-images-idx3-ubyte.gz",
+        ("train", "labels"): "train-labels-idx1-ubyte.gz",
+        ("test", "images"): "t10k-images-idx3-ubyte.gz",
+        ("test", "labels"): "t10k-labels-idx1-ubyte.gz",
+    },
+}
+
+SCHEMAS = {
+    "resources": {"name": "fqcnn_q1_resources", "version": 1},
+    "pooling": {"name": "fqcnn_q1_pooling_practicality", "version": 1},
+    "noise": {"name": "fqcnn_q1_noise_validation", "version": 1},
+    "rehearsal": {"name": "fqcnn_q1_fake_backend_rehearsal", "version": 1},
+}
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _json_hash(payload: Any) -> str:
+    return sha256_bytes(
+        json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+    )
+
+
+def _git_snapshot() -> Dict[str, Any]:
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=str(ROOT), check=True,
+            capture_output=True, text=True,
+        ).stdout.strip()
+        dirty = subprocess.run(
+            ["git", "status", "--short"], cwd=str(ROOT), check=True,
+            capture_output=True, text=True,
+        ).stdout.splitlines()
+        # Record cleanliness without embedding workstation-specific filenames.
+        return {"head": head, "dirty": bool(dirty), "dirty_entries": len(dirty)}
+    except (OSError, subprocess.CalledProcessError):
+        return {"head": None, "dirty": True, "dirty_entries": None, "error": "git unavailable"}
+
+
+def _require_qiskit() -> Dict[str, Any]:
+    """Import the isolated-toolchain pieces lazily.
+
+    Importing this module remains safe in the Python 3.9 PennyLane training
+    environment, where the Qiskit Runtime package may be incompatible.  The
+    command then fails closed with an actionable instruction instead of
+    silently switching environments.
+    """
+    try:
+        from qiskit import QuantumCircuit, transpile
+        from qiskit.quantum_info import Pauli, Statevector
+    except Exception as exc:
+        raise RuntimeError(
+            "local evidence requires the isolated .venv-qiskit environment "
+            f"(Qiskit import failed: {type(exc).__name__}: {exc})"
+        ) from exc
+    return {
+        "QuantumCircuit": QuantumCircuit,
+        "Statevector": Statevector,
+        "Pauli": Pauli,
+        "transpile": transpile,
+    }
+
+
+def _require_fake_provider():
+    try:
+        from qiskit_ibm_runtime import fake_provider
+    except Exception as exc:
+        raise RuntimeError(
+            "local evidence requires qiskit-ibm-runtime in .venv-qiskit "
+            f"(fake backend import failed: {type(exc).__name__}: {exc})"
+        ) from exc
+    return fake_provider
+
+
+def _select_backend(name: str = DEFAULT_BACKEND):
+    """Return the named local BackendV2 fake; never query a provider."""
+    fake_provider = _require_fake_provider()
+    try:
+        backend_type = getattr(fake_provider, name)
+    except AttributeError as exc:
+        raise RuntimeError(f"local fake backend {name!r} is unavailable") from exc
+    try:
+        backend = backend_type()
+    except Exception as exc:
+        raise RuntimeError(f"could not instantiate local fake backend {name!r}") from exc
+    if not hasattr(backend, "target") or not hasattr(backend, "num_qubits"):
+        raise RuntimeError(f"{name!r} is not a BackendV2-compatible fake backend")
+    return backend
+
+
+def _backend_snapshot(backend) -> Dict[str, Any]:
+    operations = sorted(str(name) for name in getattr(backend.target, "operation_names", []))
+    coupling = getattr(backend, "coupling_map", None)
+    try:
+        edges = len(coupling.get_edges()) if coupling is not None else 0
+    except Exception:
+        edges = None
+    return {
+        "class": type(backend).__name__,
+        "name": str(getattr(backend, "name", type(backend).__name__)),
+        "num_qubits": int(backend.num_qubits),
+        "backend_v2": True,
+        "target_operations": operations,
+        "coupling_edges": edges,
+        "source": "local qiskit_ibm_runtime.fake_provider; no provider query",
+    }
+
+
+def _metrics(circuit) -> Dict[str, Any]:
+    return {
+        "depth": int(circuit.depth()),
+        "width": int(circuit.width()),
+        "size": int(circuit.size()),
+        "operation_counts": {
+            str(name): int(count) for name, count in sorted(circuit.count_ops().items())
+        },
+    }
+
+
+def _target_validation(circuit, backend) -> Dict[str, Any]:
+    """Validate final operations against the selected fake target when possible."""
+    invalid: List[Dict[str, Any]] = []
+    checked = 0
+    actual_target = hasattr(backend, "target") and hasattr(
+        backend.target, "instruction_supported")
+    for item in circuit.data:
+        if hasattr(item, "operation"):
+            operation = item.operation
+            qargs = item.qubits
+        else:
+            operation, qargs, _ = item
+        name = str(operation.name)
+        if name == "barrier":
+            continue
+        checked += 1
+        indices = [int(circuit.find_bit(qubit).index) for qubit in qargs]
+        if actual_target:
+            try:
+                supported = bool(
+                    backend.target.instruction_supported(operation_name=name, qargs=tuple(indices))
+                )
+            except Exception:
+                supported = False
+            if not supported:
+                invalid.append({"operation": name, "qargs": indices})
+    return {
+        "uses_actual_target": bool(actual_target),
+        "checked_instructions": int(checked),
+        "invalid": invalid,
+    }
+
+
+def _transpile_stage(circuit, backend, seed_transpiler: int, optimization_level: int) -> Dict[str, Any]:
+    qiskit = _require_qiskit()
+    try:
+        transpiled = qiskit["transpile"](
+            circuit,
+            backend=backend,
+            seed_transpiler=int(seed_transpiler),
+            optimization_level=int(optimization_level),
+        )
+    except Exception as exc:
+        return {
+            "status": "unsupported",
+            "error": f"{type(exc).__name__}: {exc}",
+            "metrics": None,
+            "target_validation": None,
+            "unsupported_operations": [],
+        }
+    target_validation = _target_validation(transpiled, backend)
+    counts = _metrics(transpiled)["operation_counts"]
+    target_ops = set(str(v) for v in getattr(backend.target, "operation_names", []))
+    unsupported = sorted(set(counts) - target_ops - {"barrier"})
+    if target_validation["invalid"]:
+        unsupported = sorted(set(unsupported) | {
+            str(item["operation"]) for item in target_validation["invalid"]
+        })
+    return {
+        "status": "pass" if not unsupported else "unsupported_target_operations",
+        "error": None,
+        "metrics": _metrics(transpiled),
+        "target_validation": target_validation,
+        "unsupported_operations": unsupported,
+        "circuit": transpiled,
+    }
+
+
+def _decompose(circuit):
+    try:
+        return circuit.decompose(reps=10)
+    except Exception:
+        return circuit.decompose()
+
+
+class _ParameterStream:
+    """Deterministic angle source backed by a checkpoint or a declared fixture."""
+
+    def __init__(self, seed: int, weights: Optional[Mapping[str, np.ndarray]] = None):
+        self.seed = int(seed)
+        self.weights = weights
+        self._rng = np.random.default_rng(self.seed)
+        if weights:
+            values: List[float] = []
+            for key in sorted(weights):
+                values.extend(np.asarray(weights[key], dtype=float).reshape(-1).tolist())
+            self._values = np.asarray(values, dtype=float)
+        else:
+            self._values = np.asarray([], dtype=float)
+        self._index = 0
+
+    def next(self, default_scale: float = 0.17) -> float:
+        if self._values.size:
+            value = float(self._values[self._index % self._values.size])
+            self._index += 1
+            return value
+        self._index += 1
+        return float(self._rng.normal(0.0, default_scale))
+
+
+def _weights_from_path(path: Optional[Path]) -> Tuple[Optional[Dict[str, np.ndarray]], Dict[str, Any]]:
+    if path is None or not Path(path).is_file():
+        return None, {
+            "status": "fixture",
+            "path": None if path is None else str(path),
+            "sha256": None,
+            "claim_scope": "deterministic circuit probe; no trained checkpoint available",
+        }
+    try:
+        with np.load(path, allow_pickle=False) as archive:
+            weights = {key: np.asarray(archive[key], dtype=float) for key in archive.files}
+    except Exception as exc:
+        raise ValueError(f"invalid checkpoint archive {path}: {exc}") from exc
+    try:
+        relative_path = str(Path(path).resolve().relative_to(ROOT.resolve()))
+    except ValueError:
+        relative_path = str(Path(path).resolve())
+    return weights, {
+        "status": "loaded",
+        "path": relative_path,
+        "sha256": sha256_file(Path(path)),
+        "claim_scope": "validation-selected checkpoint when available",
+    }
+
+
+def _find_checkpoint(dataset: str, classes: Sequence[int], seed: int, weights_root: Path) -> Optional[Path]:
+    task = f"{dataset}_{int(classes[0])}v{int(classes[1])}"
+    candidates = (
+        Path(weights_root) / task / "proposed" / f"seed_{int(seed)}" / "weights.npz",
+        Path(weights_root) / "runs" / task / "proposed" / f"seed_{int(seed)}" / "weights.npz",
+        ROOT / "Results" / "q1_comparison" / "runs" / task / "proposed" /
+        f"seed_{int(seed)}" / "weights.npz",
+        ROOT / "Results" / "runs" / task / "proposed" / f"seed_{int(seed)}" / "weights.npz",
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _conv_kernel(weights: Optional[Mapping[str, np.ndarray]], layer: int, stream: _ParameterStream) -> np.ndarray:
+    key = f"quantum_conv_kernel_{layer}"
+    if weights is not None and key in weights:
+        value = np.asarray(weights[key], dtype=float)
+        if value.size >= 4 * 3:
+            return value.reshape(4, -1, 3)
+    return np.asarray([[[stream.next() for _ in range(3)] for _ in range(4)] for _ in range(4)])
+
+
+def _pool_angles(weights: Optional[Mapping[str, np.ndarray]], layer: int, stream: _ParameterStream) -> np.ndarray:
+    key = f"quantum_pooling_{layer}"
+    if weights is not None and key in weights and np.asarray(weights[key]).size:
+        return np.asarray(weights[key], dtype=float).reshape(-1)
+    return np.asarray([stream.next() for _ in range(15)], dtype=float)
+
+
+def _classifier_angles(weights: Optional[Mapping[str, np.ndarray]], stream: _ParameterStream) -> np.ndarray:
+    if weights is not None and "quantum_classifier" in weights:
+        value = np.asarray(weights["quantum_classifier"], dtype=float).reshape(-1)
+        if value.size >= 32:
+            return value[:32]
+    return np.asarray([stream.next() for _ in range(32)], dtype=float)
+
+
+def _conv_windows(width: int, height: int) -> List[List[int]]:
+    windows = []
+    for row in range(height - 1):
+        for col in range(width - 1):
+            windows.append([
+                row * width + col,
+                row * width + col + 1,
+                (row + 1) * width + col,
+                (row + 1) * width + col + 1,
+            ])
+    return windows
+
+
+def _n_conv_layers(n_qubits: int) -> int:
+    # Mirror QuantumNativeConfig.configure_for_image: n<8 retains at most
+    # three convolution layers, and only the genuinely tiny n<4 family is
+    # reduced to two.  In particular n=4 is a three-layer instance.
+    if n_qubits < 4:
+        return 2
+    if n_qubits < 8:
+        return 3
+    return 4
+
+
+def _build_state_preparation(n_qubits: int, amplitudes: Optional[np.ndarray] = None):
+    qiskit = _require_qiskit()
+    circuit = qiskit["QuantumCircuit"](int(n_qubits), name="state_preparation")
+    if amplitudes is None:
+        amplitudes = np.arange(1, 2 ** int(n_qubits) + 1, dtype=float)
+        amplitudes /= np.linalg.norm(amplitudes)
+    amplitudes = np.asarray(amplitudes, dtype=complex).reshape(-1)
+    expected = 2 ** int(n_qubits)
+    if amplitudes.size != expected:
+        raise ValueError(f"state-preparation vector has {amplitudes.size} values; expected {expected}")
+    norm = float(np.linalg.norm(amplitudes))
+    if not np.isfinite(norm) or norm <= 0.0:
+        raise ValueError("state-preparation vector must have a finite, non-zero norm")
+    circuit.initialize(amplitudes / norm, list(range(int(n_qubits))))
+    return circuit
+
+
+def _build_model_body(
+    n_qubits: int,
+    pooling_mode: str = "unitary",
+    *,
+    seed: int = 0,
+    weights: Optional[Mapping[str, np.ndarray]] = None,
+):
+    """Build the Qiskit gate schedule corresponding to ``circuits.build_circuit``."""
+    qiskit = _require_qiskit()
+    if pooling_mode not in POOLING_ARMS:
+        raise ValueError(f"unknown pooling mode {pooling_mode!r}; choose from {POOLING_ARMS}")
+    # Classical bits are present for every arm so the measurement arm can be
+    # composed into the same full-circuit container as unitary arms.
+    circuit = qiskit["QuantumCircuit"](int(n_qubits), int(n_qubits), name=f"model_{pooling_mode}")
+    stream = _ParameterStream(seed, weights)
+    active = list(range(int(n_qubits)))
+    n_layers = _n_conv_layers(int(n_qubits))
+
+    for layer in range(n_layers):
+        n_current = len(active)
+        if n_current >= 4:
+            width = int(math.sqrt(n_current))
+            while width > 1 and n_current % width:
+                width -= 1
+            height = n_current // width
+            width, height = max(width, height), min(width, height)
+            kernel = _conv_kernel(weights, layer, stream)
+            for relative in _conv_windows(width, height):
+                if max(relative) >= n_current:
+                    continue
+                window = [active[index] for index in relative]
+                for depth in range(kernel.shape[1]):
+                    for index, qubit in enumerate(window):
+                        circuit.rx(float(kernel[index, depth, 0]), qubit)
+                        circuit.ry(float(kernel[index, depth, 1]), qubit)
+                        circuit.rz(float(kernel[index, depth, 2]), qubit)
+                    q0, q1, q2, q3 = window
+                    circuit.cx(q0, q1)
+                    circuit.cx(q2, q3)
+                    circuit.cx(q0, q2)
+                    circuit.cx(q1, q3)
+                    circuit.cx(q0, q3)
+                    circuit.cx(q1, q2)
+
+        if layer >= n_layers - 1 or len(active) < 2:
+            continue
+        pairs = [(active[index], active[index + 1]) for index in range(0, len(active) - 1, 2)]
+        if not pairs:
+            continue
+        angles = _pool_angles(weights, layer, stream)
+        for pair_index, (keep, discard) in enumerate(pairs):
+            base = 3 * pair_index
+            if pooling_mode == "none":
+                continue
+            if pooling_mode == "measurement":
+                circuit.measure(discard, pair_index)
+                with circuit.if_test((pair_index, 1)):
+                    circuit.ry(float(angles[base % angles.size]), keep)
+                    circuit.rz(float(angles[(base + 1) % angles.size]), keep)
+                circuit.ry(float(angles[(base + 2) % angles.size]), keep)
+            elif pooling_mode == "unitary":
+                circuit.cry(float(angles[base % angles.size]), discard, keep)
+                circuit.crz(float(angles[(base + 1) % angles.size]), discard, keep)
+                circuit.ry(0.02, discard)
+                circuit.ry(float(angles[(base + 2) % angles.size]), keep)
+            elif pooling_mode == "coherent":
+                base4 = 4 * pair_index
+                circuit.cry(float(angles[base4 % angles.size]), discard, keep)
+                circuit.crz(float(angles[(base4 + 1) % angles.size]), discard, keep)
+                circuit.ry(float(angles[(base4 + 2) % angles.size]), keep)
+                circuit.cry(float(angles[(base4 + 3) % angles.size]), keep, discard)
+            elif pooling_mode == "su4":
+                # A deterministic SU(4)-class gate is sufficient for resource
+                # accounting; its 15-angle parameterisation is recorded in the
+                # arm metadata.  The matrix is made unitary by QR factorisation.
+                rng = np.random.default_rng(int(seed) + 991 * (layer + 1) + pair_index)
+                matrix = rng.normal(size=(4, 4)) + 1j * rng.normal(size=(4, 4))
+                unitary, upper = np.linalg.qr(matrix)
+                diagonal = np.diag(upper)
+                phase = np.where(np.abs(diagonal) > 0, diagonal / np.abs(diagonal), 1.0)
+                circuit.unitary(unitary @ np.diag(np.conjugate(phase)), [keep, discard])
+        active = active[::2]
+
+    classifier = _classifier_angles(weights, stream)
+    readout = active[0]
+    for index, qubit in enumerate(active[:min(len(active), 4)]):
+        circuit.rx(float(classifier[index * 2 % 32]), qubit)
+        circuit.ry(float(classifier[(index * 2 + 1) % 32]), qubit)
+        circuit.rz(float(classifier[(index * 2 + 8) % 32]), qubit)
+    for index in range(len(active) - 1):
+        circuit.cx(active[index], active[index + 1])
+    if len(active) >= 2:
+        circuit.cx(active[-1], active[0])
+    for index, qubit in enumerate(active[:min(len(active), 4)]):
+        circuit.rx(float(classifier[(index * 2 + 16) % 32]), qubit)
+        circuit.ry(float(classifier[(index * 2 + 17) % 32]), qubit)
+    if len(active) >= 2:
+        circuit.cx(active[0], active[min(len(active) - 1, 1)])
+    circuit.rz(float(classifier[31]), readout)
+    return circuit
+
+
+def _build_readout(n_qubits: int):
+    qiskit = _require_qiskit()
+    circuit = qiskit["QuantumCircuit"](int(n_qubits), int(n_qubits), name="readout")
+    circuit.measure(0, 0)
+    return circuit
+
+
+def _build_full_circuit(
+    n_qubits: int,
+    pooling_mode: str = "unitary",
+    *,
+    amplitudes: Optional[np.ndarray] = None,
+    seed: int = 0,
+    weights: Optional[Mapping[str, np.ndarray]] = None,
+    measure: bool = True,
+):
+    qiskit = _require_qiskit()
+    circuit = qiskit["QuantumCircuit"](int(n_qubits), int(n_qubits), name="fqcnn_local_probe")
+    state = _build_state_preparation(n_qubits, amplitudes)
+    body = _build_model_body(n_qubits, pooling_mode, seed=seed, weights=weights)
+    circuit.compose(state, qubits=list(range(int(n_qubits))), inplace=True)
+    circuit.compose(
+        body,
+        qubits=list(range(int(n_qubits))),
+        clbits=list(range(int(n_qubits))),
+        inplace=True,
+    )
+    if measure:
+        circuit.measure(0, 0)
+    return circuit
+
+
+def _component_record(circuit, backend, seed_transpiler: int, optimization_level: int) -> Dict[str, Any]:
+    decomposed = _decompose(circuit)
+    transpiled = _transpile_stage(circuit, backend, seed_transpiler, optimization_level)
+    result: Dict[str, Any] = {
+        "logical": _metrics(circuit),
+        "decomposed": _metrics(decomposed),
+        "transpiled": transpiled["metrics"],
+        "transpilation_status": transpiled["status"],
+        "transpilation_error": transpiled["error"],
+        "unsupported_operations": transpiled["unsupported_operations"],
+        "target_validation": transpiled["target_validation"],
+    }
+    return result
+
+
+def _resource_record(
+    n_qubits: int,
+    pooling_mode: str,
+    backend,
+    *,
+    seed: int = 0,
+    seed_transpiler: int = DEFAULT_SEED_TRANSPILER,
+    optimization_level: int = DEFAULT_OPTIMIZATION_LEVEL,
+    weights: Optional[Mapping[str, np.ndarray]] = None,
+) -> Dict[str, Any]:
+    state = _build_state_preparation(n_qubits)
+    body = _build_model_body(n_qubits, pooling_mode, seed=seed, weights=weights)
+    readout = _build_readout(n_qubits)
+    full = _build_full_circuit(n_qubits, pooling_mode, seed=seed, weights=weights)
+    components = {
+        "state_preparation": _component_record(state, backend, seed_transpiler, optimization_level),
+        "model_body": _component_record(body, backend, seed_transpiler, optimization_level),
+        "readout": _component_record(readout, backend, seed_transpiler, optimization_level),
+        "total": _component_record(full, backend, seed_transpiler, optimization_level),
+    }
+    statuses = [value["transpilation_status"] for value in components.values()]
+    payload = {
+        "qubits": int(n_qubits),
+        "pooling_mode": pooling_mode,
+        "backend": _backend_snapshot(backend),
+        "transpilation": {
+            "seed_transpiler": int(seed_transpiler),
+            "optimization_level": int(optimization_level),
+            "layout_policy": "transpiler-selected layout against the declared fake BackendV2 target; no initial_layout",
+        },
+        "components": components,
+        "status": "pass" if all(status == "pass" for status in statuses) else "partial",
+        "limitations": (
+            "Counts are local logical/decomposed/transpiled estimates. They are not a hardware run; "
+            "measurement-style dynamic control may be unsupported by the fake target."
+        ),
+    }
+    payload["payload_sha256"] = _json_hash(payload)
+    return payload
+
+
+def build_resources(
+    qubits: Sequence[int] = RESOURCE_QUBITS,
+    *,
+    backend_name: str = DEFAULT_BACKEND,
+    seed_transpiler: int = DEFAULT_SEED_TRANSPILER,
+    optimization_level: int = DEFAULT_OPTIMIZATION_LEVEL,
+    output: Optional[Path] = None,
+) -> Dict[str, Any]:
+    requested = tuple(int(value) for value in qubits)
+    if not requested or any(value < 2 for value in requested):
+        raise ValueError("qubits must be a non-empty sequence of values >= 2")
+    if len(set(requested)) != len(requested):
+        raise ValueError("qubits must be unique")
+    backend = _select_backend(backend_name)
+    if max(requested) > int(backend.num_qubits):
+        raise ValueError(f"requested n={max(requested)} exceeds fake backend width {backend.num_qubits}")
+    records = []
+    for n_qubits in requested:
+        records.append(_resource_record(
+            n_qubits, "unitary", backend,
+            seed_transpiler=seed_transpiler,
+            optimization_level=optimization_level,
+        ))
+    payload = {
+        "schema": SCHEMAS["resources"],
+        "status": "pass" if all(item["status"] == "pass" for item in records) else "partial",
+        "protocol": {
+            "qubits": list(requested),
+            "arm": "frozen unitary pooling",
+            "components": ["state_preparation", "model_body", "readout", "total"],
+            "backend": _backend_snapshot(backend),
+            "seed_transpiler": int(seed_transpiler),
+            "optimization_level": int(optimization_level),
+            "layout_policy": "transpiler-selected layout; no initial_layout supplied",
+        },
+        "canonical_source": {
+            "path": "QCNN/circuits.py",
+            "function": "build_circuit",
+            "sha256": sha256_file(CANONICAL_SOURCE),
+        },
+        "records": records,
+        "environment": {
+            "python": sys.version.split()[0],
+            # Keep the artifact portable and avoid leaking the workstation path.
+            "executable": Path(sys.executable).name,
+            "qiskit_lock": {
+                "path": "requirements-qiskit-lock.txt",
+                "sha256": sha256_file(LOCK_PATH) if LOCK_PATH.exists() else None,
+            },
+            "git": _git_snapshot(),
+            "network_accessed": False,
+            "credentials_accessed": False,
+        },
+        "limitations": (
+            "This artifact reports local transpilation/resource estimates only. "
+            "State preparation and model-body counts are intentionally separated; "
+            "no QPU execution is implied."
+        ),
+    }
+    payload["payload_sha256"] = _json_hash(payload)
+    if output is not None:
+        write_artifact(payload, output)
+    return payload
+
+
+def build_pooling_practicality(
+    n_qubits: int = 4,
+    *,
+    backend_name: str = DEFAULT_BACKEND,
+    seed_transpiler: int = DEFAULT_SEED_TRANSPILER,
+    optimization_level: int = DEFAULT_OPTIMIZATION_LEVEL,
+    output: Optional[Path] = None,
+) -> Dict[str, Any]:
+    n_qubits = int(n_qubits)
+    backend = _select_backend(backend_name)
+    if n_qubits > int(backend.num_qubits):
+        raise ValueError(f"requested n={n_qubits} exceeds fake backend width {backend.num_qubits}")
+    arms: Dict[str, Any] = {}
+    for mode in POOLING_ARMS:
+        record = _resource_record(
+            n_qubits, mode, backend,
+            seed_transpiler=seed_transpiler,
+            optimization_level=optimization_level,
+        )
+        arms[f"pool_{mode}"] = {
+            "mode": mode,
+            "logical": record["components"]["model_body"]["logical"],
+            "decomposed": record["components"]["model_body"]["decomposed"],
+            "transpiled": record["components"]["model_body"]["transpiled"],
+            "transpilation_status": record["components"]["model_body"]["transpilation_status"],
+            "unsupported_operations": record["components"]["model_body"]["unsupported_operations"],
+            "target_validation": record["components"]["model_body"]["target_validation"],
+            "limitations": record["limitations"],
+        }
+    measurement = arms["pool_measurement"]
+    dynamic_unsupported = bool(
+        measurement["unsupported_operations"] or
+        measurement["transpilation_status"] != "pass"
+    )
+    payload = {
+        "schema": SCHEMAS["pooling"],
+        "status": "pass",
+        "protocol": {
+            "n_qubits": n_qubits,
+            "arms": list(arms),
+            "backend": _backend_snapshot(backend),
+            "seed_transpiler": int(seed_transpiler),
+            "optimization_level": int(optimization_level),
+            "same_backend_settings": True,
+        },
+        "arms": arms,
+        "dynamic_behavior": {
+            "measurement_arm_target_unsupported": dynamic_unsupported,
+            "measurement_arm_statement": (
+                "The measurement-style arm is reported as dynamic control and is not treated as a "
+                "fully unitary hardware path; unsupported target operations remain visible."
+            ),
+        },
+        "canonical_source": {
+            "path": "QCNN/circuits.py",
+            "function": "build_circuit",
+            "sha256": sha256_file(CANONICAL_SOURCE),
+        },
+        "environment": {
+            "qiskit_lock": {
+                "path": "requirements-qiskit-lock.txt",
+                "sha256": sha256_file(LOCK_PATH) if LOCK_PATH.exists() else None,
+            },
+            "git": _git_snapshot(),
+            "network_accessed": False,
+            "credentials_accessed": False,
+        },
+        "limitations": (
+            "Fake-backend transpilation is a local practicality comparison, not device execution. "
+            "SU(4) is an expressivity/resource ceiling arm; it is not promoted to the headline model."
+        ),
+    }
+    payload["payload_sha256"] = _json_hash(payload)
+    if output is not None:
+        write_artifact(payload, output)
+    return payload
+
+
+def _parse_task(value: str) -> Tuple[str, Tuple[int, int]]:
+    try:
+        dataset, pair = str(value).split(":", 1)
+        low, high = pair.split(",", 1)
+        classes = (int(low), int(high))
+    except (ValueError, TypeError) as exc:
+        raise ValueError(f"task must have the form dataset:low,high, got {value!r}") from exc
+    if dataset not in DATASET_DIRECTORIES:
+        raise ValueError(f"unknown dataset {dataset!r}; choose from {sorted(DATASET_DIRECTORIES)}")
+    if classes[0] == classes[1] or min(classes) < 0 or max(classes) > 9:
+        raise ValueError(f"task classes must be two distinct labels in 0..9, got {classes!r}")
+    return dataset, classes
+
+
+def _idx_open(path: Path):
+    return gzip.open(path, "rb") if path.suffix == ".gz" else path.open("rb")
+
+
+def _load_idx_train(dataset: str, data_root: Path = ROOT / "datasets") -> Tuple[np.ndarray, np.ndarray, List[str]]:
+    if dataset not in IDX_FILENAMES:
+        raise ValueError(f"unknown dataset {dataset!r}")
+    directory = Path(data_root) / DATASET_DIRECTORIES[dataset]
+    image_path = directory / IDX_FILENAMES[dataset][("train", "images")]
+    label_path = directory / IDX_FILENAMES[dataset][("train", "labels")]
+    if not image_path.is_file() or not label_path.is_file():
+        raise FileNotFoundError(
+            f"missing local source files for {dataset}: {image_path}, {label_path}; "
+            "run the checksummed dataset registry fetch first"
+        )
+    with _idx_open(label_path) as handle:
+        header = handle.read(8)
+        magic, count = struct.unpack(">II", header)
+        if magic != 2049:
+            raise ValueError(f"invalid IDX label magic {magic} in {label_path}")
+        labels = np.frombuffer(handle.read(), dtype=np.uint8)
+    with _idx_open(image_path) as handle:
+        header = handle.read(16)
+        magic, image_count, rows, columns = struct.unpack(">IIII", header)
+        if magic != 2051 or (rows, columns) != (28, 28):
+            raise ValueError(f"invalid IDX image header in {image_path}")
+        images = np.frombuffer(handle.read(), dtype=np.uint8)
+    if count != image_count or labels.size != count or images.size != count * 28 * 28:
+        raise ValueError(f"IDX source count mismatch for {dataset}")
+    images = images.reshape(count, 28 * 28)
+    sample_ids = [f"{dataset}:train:{index:05d}" for index in range(count)]
+    return images, labels, sample_ids
+
+
+def _canonical_validation_manifest(
+    dataset: str, classes: Sequence[int], seed: int
+) -> Optional[Tuple[Path, Dict[str, Any]]]:
+    """Return a persisted Q1 manifest when one already exists.
+
+    The local Qiskit environment intentionally does not import the training
+    split service.  Reading its JSON manifest is sufficient to preserve exact
+    sample identity, and prevents this adapter from silently inventing a new
+    validation split when a canonical comparison split is available.
+    """
+    low, high = sorted(int(value) for value in classes)
+    task = f"{dataset}_{low}v{high}"
+    roots = (
+        ROOT / "Results" / "q1_comparison" / "manifests",
+        ROOT / "Results" / "smoke" / "q1_datasets" / "manifests",
+    )
+    candidates: List[Path] = []
+    for root in roots:
+        if root.exists():
+            candidates.extend(sorted(root.glob(f"{task}_n*_seed{int(seed)}.json")))
+    for candidate in candidates:
+        try:
+            payload = json.loads(candidate.read_text(encoding="utf-8"))
+            if (
+                payload.get("class_mapping") == {str(low): -1, str(high): 1}
+                and isinstance(payload.get("sample_ids"), list)
+                and isinstance(payload.get("val_idx"), list)
+                and isinstance(payload.get("id"), str)
+            ):
+                return candidate, payload
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            continue
+    return None
+
+
+def _validation_subset(
+    dataset: str,
+    classes: Sequence[int],
+    seed: int,
+    samples: int,
+    data_root: Path,
+) -> Tuple[np.ndarray, np.ndarray, List[str], str, Dict[str, Any]]:
+    images, labels, sample_ids = _load_idx_train(dataset, data_root)
+    classes = tuple(sorted(int(value) for value in classes))
+    persisted = _canonical_validation_manifest(dataset, classes, seed)
+    if persisted is not None:
+        manifest_path, manifest = persisted
+        val_positions = [int(value) for value in manifest["val_idx"]]
+        if samples > len(val_positions):
+            raise ValueError(
+                f"requested {samples} validation examples; only {len(val_positions)} available"
+            )
+        selected_positions = val_positions[:int(samples)]
+        selected_ids = [str(value) for value in manifest["sample_ids"]]
+        source_indices: List[int] = []
+        for value in selected_ids:
+            try:
+                source_indices.append(int(value.rsplit(":", 1)[1]))
+            except (IndexError, ValueError) as exc:
+                raise ValueError(f"manifest contains non-source sample ID {value!r}") from exc
+        selected = np.asarray([source_indices[position] for position in selected_positions], dtype=int)
+        mapped_labels = np.where(labels[selected] == classes[1], 1, -1).astype(np.int8)
+        return (
+            images[selected],
+            mapped_labels,
+            [selected_ids[position] for position in selected_positions],
+            str(manifest["id"]),
+            {
+                "method": "persisted canonical Q1 manifest validation partition",
+                "manifest_path": manifest_path.resolve().relative_to(ROOT.resolve()).as_posix(),
+                "fractions": manifest.get("fractions", [0.60, 0.15, 0.25]),
+                "source_positions": [int(position) for position in selected_positions],
+            },
+        )
+    keep = np.flatnonzero(np.isin(labels, np.asarray(classes, dtype=np.uint8)))
+    if keep.size < 4:
+        raise ValueError(f"not enough source samples for {dataset} {classes}")
+    # The project split is deterministic and stratified.  This local selector
+    # mirrors its fractions while remaining independent of sklearn in the
+    # isolated Qiskit environment.  It records its own hash so it cannot be
+    # confused with a historical split.
+    rng = np.random.default_rng(int(seed))
+    val_indices: List[int] = []
+    train_indices: List[int] = []
+    test_indices: List[int] = []
+    for label in classes:
+        group = keep[labels[keep] == label].copy()
+        group = group[rng.permutation(len(group))]
+        n_train = int(round(0.60 * len(group)))
+        n_val = int(round(0.15 * len(group)))
+        train_indices.extend(int(v) for v in group[:n_train])
+        val_indices.extend(int(v) for v in group[n_train:n_train + n_val])
+        test_indices.extend(int(v) for v in group[n_train + n_val:])
+    val_indices = sorted(val_indices)
+    if samples > len(val_indices):
+        raise ValueError(f"requested {samples} validation examples; only {len(val_indices)} available")
+    # Selection is seeded, but sorted source order makes the persisted IDs easy
+    # to audit and keeps repeated runs byte-stable.
+    selected = np.asarray(val_indices[:int(samples)], dtype=int)
+    mapped_labels = np.where(labels[selected] == classes[1], 1, -1).astype(np.int8)
+    selected_ids = [sample_ids[int(index)] for index in selected]
+    split_payload = {
+        "dataset": dataset,
+        "classes": list(classes),
+        "seed": int(seed),
+        "fractions": [0.60, 0.15, 0.25],
+        "train_source_indices": sorted(train_indices),
+        "val_source_indices": val_indices,
+        "test_source_indices": sorted(test_indices),
+    }
+    split_id = _json_hash(split_payload)
+    return images[selected], mapped_labels, selected_ids, split_id, {
+        "method": "deterministic per-class 60/15/25 source split; validation selected before noise sweep",
+        "fractions": [0.60, 0.15, 0.25],
+        "source_indices": [int(index) for index in selected],
+    }
+
+
+def _amplitudes_from_pixels(images: np.ndarray, n_qubits: int = 10) -> np.ndarray:
+    target = 2 ** int(n_qubits)
+    features = np.asarray(images, dtype=float) / 255.0
+    if features.ndim == 1:
+        features = features.reshape(1, -1)
+    if features.shape[1] > target:
+        features = features[:, :target]
+    if features.shape[1] < target:
+        features = np.pad(features, ((0, 0), (0, target - features.shape[1])))
+    norms = np.linalg.norm(features, axis=1, keepdims=True)
+    norms = np.where(norms <= 1e-15, 1.0, norms)
+    features = features / norms
+    # PennyLane's AmplitudeEmbedding treats the supplied vector as ordered by
+    # wires [0, ..., n-1], whereas Qiskit stores basis amplitudes with qubit 0
+    # as the least-significant bit.  Reverse the bit indices before calling
+    # QuantumCircuit.initialize so the Qiskit reconstruction is genuinely the
+    # canonical wire-order circuit rather than merely a self-consistent probe.
+    n = int(n_qubits)
+    order = [int(f"{index:0{n}b}"[::-1], 2) for index in range(target)]
+    return features[:, order]
+
+
+def _exact_statevector_expectation(circuit) -> float:
+    qiskit = _require_qiskit()
+    state = qiskit["Statevector"].from_instruction(circuit)
+    probabilities = np.asarray(state.probabilities(qargs=[0]), dtype=float)
+    return float(probabilities[0] - probabilities[1])
+
+
+def _aer_statevector_expectation(circuit) -> float:
+    try:
+        from qiskit_aer import AerSimulator
+    except Exception as exc:
+        raise RuntimeError("qiskit-aer is required for the zero-noise agreement check") from exc
+    qiskit = _require_qiskit()
+    probe = circuit.copy()
+    probe.save_expectation_value(qiskit["Pauli"]("Z"), [0], label="z_readout")
+    simulator = AerSimulator(method="statevector")
+    result = simulator.run(probe).result()
+    value = result.data(0)["z_readout"]
+    return float(np.real(value))
+
+
+def _noise_model(kind: str, level: float):
+    try:
+        from qiskit_aer.noise import NoiseModel, depolarizing_error, phase_damping_error
+    except Exception as exc:
+        raise RuntimeError("qiskit-aer noise helpers are required for local noise evidence") from exc
+    level = float(level)
+    if not 0.0 <= level <= 1.0:
+        raise ValueError("noise level must be between 0 and 1")
+    model = NoiseModel()
+    if level == 0.0:
+        return model
+    if kind == "depolarizing":
+        one = depolarizing_error(level, 1)
+        two = depolarizing_error(min(1.0, 2.0 * level), 2)
+    elif kind == "dephasing":
+        one = phase_damping_error(level)
+        two = phase_damping_error(min(1.0, 2.0 * level)).tensor(phase_damping_error(min(1.0, 2.0 * level)))
+    else:
+        raise ValueError("noise model must be 'depolarizing' or 'dephasing'")
+    for gate in ("rz", "sx", "x"):
+        model.add_all_qubit_quantum_error(one, gate)
+    model.add_all_qubit_quantum_error(two, "cx")
+    return model
+
+
+def _noisy_accuracy(
+    circuits: Sequence[Any],
+    labels: Sequence[int],
+    *,
+    kind: str,
+    level: float,
+    shots: int,
+) -> Dict[str, Any]:
+    try:
+        from qiskit_aer import AerSimulator
+    except Exception as exc:
+        raise RuntimeError("qiskit-aer is required for local noise evidence") from exc
+    qiskit = _require_qiskit()
+    model = _noise_model(kind, level)
+    measured = []
+    for circuit in circuits:
+        candidate = circuit.copy()
+        if not any(
+            str(item.operation.name if hasattr(item, "operation") else item[0].name) == "measure"
+            for item in candidate.data
+        ):
+            candidate.measure(0, 0)
+        measured.append(candidate)
+    simulator = AerSimulator(noise_model=model, method="automatic")
+    compiled = qiskit["transpile"](measured, simulator, optimization_level=1, seed_transpiler=42)
+    result = simulator.run(compiled, shots=int(shots), seed_simulator=991).result()
+    raw = []
+    for index in range(len(compiled)):
+        counts = result.get_counts(index)
+        # The one-bit readout is classical bit 0; strings may be padded when a
+        # circuit carries the model's unused classical bits.
+        total = max(1, sum(counts.values()))
+        ones = sum(value for key, value in counts.items() if str(key).replace(" ", "")[-1:] == "1")
+        raw.append(float(1.0 - 2.0 * ones / total))
+    labels = np.asarray(labels, dtype=int)
+    predictions = np.where(np.asarray(raw) > 0.0, 1, -1)
+    correct = predictions == labels
+    accuracy = float(correct.mean()) if len(correct) else None
+    stderr = math.sqrt(max(accuracy * (1.0 - accuracy), 0.0) / len(correct)) if correct.size else None
+    return {
+        "noise_model": kind,
+        "level": float(level),
+        "shots": int(shots),
+        "accuracy": accuracy,
+        "accuracy_standard_error": float(stderr) if stderr is not None else None,
+        "mean_readout": float(np.mean(raw)) if raw else None,
+        "raw_readouts": [float(value) for value in raw],
+        "predictions": [int(value) for value in predictions],
+    }
+
+
+def build_noise_validation(
+    tasks: Sequence[str],
+    seeds: Sequence[int],
+    *,
+    samples: int = 25,
+    shots: int = DEFAULT_SHOTS,
+    levels: Sequence[float] = NOISE_LEVELS,
+    data_root: Path = ROOT / "datasets",
+    weights_root: Path = ROOT / "Results" / "q1_comparison" / "runs",
+    output: Optional[Path] = None,
+) -> Dict[str, Any]:
+    parsed_tasks = [_parse_task(value) for value in tasks]
+    seeds = tuple(int(value) for value in seeds)
+    if not parsed_tasks or not seeds:
+        raise ValueError("noise validation requires at least one task and seed")
+    if samples < 1 or shots < 1:
+        raise ValueError("samples and shots must be positive")
+    levels = tuple(float(value) for value in levels)
+    if not levels or levels[0] != 0.0:
+        raise ValueError("noise ladder must begin with declared zero-noise level 0.0")
+    records: List[Dict[str, Any]] = []
+    for dataset, classes in parsed_tasks:
+        for seed in seeds:
+            images, labels, sample_ids, split_id, split_metadata = _validation_subset(
+                dataset, classes, seed, int(samples), Path(data_root)
+            )
+            checkpoint_path = _find_checkpoint(dataset, classes, seed, Path(weights_root))
+            weights, checkpoint = _weights_from_path(checkpoint_path)
+            amplitudes = _amplitudes_from_pixels(images, 10)
+            exact_values: List[float] = []
+            aer_values: List[float] = []
+            noisy_circuits = []
+            for index, vector in enumerate(amplitudes):
+                base = _build_full_circuit(
+                    10,
+                    "unitary",
+                    amplitudes=vector,
+                    seed=seed,
+                    weights=weights,
+                    measure=False,
+                )
+                exact_values.append(_exact_statevector_expectation(base))
+                aer_values.append(_aer_statevector_expectation(base))
+                noisy_circuits.append(_build_full_circuit(
+                    10,
+                    "unitary",
+                    amplitudes=vector,
+                    seed=seed,
+                    weights=weights,
+                    measure=True,
+                ))
+            exact_values_arr = np.asarray(exact_values, dtype=float)
+            aer_values_arr = np.asarray(aer_values, dtype=float)
+            agreement = {
+                "method": "Qiskit Statevector.from_instruction versus AerSimulator statevector save_expectation_value",
+                "max_abs_difference": float(np.max(np.abs(exact_values_arr - aer_values_arr))),
+                "mean_abs_difference": float(np.mean(np.abs(exact_values_arr - aer_values_arr))),
+                "tolerance": 1e-10,
+                "passes": bool(np.max(np.abs(exact_values_arr - aer_values_arr)) <= 1e-10),
+                "statevector_readouts": [float(value) for value in exact_values_arr],
+                "aer_readouts": [float(value) for value in aer_values_arr],
+            }
+            ladder = []
+            for kind in ("depolarizing", "dephasing"):
+                for level in levels:
+                    if level == 0.0:
+                        predictions = np.where(exact_values_arr > 0.0, 1, -1)
+                        correct = predictions == labels
+                        result = {
+                            "noise_model": kind,
+                            "level": 0.0,
+                            "shots": None,
+                            "accuracy": float(correct.mean()),
+                            "accuracy_standard_error": float(math.sqrt(max(float(correct.mean()) * (1.0 - float(correct.mean())), 0.0) / len(correct))),
+                            "mean_readout": float(np.mean(exact_values_arr)),
+                            "raw_readouts": [float(value) for value in exact_values_arr],
+                            "predictions": [int(value) for value in predictions],
+                            "evaluation": "exact statevector; shared zero-noise reference",
+                        }
+                    else:
+                        result = _noisy_accuracy(
+                            noisy_circuits, labels, kind=kind, level=level, shots=int(shots)
+                        )
+                        result["evaluation"] = "local Aer noise model; not hardware data"
+                    ladder.append(result)
+            records.append({
+                "dataset": dataset,
+                "classes": list(classes),
+                "seed": int(seed),
+                "split_id": split_id,
+                "sample_ids": sample_ids,
+                "n_validation": len(sample_ids),
+                "split": split_metadata,
+                "checkpoint": checkpoint,
+                "zero_noise_agreement": agreement,
+                "noise_ladder": ladder,
+            })
+    payload = {
+        "schema": SCHEMAS["noise"],
+        "status": "pass" if all(item["zero_noise_agreement"]["passes"] for item in records) else "partial",
+        "protocol": {
+            "tasks": [f"{dataset}:{classes[0]},{classes[1]}" for dataset, classes in parsed_tasks],
+            "seeds": list(seeds),
+            "samples_per_validation_subset": int(samples),
+            "shots": int(shots),
+            "noise_models": ["depolarizing", "dephasing"],
+            "levels": list(levels),
+            "retraining": False,
+            "test_data_used": False,
+        },
+        "records": records,
+        "environment": {
+            "python": sys.version.split()[0],
+            "executable": Path(sys.executable).name,
+            "qiskit_lock": {
+                "path": "requirements-qiskit-lock.txt",
+                "sha256": sha256_file(LOCK_PATH) if LOCK_PATH.exists() else None,
+            },
+            "git": _git_snapshot(),
+            "network_accessed": False,
+            "credentials_accessed": False,
+        },
+        "limitations": (
+            "Noise values are local Aer simulations of declared depolarizing/dephasing channels. "
+            "They are not calibration-accurate device noise, fake-backend execution, or QPU data. "
+            "Records using a deterministic fixture rather than a loaded checkpoint are explicitly labelled."
+        ),
+    }
+    payload["payload_sha256"] = _json_hash(payload)
+    if output is not None:
+        write_artifact(payload, output)
+    return payload
+
+
+def build_rehearsal(
+    n_qubits: int = 6,
+    *,
+    backend_name: str = DEFAULT_BACKEND,
+    shots: int = 1024,
+    seed_transpiler: int = DEFAULT_SEED_TRANSPILER,
+    optimization_level: int = DEFAULT_OPTIMIZATION_LEVEL,
+    output: Optional[Path] = None,
+) -> Dict[str, Any]:
+    """Prepare/hash a local payload for later QPU review, without submission."""
+    backend = _select_backend(backend_name)
+    circuit = _build_full_circuit(int(n_qubits), "unitary", seed=0, measure=True)
+    transpiled = _transpile_stage(circuit, backend, seed_transpiler, optimization_level)
+    if transpiled["metrics"] is None:
+        raise RuntimeError(f"fake-backend rehearsal transpilation failed: {transpiled['error']}")
+    payload_spec = {
+        "backend": _backend_snapshot(backend),
+        "n_qubits": int(n_qubits),
+        "shots": int(shots),
+        "seed_transpiler": int(seed_transpiler),
+        "optimization_level": int(optimization_level),
+        "layout_policy": "transpiler-selected layout; no initial_layout supplied",
+        "sample_ids": [f"rehearsal:synthetic:{index:05d}" for index in range(1)],
+        "circuit": {
+            "logical": _metrics(circuit),
+            "transpiled": transpiled["metrics"],
+            "target_validation": transpiled["target_validation"],
+            "unsupported_operations": transpiled["unsupported_operations"],
+        },
+        "canonical_source": {
+            "path": "QCNN/circuits.py",
+            "function": "build_circuit",
+            "sha256": sha256_file(CANONICAL_SOURCE),
+        },
+        "qiskit_lock": {
+            "path": "requirements-qiskit-lock.txt",
+            "sha256": sha256_file(LOCK_PATH) if LOCK_PATH.exists() else None,
+        },
+    }
+    payload = {
+        "schema": SCHEMAS["rehearsal"],
+        "status": "pass" if not transpiled["unsupported_operations"] else "partial",
+        "submission": {
+            "authenticated": False,
+            "submitted": False,
+            "network_accessed": False,
+            "credentials_accessed": False,
+            "provider": None,
+            "statement": "Payload was prepared and hashed locally; no service was contacted.",
+        },
+        "payload": payload_spec,
+        "payload_sha256": _json_hash(payload_spec),
+        "environment": {"python": sys.version.split()[0], "executable": Path(sys.executable).name, "git": _git_snapshot()},
+        "limitations": (
+            "This is a fake-backend rehearsal only. It does not reserve a backend, estimate a live queue, "
+            "authenticate, submit, or establish hardware performance."
+        ),
+    }
+    if output is not None:
+        write_artifact(payload, output)
+    return payload
+
+
+def write_artifact(payload: Mapping[str, Any], output: Path) -> None:
+    output = Path(output)
+    if not output.is_absolute():
+        output = ROOT / output
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    sub = parser.add_subparsers(dest="command", required=True)
+    resources = sub.add_parser("resources", help="count logical/decomposed/transpiled resource stages")
+    resources.add_argument("--qubits", nargs="+", type=int, default=list(RESOURCE_QUBITS))
+    resources.add_argument("--backend", default=DEFAULT_BACKEND)
+    resources.add_argument("--seed-transpiler", type=int, default=DEFAULT_SEED_TRANSPILER)
+    resources.add_argument("--optimization-level", type=int, default=DEFAULT_OPTIMIZATION_LEVEL)
+    resources.add_argument("--output", default="Results/evidence/q1_resources.json")
+
+    pooling = sub.add_parser("pooling", help="compare pooling arms on one local fake backend")
+    pooling.add_argument("--qubits", type=int, default=4)
+    pooling.add_argument("--backend", default=DEFAULT_BACKEND)
+    pooling.add_argument("--seed-transpiler", type=int, default=DEFAULT_SEED_TRANSPILER)
+    pooling.add_argument("--optimization-level", type=int, default=DEFAULT_OPTIMIZATION_LEVEL)
+    pooling.add_argument("--output", default="Results/evidence/q1_pooling_practicality.json")
+
+    noise = sub.add_parser("noise", help="run bounded local Aer validation/noise ladders")
+    noise.add_argument("--tasks", nargs="+", default=["mnist:3,5", "fashion_mnist:0,6"])
+    noise.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2])
+    noise.add_argument("--samples", type=int, default=25)
+    noise.add_argument("--shots", type=int, default=DEFAULT_SHOTS)
+    noise.add_argument("--levels", nargs="+", type=float, default=list(NOISE_LEVELS))
+    noise.add_argument("--data-root", default=str(ROOT / "datasets"))
+    noise.add_argument("--weights-root", default=str(ROOT / "Results" / "q1_comparison" / "runs"))
+    noise.add_argument("--output", default="Results/evidence/q1_noise_validation.json")
+
+    rehearsal = sub.add_parser("rehearse", help="prepare/hash one fake-backend hardware payload")
+    rehearsal.add_argument("--qubits", type=int, default=6)
+    rehearsal.add_argument("--shots", type=int, default=1024)
+    rehearsal.add_argument("--backend", default=DEFAULT_BACKEND)
+    rehearsal.add_argument("--seed-transpiler", type=int, default=DEFAULT_SEED_TRANSPILER)
+    rehearsal.add_argument("--optimization-level", type=int, default=DEFAULT_OPTIMIZATION_LEVEL)
+    rehearsal.add_argument("--output", default="Results/evidence/q1_fake_backend_rehearsal.json")
+    return parser
+
+
+def main(argv: Optional[Iterable[str]] = None) -> int:
+    args = _parser().parse_args(argv)
+    if args.command == "resources":
+        payload = build_resources(
+            args.qubits,
+            backend_name=args.backend,
+            seed_transpiler=args.seed_transpiler,
+            optimization_level=args.optimization_level,
+            output=Path(args.output),
+        )
+    elif args.command == "pooling":
+        payload = build_pooling_practicality(
+            args.qubits,
+            backend_name=args.backend,
+            seed_transpiler=args.seed_transpiler,
+            optimization_level=args.optimization_level,
+            output=Path(args.output),
+        )
+    elif args.command == "noise":
+        payload = build_noise_validation(
+            args.tasks,
+            args.seeds,
+            samples=args.samples,
+            shots=args.shots,
+            levels=args.levels,
+            data_root=Path(args.data_root),
+            weights_root=Path(args.weights_root),
+            output=Path(args.output),
+        )
+    else:
+        payload = build_rehearsal(
+            args.qubits,
+            backend_name=args.backend,
+            shots=args.shots,
+            seed_transpiler=args.seed_transpiler,
+            optimization_level=args.optimization_level,
+            output=Path(args.output),
+        )
+    print(json.dumps({"status": payload["status"], "output": str(args.output)}, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

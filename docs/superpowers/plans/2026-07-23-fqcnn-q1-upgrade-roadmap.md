@@ -1,5 +1,7 @@
 # FQCNN Q1 Upgrade Roadmap
 
+> **Scope amendment — 2026-08-27:** This roadmap remains the history of the maximal Q1 program and the source of completed architecture/protocol work. Its unfinished milestones are compressed into the Q1-targeted gates in `docs/superpowers/plans/2026-08-27-q1-journal-fast-track.md`.
+
 > **For future agentic workers:** Before implementing a milestone, create a milestone-specific plan and use `superpowers:subagent-driven-development` or `superpowers:executing-plans`. This document is the program roadmap; it intentionally does not start implementation.
 
 **Goal:** Complete every non-optional requirement in `UPGRADE_PLAN.md` and produce a reproducible, evidence-backed Q1-journal submission package without changing the frozen headline FQCNN architecture.

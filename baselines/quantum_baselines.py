@@ -68,28 +68,39 @@ def _pool_block(p, keep: int, discard: int) -> None:
 # ---- convolution blocks (shared params per layer => translational invariance) ----
 def _conv_block_cong(p, a: int, b: int) -> None:
     """Cong-style two-qubit conv unitary. 6 params."""
-    qml.RX(p[0], wires=a); qml.RY(p[1], wires=a); qml.RZ(p[2], wires=a)
-    qml.RX(p[3], wires=b); qml.RY(p[4], wires=b); qml.RZ(p[5], wires=b)
+    qml.RX(p[0], wires=a)
+    qml.RY(p[1], wires=a)
+    qml.RZ(p[2], wires=a)
+    qml.RX(p[3], wires=b)
+    qml.RY(p[4], wires=b)
+    qml.RZ(p[5], wires=b)
     qml.CNOT(wires=[a, b])
 
 
 def _conv_block_hur(p, a: int, b: int) -> None:
     """Hur-style two-qubit conv unitary (more expressive, both CNOT directions). 8 params."""
-    qml.RY(p[0], wires=a); qml.RZ(p[1], wires=a)
-    qml.RY(p[2], wires=b); qml.RZ(p[3], wires=b)
+    qml.RY(p[0], wires=a)
+    qml.RZ(p[1], wires=a)
+    qml.RY(p[2], wires=b)
+    qml.RZ(p[3], wires=b)
     qml.CNOT(wires=[a, b])
-    qml.RY(p[4], wires=a); qml.RY(p[5], wires=b)
+    qml.RY(p[4], wires=a)
+    qml.RY(p[5], wires=b)
     qml.CNOT(wires=[b, a])
-    qml.RZ(p[6], wires=a); qml.RZ(p[7], wires=b)
+    qml.RZ(p[6], wires=a)
+    qml.RZ(p[7], wires=b)
 
 
 def _ttn_node(p, keep: int, discard: int) -> None:
     """TTN two-qubit node; information consolidated onto `keep`. 6 params."""
-    qml.RY(p[0], wires=keep); qml.RY(p[1], wires=discard)
+    qml.RY(p[0], wires=keep)
+    qml.RY(p[1], wires=discard)
     qml.CNOT(wires=[keep, discard])
-    qml.RY(p[2], wires=keep); qml.RY(p[3], wires=discard)
+    qml.RY(p[2], wires=keep)
+    qml.RY(p[3], wires=discard)
     qml.CNOT(wires=[discard, keep])
-    qml.RY(p[4], wires=keep); qml.RZ(p[5], wires=keep)
+    qml.RY(p[4], wires=keep)
+    qml.RZ(p[5], wires=keep)
 
 
 def active_wire_schedule(n_qubits: int) -> list[dict]:
@@ -258,12 +269,17 @@ def _train_architecture(*, arch_name: str, X_train, y_train, X_val, y_val,
 
 def run_quantum_baselines(*, X_train, y_train, X_val, y_val, X_test, y_test,
                           seed: int = 42, n_qubits: int = 8, n_epochs: int = 30,
-                          learning_rate: float = 0.02, use_bce: bool = True) -> dict:
+                          learning_rate: float = 0.02, use_bce: bool = True,
+                          baselines=None) -> dict:
     common = dict(X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val,
                   X_test=X_test, y_test=y_test, seed=seed, n_qubits=n_qubits,
                   n_epochs=n_epochs, learning_rate=learning_rate, use_bce=use_bce)
+    selected = tuple(_ARCHITECTURES) if baselines is None else tuple(baselines)
+    if len(set(selected)) != len(selected) or any(
+            name not in _ARCHITECTURES for name in selected):
+        raise ValueError("quantum baselines must be unique choices from cong, hur, ttn")
     return {name: _train_architecture(arch_name=name, **common)
-            for name in _ARCHITECTURES}
+            for name in selected}
 
 
 # ---------------------------------------------------------------------------

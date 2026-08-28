@@ -35,6 +35,53 @@ def test_a_complete_matching_run_is_reusable(tmp_path):
     assert run_artifacts.is_reusable(d, config=CONFIG, seed=3)
 
 
+def test_legitimate_zero_parameter_group_is_reusable(tmp_path):
+    """A disabled layer may persist an empty group beside real trainable weights."""
+    d = _complete_run(str(tmp_path))
+    np.savez(
+        run_artifacts.weights_path(d),
+        convolution=np.zeros(3),
+        disabled_pooling=np.empty(0),
+    )
+    assert run_artifacts.is_reusable(d, config=CONFIG, seed=3)
+
+
+def test_weight_archive_with_no_parameter_values_is_not_reusable(tmp_path):
+    d = _complete_run(str(tmp_path))
+    np.savez(run_artifacts.weights_path(d), disabled_pooling=np.empty(0))
+    assert not run_artifacts.is_reusable(d, config=CONFIG, seed=3)
+
+
+def test_proposed_cell_waits_for_every_required_baseline(tmp_path, monkeypatch):
+    from experiments import run_experiments as runner
+
+    exp_root = tmp_path / "experiments"
+    run_root = tmp_path / "runs"
+    monkeypatch.setattr(runner, "EXP_ROOT", str(exp_root))
+    monkeypatch.setattr(run_artifacts, "RUN_ROOT", str(run_root))
+    pair, seed, task = (0, 6), 0, "fashion_mnist_0v6"
+    path = exp_root / task / "proposed" / "seed_0.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps({"accuracy": 0.5}))
+    _complete_run(
+        run_artifacts.run_dir(task, "proposed", seed),
+        config=runner._expected_config("proposed", seed, epochs=30), seed=seed)
+
+    assert runner._is_reusable_cell(
+        pair, "proposed", seed, 30, "fashion_mnist")
+    assert not runner._is_reusable_cell(
+        pair, "proposed", seed, 30, "fashion_mnist",
+        required_baselines=("logistic", "mlp", "ttn"))
+
+    for name in ("logistic", "mlp", "ttn"):
+        _complete_run(
+            run_artifacts.run_dir(task, f"baseline_{name}", seed),
+            config={"artifact_schema_version": 1}, seed=seed)
+    assert runner._is_reusable_cell(
+        pair, "proposed", seed, 30, "fashion_mnist",
+        required_baselines=("logistic", "mlp", "ttn"))
+
+
 def test_an_unfinished_run_is_not_reusable(tmp_path):
     d = str(tmp_path)
     run_artifacts.start_run(d, config=dict(CONFIG), split_id='split-abc', seed=3,

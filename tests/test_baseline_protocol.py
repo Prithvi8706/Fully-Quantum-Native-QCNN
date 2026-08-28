@@ -112,3 +112,33 @@ def test_quantum_checkpoint_uses_validation_each_epoch_and_test_once(monkeypatch
     np.testing.assert_array_equal(test_calls[0], [1.0])
     assert result["selection"]["best_epoch"] == 3
     assert result["test_evaluations"] == 1
+
+
+def test_baseline_selectors_run_only_the_declared_comparators(monkeypatch):
+    classical_calls = []
+    quantum_calls = []
+    monkeypatch.setattr(
+        classical_cnn, "run_logistic_baseline",
+        lambda **kwargs: classical_calls.append("logistic") or {})
+    monkeypatch.setattr(
+        classical_cnn, "run_mlp_baseline",
+        lambda **kwargs: classical_calls.append("mlp") or {})
+    monkeypatch.setattr(
+        quantum_baselines, "_train_architecture",
+        lambda **kwargs: quantum_calls.append(kwargs["arch_name"]) or {})
+
+    assert set(classical_cnn.run_classical_baselines(
+        **_SPLIT, baselines=["logistic", "mlp"])) == {"logistic", "mlp"}
+    assert set(quantum_baselines.run_quantum_baselines(
+        **_SPLIT, baselines=["ttn"])) == {"ttn"}
+    assert classical_calls == ["logistic", "mlp"]
+    assert quantum_calls == ["ttn"]
+
+
+@pytest.mark.parametrize("runner,selection", [
+    (classical_cnn.run_classical_baselines, ["logistic", "logistic"]),
+    (quantum_baselines.run_quantum_baselines, ["unknown"]),
+])
+def test_invalid_baseline_selection_fails_closed(runner, selection):
+    with pytest.raises(ValueError, match="baselines"):
+        runner(**_SPLIT, baselines=selection)

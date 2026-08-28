@@ -2,16 +2,34 @@
 
 Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 
-**Governing spec:** `UPGRADE_PLAN.md` (v2)
+**Governing architecture/protocol spec:** `UPGRADE_PLAN.md` (v2)
 **Roadmap:** `docs/superpowers/plans/2026-07-23-fqcnn-q1-upgrade-roadmap.md`
 **Design:** `docs/superpowers/specs/2026-07-23-fqcnn-q1-upgrade-design.md`
 **Month plan:** `docs/superpowers/plans/2026-07-25-fqcnn-remaining-work-month-plan.md`
 **Track A (grid, M4→M5→M6):** `docs/superpowers/plans/2026-07-27-track-a-grid-handoff.md`
 **Track B (theory+hardware, M3/E5/M8→M7):** `docs/superpowers/plans/2026-07-27-track-b-theory-hardware-handoff.md`
 
-**Last updated:** 2026-08-17 · **Branch:** `plan/fqcnn-q1-upgrade` · **Tests:** 284 passing
+**Active fast-track plan:** `docs/superpowers/plans/2026-08-27-q1-journal-fast-track.md`
+
+**Planning amendment (2026-08-27):** The maximal Tasks 8–19 program has been compressed into a seven-focused-day Q1-journal fast track with two bounded unattended compute windows. Task 7 was integrated from `origin/dev` on 2026-08-27. The Q1 target is retained; evidence breadth is reduced only through explicit minimum bars and honest claim limits.
+
+**Last updated:** 2026-08-27 · **Branch:** `dev` · **Verification:** Day 2 final suite 585 passed / 2 documented Windows symlink skips
 
 **State labels:** `pending` · `running` · `failed` · `complete`
+
+---
+
+## 0. Q1 fast-track daily execution
+
+| Day | State | Required completion | Gate evidence |
+|---|---|---|---|
+| **1 — integrate + inventory** | `complete` | Integrate Task 7; preserve local files; repair resume if required; pass Task 7, architecture, protocol, and full suites; inventory evidence and manuscript claims | Task 7 synchronized at `0a0f60f`; disabled-layer resume regression fixed; final suite 570 passed / 2 documented Windows symlink skips; `Results/evidence/q1_fast_track_inventory.json`: 19 artifacts, 79 valid run cells, 0 invalid cells, 72 manuscript findings |
+| **2 — multi-domain path** | `complete` | Add deterministic MNIST, Fashion-MNIST, and KMNIST sources; freeze four tasks; pass provenance/preprocessing tests and three smoke cells | `q1_dataset_provenance.json` (`A730615C…A1594B4D`): 3 families / 12 verified source files; split IDs hash source-stable IDs; isolated three-family two-epoch smoke completed and resumed 3/3 with 0 failures; final suite 585 passed / 2 documented Windows symlink skips |
+| **3 — comparison campaign** | `running` | Complete proposed/logistic/MLP/TTN matrix at the declared seed floor; complete Fashion-MNIST pooling transfer; aggregate paired statistics | Baseline selector, resumable baseline artifacts, balanced accuracy, and frozen comparison validator/aggregation pass focused tests; MNIST `0,1` seed 0 validated across all four arms on split `e390eff7…e57926`; compute window 1 active with 3 conservative workers and isolated Q1 roots |
+| **4 — local practicality evidence** | `pending` | Freeze statistics/tables; complete n=4,6,8,10 resources, pooling practicality, clean two-task noise ladder, and fake-backend rehearsal | Tooling and focused contracts ready; `q1_resources.json`, `q1_pooling_practicality.json`, and `q1_fake_backend_rehearsal.json` generated; bounded two-task noise run remains pending |
+| **5 — core manuscript rewrite** | `pending` | Rewrite positioning, methods, theory, experiments, results, and limitations from canonical evidence | Generated tables/figures; draft claim ledger; clean LaTeX build |
+| **6 — citations + final manuscript** | `pending` | Finish introduction/discussion/conclusion, sentence-level citation audit, complete claim ledger, and final PDF inspection | Resolved citation ledger; `q1_claim_ledger.json`; three-pass LaTeX build |
+| **7 — reproduce + package** | `pending` | Clean-worktree reproduction, 15-question Q1 review, one correction pass, and hashed package | `q1_reproduction.json`; `docs/q1-reviewer-checklist.md`; package manifest |
 
 ---
 
@@ -31,6 +49,12 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 | M9 — Phase 9: references | `complete` | completed 2026-07-26; 0 author-less, 0 uncited, every published entry has a DOI; preprint ratio and sentence audit remain | `docs/paper_code_reconciliation.md`; §9 |
 | M10 — Phase 10: manuscript + venue | `pending` | — | — |
 | M11 — final reproduction + red team | `pending` | — | — |
+
+### Parallel quality workstreams
+
+- **Pooling transfer tooling:** `experiments/q1_pooling_transfer.py` and `tests/test_q1_pooling_transfer.py`; 7 focused tests passed. The 15-cell Fashion-MNIST `0,6` run is not yet launched.
+- **Local practicality tooling:** `experiments/q1_local_evidence.py` and `tests/test_q1_local_evidence.py`; 13 focused tests passed. Resource, pooling-practicality, and fake-backend rehearsal artifacts are generated; the expensive two-task noise ladder is pending.
+- **Manuscript audit:** `Results/evidence/q1_claim_ledger_draft.json`; 25 claim records and 11 reviewer-risk findings. The draft is diagnostic only; it is not the final claim ledger.
 
 ## 2. Active queue and blockers
 
@@ -533,13 +557,13 @@ Evidence: `Results/evidence/e2_dephasing.json`.
 |---|---|---|
 | Theorem 1 | `test_e1_unitary_and_measurement_pooling_agree_exactly` | E1: **2.2e-16** at headline n=10 |
 | Proposition 2 | `test_swap_witnesses_strict_containment` | trace distance **1/2** |
-| Proposition 3 | `test_e2_dephasing_discarded_wires_changes_nothing` | E2: **1.3e-14**, ΔAcc **0.0 exactly** |
+| Proposition 3 | `test_e2_dephasing_discarded_wires_changes_nothing` | E2: **5.86e-14**, ΔAcc **0.0 exactly** |
 
 ### The information-loss claim is deleted
 
 It appeared in **six** places. All replaced with Theorem 1's defensible claims — exact
-simulation at zero overhead, no mid-circuit measurement/reset/feed-forward, a globally pure
-state, end-to-end adjoint differentiability:
+simulation in the frozen construction, no mid-circuit measurement/reset/feed-forward, a globally
+pure state, end-to-end adjoint differentiability:
 
 Abstract · Sec. I (×2) · Sec. II (×2) · Sec. V analysis · Sec. V comparison · Sec. VI-A
 
@@ -661,9 +685,9 @@ coherent 0.963/0.810/0.866 - su4 0.972/**0.863**/0.870.
    measurement-simulable class mathematically and gains nothing operationally.
 4. **The frozen block is NOT the best arm.** `pool_su4` is +2.4pp overall and +5.6pp on 3v5,
    the hardest pair. Anticipated by the risk register: report family headroom, retain the
-   frozen headline. The paper therefore cannot claim the frozen block is optimal -- only that
-   it is minimal-cost within the simulable class and within 2.4pp of the unconstrained ceiling
-   at one fifth of the pooling parameters.
+   frozen headline. The paper therefore cannot claim the frozen block is optimal. The Q1
+   manuscript reports it as the frozen reference construction and binds resource statements
+   to the local counts generated for each declared pooling arm.
 5. **The two tests disagree about SU(4).** McNemar p = 0.002, Wilcoxon p = 0.50. McNemar treats
    2,130 items as observations; Wilcoxon has 15 seed-level scores and far less power, but is
    arguably the more appropriate unit for a generalisation claim. Honest wording: a consistent
