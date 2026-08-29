@@ -181,11 +181,15 @@ def evidence_artifacts(root: Path) -> List[Dict[str, Any]]:
         path = root / "Results" / name
         if path.exists():
             candidates.add(path)
-    # The inventory cannot hash itself: rewriting it would immediately make
-    # the recorded self-hash stale and break deterministic regeneration.
-    candidates = {
-        path for path in candidates if path.name != "q1_fast_track_inventory.json"
+    # The inventory cannot hash itself, and it must not snapshot the derived
+    # claim ledgers: the claim ledger hashes the inventory, so including it
+    # here would create a circular, permanently stale previous-snapshot hash.
+    derived_ledgers = {
+        "q1_fast_track_inventory.json",
+        "q1_claim_ledger.json",
+        "q1_claim_ledger_draft.json",
     }
+    candidates = {path for path in candidates if path.name not in derived_ledgers}
     return [inspect_json_artifact(path, root) for path in sorted(candidates)]
 
 

@@ -1,0 +1,102 @@
+{
+  "environment": {
+    "executable": "python.exe",
+    "git": {
+      "dirty": true,
+      "dirty_entries": 23,
+      "head": "a86c89180b3f65c87b265beceedb75d9ab51c5a3"
+    },
+    "python": "3.11.9"
+  },
+  "limitations": "This is a fake-backend rehearsal only. It does not reserve a backend, estimate a live queue, authenticate, submit, or establish hardware performance.",
+  "payload": {
+    "backend": {
+      "backend_v2": true,
+      "class": "FakePeekskill",
+      "coupling_edges": 28,
+      "name": "fake_peekskill",
+      "num_qubits": 27,
+      "source": "local qiskit_ibm_runtime.fake_provider; no provider query",
+      "target_operations": [
+        "delay",
+        "ecr",
+        "for_loop",
+        "id",
+        "if_else",
+        "measure",
+        "reset",
+        "rz",
+        "switch_case",
+        "sx",
+        "x"
+      ]
+    },
+    "canonical_source": {
+      "function": "build_circuit",
+      "path": "QCNN/circuits.py",
+      "sha256": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09"
+    },
+    "circuit": {
+      "logical": {
+        "depth": 65,
+        "operation_counts": {
+          "cry": 4,
+          "crz": 4,
+          "cx": 51,
+          "initialize": 1,
+          "measure": 1,
+          "rx": 36,
+          "ry": 44,
+          "rz": 35
+        },
+        "size": 176,
+        "width": 12
+      },
+      "target_validation": {
+        "checked_instructions": 1708,
+        "invalid": [],
+        "uses_actual_target": true
+      },
+      "transpiled": {
+        "depth": 934,
+        "operation_counts": {
+          "ecr": 289,
+          "measure": 1,
+          "reset": 6,
+          "rz": 800,
+          "sx": 562,
+          "x": 50
+        },
+        "size": 1708,
+        "width": 33
+      },
+      "unsupported_operations": []
+    },
+    "layout_policy": "transpiler-selected layout; no initial_layout supplied",
+    "n_qubits": 6,
+    "optimization_level": 1,
+    "qiskit_lock": {
+      "path": "requirements-qiskit-lock.txt",
+      "sha256": "97ea5292428d071769f500866f06f32d408f1720731b6a2e5751f14bbe9bd6a8"
+    },
+    "sample_ids": [
+      "rehearsal:synthetic:00000"
+    ],
+    "seed_transpiler": 42,
+    "shots": 1024
+  },
+  "payload_sha256": "8369ea8bc0c1ab07baea869669437cb097e482a744a3b1ef4419f6a877095915",
+  "schema": {
+    "name": "fqcnn_q1_fake_backend_rehearsal",
+    "version": 1
+  },
+  "status": "pass",
+  "submission": {
+    "authenticated": false,
+    "credentials_accessed": false,
+    "network_accessed": false,
+    "provider": null,
+    "statement": "Payload was prepared and hashed locally; no service was contacted.",
+    "submitted": false
+  }
+}

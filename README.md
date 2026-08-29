@@ -1,9 +1,9 @@
 # FQCNN: Fully Quantum-Native QCNN 
 ### A Fully Quantum-Native Convolutional Neural Network with Coherent Unitary Pooling
 
-This repository implements **FQCNN**, a **fully quantum-native convolutional neural network (QCNN)** that performs data encoding, local convolution, coherence-preserving unitary pooling, and classification **entirely using unitary quantum operations, with no intermediate measurements**. Unlike hybrid models, this architecture contains no classical convolutional layers at any stage.
+This repository implements **FQCNN**, a **fully quantum-native convolutional neural network (QCNN)** that performs state preparation, register-index convolution, coherence-preserving unitary pooling, and classification **entirely using unitary quantum operations before one terminal observable**. Unlike hybrid models, this architecture contains no classical convolutional layers at any stage.
 
-The frozen headline study uses 28×28 MNIST inputs (784 flattened pixels), zero-padded to 1,024 amplitudes on n=10 qubits, with an active-wire schedule of 10→5→2→1. The current n=10 study is classically simulated; no quantum-advantage claim is made.
+The frozen headline study uses 28×28 MNIST inputs (784 flattened pixels), zero-padded to 1,024 amplitudes on n=10 qubits, with an active-wire schedule of 10→5→2→1. The Q1 evidence package is classically simulated; register-index parameter sharing is not an image-space translational-equivariance guarantee, and no quantum-advantage or hardware-performance claim is made.
 
 ---
 
@@ -67,9 +67,11 @@ python main.py --dataset mnist --classes 3 7 --encoding patch
 
 ## Performance Benchmarks
 
-The standalone accuracy values historically shown here were single-seed results, not distributions, and are not manuscript evidence. The protocol-clean 98.29% MNIST 0-vs-1 headline is also a single-seed result until a multi-seed distribution with confidence intervals exists. Current baseline numbers are blocked from manuscript use pending leakage and protocol repair.
+The canonical Q1 comparison evaluates the proposed model, logistic regression, an MLP, and a tree-tensor-network baseline on four frozen binary tasks (five seeds, identical 666/400/100/166 manifests). The proposed model is below logistic regression and the MLP on all four tasks and above TTN in mean accuracy on all four; the paired tests are not significant after the declared Holm correction. These are finite within-study results, not a claim of superiority or quantum advantage. See [`Results/evidence/q1_comparison.json`](Results/evidence/q1_comparison.json) and the manuscript table/figure.
 
-Canonical evidence under `Results/evidence/` currently supports these narrower conclusions:
+The completed pooling-transfer lane evaluates five pooling arms on Fashion-MNIST 0-vs-6 for three seeds. It is a bounded ablation, not a universal pooling ranking. Local resource, noise, and fake-backend artifacts are similarly simulator-only and do not imply physical-device performance.
+
+Canonical evidence under `Results/evidence/` also supports these narrower conclusions:
 
 - E1–E4 are complete. The 75-cell pooling campaign found no significant benefit from the coherent extension; SU(4) is the remaining pooling headroom, so frozen pooling is not proven globally optimal.
 - The headline DLA is full su(2^10), dimension 1,048,575; therefore there is no polynomial-DLA trainability certificate.
@@ -77,7 +79,7 @@ Canonical evidence under `Results/evidence/` currently supports these narrower c
 - The selected expressibility metric is Haar-indistinguishable at the available resolution.
 - Information-concentration language is not an established result.
 
-Dataset breadth, repaired baselines, the broader ablation grid, resource scaling, noise, hardware, and manuscript claims remain pending unless a canonical artifact records them.
+Dataset provenance, manifests, source hashes, and the final claim ledger are recorded alongside the Q1 artifacts. The release status and exact validation counts are maintained in [`STATUS.md`](STATUS.md).
 
 ---
 
@@ -107,7 +109,7 @@ This generates comparisons between raw images and their quantum-encoded counterp
 
 ## Reproducibility & Experiments
 
-Experiments provide seed controls, but full clean-checkout reproduction is not yet claimed; that remains pending until M11 passes. Use the frozen environment for matching supported numbers:
+Experiments provide seed controls and the Q1 package records the exact manifests, per-run hashes, aggregate inputs, and bounded validation commands. The final package is simulator-only; no real-QPU job is submitted by the repository workflow. Use the frozen environment for matching supported numbers:
 
 ```bash
 pip install -r requirements-lock.txt     # exact tested versions (Python 3.9.13)
@@ -136,17 +138,19 @@ Exercise the current reproduction scripts with:
 ./reproduce.sh --quick    # fast smoke test that exercises the whole pipeline
 ```
 
-### Ablation & multi-seed study
-A single harness runs the ablations across hard MNIST digit pairs and multiple
-seeds, then reports **mean ± std** for accuracy / precision / recall / F1 /
-ROC-AUC / PR-AUC, alongside both classical baselines (logistic, MLP) and
-published **quantum-architecture** baselines (see below), all trained on the
-**identical** split for a fair comparison:
+### Q1 comparison campaign
+The bounded Q1 command evaluates the frozen proposed arm with logistic and MLP
+classical baselines plus the TTN quantum baseline on four registered tasks and
+five seeds. Every arm consumes the identical split and ordered sample IDs; the
+canonical output is under `Results/q1_comparison/` and
+`Results/evidence/q1_comparison.json`:
 
 ```bash
 python -m experiments.run_experiments \
-    --datasets 0,1 3,5 4,9 5,8 --seeds 0 1 2 3 4 --samples 400 --epochs 30
-# -> Results/experiments/summary.csv  (one row per dataset × config, mean ± std)
+    --task mnist:0,1 --task mnist:3,5 \
+    --task fashion_mnist:0,6 --task kmnist:2,3 \
+    --configs proposed --seeds 0 1 2 3 4 --samples 400 --epochs 30 \
+    --classical-baselines logistic mlp --quantum-baselines ttn --jobs 3
 ```
 
 Ablation toggles (set in `QCNN/config/Qconfig.py` or via the runner):
@@ -158,13 +162,10 @@ Ablation toggles (set in `QCNN/config/Qconfig.py` or via the runner):
 | Kernel rotations | `kernel_rotations` | `su2` (proposed) · `ry` |
 | Encoding | `encoding_type` | `amplitude` · `feature_map` |
 
-### Quantum-architecture baselines
-To compare the proposed FQCNN against *existing* quantum architectures (not only
-classical models), the harness also trains three well-cited quantum classifiers
-on the **identical** amplitude-encoded representation, split, seed, optimiser and
-epoch budget (`baselines/quantum_baselines.py`). They appear automatically as
-extra rows in `summary.csv` (`baseline_cong`, `baseline_hur`, `baseline_ttn`),
-each reporting its own trainable-parameter count for a like-for-like comparison:
+### Optional quantum-architecture baselines
+The harness can also run additional quantum classifiers for exploratory work.
+They are optional arms, not automatic Q1 evidence; only a completed aggregate
+with matched manifests may be used in a manuscript comparison:
 
 | Row | Architecture | Reference |
 | :--- | :--- | :--- |

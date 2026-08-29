@@ -1,0 +1,1451 @@
+{
+  "environment_locks": [
+    {
+      "path": "requirements-lock.txt",
+      "sha256": "d731ba28b02eb9c7cd39ecdacc193f8eae6f34dfddf528fea5c0b9af63827efe"
+    },
+    {
+      "path": "requirements-qiskit-lock.txt",
+      "sha256": "97ea5292428d071769f500866f06f32d408f1720731b6a2e5751f14bbe9bd6a8"
+    }
+  ],
+  "evidence_artifacts": [
+    {
+      "bytes": 1494,
+      "class_pairs": [],
+      "datasets": [
+        "0,1",
+        "3,5",
+        "4,9",
+        "5,8"
+      ],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/campaigns/baseline_mnist_n10_v1/cost_estimate.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": "approved",
+      "schema": {
+        "name": "fqcnn_campaign_cost_estimate",
+        "version": 1
+      },
+      "seeds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "sha256": "cfd5668403fa90dfc30890787afed3b8e14b31754891ff4f485c06b58ee27f2f",
+      "split_ids": []
+    },
+    {
+      "bytes": 620,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/campaigns/baseline_mnist_n10_v1/full_suite.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": "pass",
+      "schema": {
+        "name": "fqcnn_full_suite_evidence",
+        "version": 1
+      },
+      "seeds": [],
+      "sha256": "abb671d230d7153ca85c5587e8a3b1b5d9d395b0ecb97ac1f63ae990176dc66a",
+      "split_ids": []
+    },
+    {
+      "bytes": 4198,
+      "class_pairs": [],
+      "datasets": [
+        "0,1",
+        "3,5",
+        "4,9",
+        "5,8"
+      ],
+      "disposition": "bounded_rerun",
+      "parse_state": "valid",
+      "path": "Results/campaigns/baseline_mnist_n10_v1/manifest.json",
+      "reasons": [
+        "artifact state is pending",
+        "artifact is bound to a dirty repository state",
+        "campaign launch is not approved/completed"
+      ],
+      "recorded_state": "pending",
+      "schema": {
+        "name": "fqcnn_campaign_manifest",
+        "version": 1
+      },
+      "seeds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "sha256": "fd9383d923f0ee26e5f27965afd4ad39abf994b705ca2ae7b24ea490ba271b46",
+      "split_ids": []
+    },
+    {
+      "bytes": 3734,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/ablation_registry_audit.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": {
+        "name": "fqcnn_ablation_registry_audit",
+        "version": 1
+      },
+      "seeds": [],
+      "sha256": "610155a69a8a490a4e6fcb6532e7922040add040c2b038ed82d0b0f9952b0c9b",
+      "split_ids": []
+    },
+    {
+      "bytes": 2376,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/baseline_protocol_audit.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": null,
+      "seeds": [],
+      "sha256": "5029c9f3bc934efff826eeb09a1b60c35ab6456998c931e0b25c669e7eb298ee",
+      "split_ids": []
+    },
+    {
+      "bytes": 3675,
+      "class_pairs": [],
+      "datasets": [
+        "0,1",
+        "3,5",
+        "4,9",
+        "5,8"
+      ],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/campaign_cost_estimate.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": "approved",
+      "schema": {
+        "name": "fqcnn_campaign_cost_estimate",
+        "version": 1
+      },
+      "seeds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "sha256": "893125e3f977371d35db3eae55eef822ee51be1ab22cc6d85f099c6f1645d6d5",
+      "split_ids": []
+    },
+    {
+      "bytes": 1102,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/e1_pooling_equivalence.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": null,
+      "seeds": [],
+      "sha256": "126eed664de340370af37047eaeebf540732e0c03005ca47eb152114dfe344e0",
+      "split_ids": []
+    },
+    {
+      "bytes": 1585,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/e2_dephasing.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": null,
+      "seeds": [],
+      "sha256": "2dea23e372ffc9ed9301616c3ff5aa1ea45cd6e8e657656576e8d195fcfa1a6a",
+      "split_ids": []
+    },
+    {
+      "bytes": 20366,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/e4_information_dynamics.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": null,
+      "seeds": [],
+      "sha256": "a7a42c7ebf50d7da98b135fa6feec29003af4846fac0cc3576c273fd525734ae",
+      "split_ids": []
+    },
+    {
+      "bytes": 5154,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/f_e_gradient_variance.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": null,
+      "seeds": [
+        "20260726"
+      ],
+      "sha256": "1d369a18033991fbb9564bbefd7ee2520f15a932f8c2f7f7d1e2ae4e9f4cce5d",
+      "split_ids": []
+    },
+    {
+      "bytes": 117075,
+      "class_pairs": [],
+      "datasets": [
+        "fashion_mnist",
+        "kmnist",
+        "mnist"
+      ],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/q1_comparison.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": {
+        "name": "fqcnn_q1_comparison",
+        "version": 1
+      },
+      "seeds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "sha256": "73f3dbb8665a36e8c21b4dbc995d63e8001ff6e742bca562b9db4e2e63ae1ee6",
+      "split_ids": []
+    },
+    {
+      "bytes": 8143,
+      "class_pairs": [],
+      "datasets": [
+        "fashion_mnist",
+        "kmnist",
+        "mnist"
+      ],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/q1_dataset_provenance.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": {
+        "name": "fqcnn_q1_dataset_provenance",
+        "version": 1
+      },
+      "seeds": [],
+      "sha256": "32f32731c202cdca7cbf38efd7c073ef48d5a1f53efcd08183b904fb062ffbed",
+      "split_ids": []
+    },
+    {
+      "bytes": 2736,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/q1_fake_backend_rehearsal.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": "pass",
+      "schema": {
+        "name": "fqcnn_q1_fake_backend_rehearsal",
+        "version": 1
+      },
+      "seeds": [],
+      "sha256": "7523b4d99c661c30b6b7b39306b8e4f7346ebd01a932a104e0a03307449da467",
+      "split_ids": []
+    },
+    {
+      "bytes": 95997,
+      "class_pairs": [],
+      "datasets": [
+        "fashion_mnist",
+        "mnist"
+      ],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/q1_noise_validation.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": "pass",
+      "schema": {
+        "name": "fqcnn_q1_noise_validation",
+        "version": 1
+      },
+      "seeds": [
+        "0",
+        "1",
+        "2"
+      ],
+      "sha256": "401ff57a545b987982a9e15ee95475f145ed11d8365a09fb63f7454703be3e1e",
+      "split_ids": [
+        "5859a0db121dddc1732ef79b9b7910b825565ff471c08b1eb36c6951d83e1349",
+        "7ed8d170a2f56409524ed3074035a5e18dbd2b4d31ed771f787d9571241c3a0f",
+        "9f72c79fb4e8d584e7b30505718087e3f36c17a1271c7653b24ed14780e9f500",
+        "a6184dbf30e2c5a3200770f32dea4a69036632a5767ac899e2de71890b2a3080",
+        "dcacadad3b95c20a4d3a218e2c671c75c5cc47d27e5741337917985fafab2ca1",
+        "e2251cf73922724b618f8d5caf6fe73371fcfa5c9c7437121c40e13a2a3817f9"
+      ]
+    },
+    {
+      "bytes": 7662,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/q1_pooling_practicality.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": "pass",
+      "schema": {
+        "name": "fqcnn_q1_pooling_practicality",
+        "version": 1
+      },
+      "seeds": [],
+      "sha256": "91c70bd35918f8e7cdac2de67fd60f3aa2c8e620d788f842f3c23195153e5eca",
+      "split_ids": []
+    },
+    {
+      "bytes": 31679,
+      "class_pairs": [],
+      "datasets": [
+        "fashion_mnist"
+      ],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/q1_pooling_transfer.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": {
+        "name": "fqcnn_q1_pooling_transfer",
+        "version": 1
+      },
+      "seeds": [
+        "0",
+        "1",
+        "2"
+      ],
+      "sha256": "1dd8caf062e9cbbde6778d5b5eb604dc67d396f369073b86f4f1807a39da7db3",
+      "split_ids": [
+        "5859a0db121dddc1732ef79b9b7910b825565ff471c08b1eb36c6951d83e1349",
+        "9f72c79fb4e8d584e7b30505718087e3f36c17a1271c7653b24ed14780e9f500",
+        "e2251cf73922724b618f8d5caf6fe73371fcfa5c9c7437121c40e13a2a3817f9"
+      ]
+    },
+    {
+      "bytes": 23994,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/q1_resources.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": "pass",
+      "schema": {
+        "name": "fqcnn_q1_resources",
+        "version": 1
+      },
+      "seeds": [],
+      "sha256": "a5b4e23fc2168766bbecca1bb5d88d33931d6102d13967aacace19fa4652ab0c",
+      "split_ids": []
+    },
+    {
+      "bytes": 2414,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/qiskit_environment.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": "pass",
+      "schema": null,
+      "seeds": [],
+      "sha256": "008be827bcd2437b2259f7213fdad7dbc4974df217d8dbcee57872dc94434d08",
+      "split_ids": []
+    },
+    {
+      "bytes": 6746,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/qiskit_transpile_smoke.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": "pass",
+      "schema": null,
+      "seeds": [],
+      "sha256": "8c7caff8aca9f5bafde6cc9020ce645a623733d1d2bb4513c59d01a16670ce90",
+      "split_ids": []
+    },
+    {
+      "bytes": 1482,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/repository_preservation.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": null,
+      "seeds": [],
+      "sha256": "b85cc5268605626e2d2e3a7c5b96c8769149b77c9325b05dc75c9f4510c07f4d",
+      "split_ids": []
+    },
+    {
+      "bytes": 14282,
+      "class_pairs": [],
+      "datasets": [
+        "0v1",
+        "3v5",
+        "4v9"
+      ],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/t5_pooling_arms.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": null,
+      "seeds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "sha256": "24f6a55d05107d1c91b4a26b4dfd1eb242da11f1f51de316680395d78bf01f54",
+      "split_ids": []
+    },
+    {
+      "bytes": 56942,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/t6_dynamical_lie_algebra.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": null,
+      "seeds": [
+        "20260730"
+      ],
+      "sha256": "3aa219b01f71bfe480fde10c5a269d3d83251784beebe264020812fa1c029438",
+      "split_ids": []
+    },
+    {
+      "bytes": 1590,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/t6_expressibility.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": null,
+      "seeds": [
+        "20260727"
+      ],
+      "sha256": "e81a71ecd366c784a338d0ae93613efdf25cd1118f12016f9b31245226a264f8",
+      "split_ids": []
+    },
+    {
+      "bytes": 2666,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/evidence/t6_generalization_bound.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": null,
+      "seeds": [],
+      "sha256": "e0e84258a33046aee2bba102d35933d3f6cb0d1cf0ee635369d28b0a94425376",
+      "split_ids": [
+        "adbb14862dfec2f7113dde062a63084b44e3c650a52066f9f3b9224987d45775"
+      ]
+    },
+    {
+      "bytes": 935,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/headline_manifest.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": null,
+      "seeds": [
+        "42"
+      ],
+      "sha256": "0ffb1edfa109cb76cdd88e27981d7b05296985d7585a198615d9e830283eea47",
+      "split_ids": []
+    },
+    {
+      "bytes": 348,
+      "class_pairs": [],
+      "datasets": [],
+      "disposition": "keep_candidate",
+      "parse_state": "valid",
+      "path": "Results/metrics.json",
+      "reasons": [
+        "candidate requires semantic validation at its owning evidence gate"
+      ],
+      "recorded_state": null,
+      "schema": null,
+      "seeds": [],
+      "sha256": "3644c0c451f9e04efdd720e7dc542de0862fdaf51d041495cd84ac1893b459c5",
+      "split_ids": []
+    }
+  ],
+  "generated_at_utc": "2026-08-29T14:41:29.800358+00:00",
+  "manuscript": {
+    "findings": [
+      {
+        "categories": [
+          "noise_or_robustness",
+          "hardware_scope",
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 46,
+        "text": "Building a quantum convolutional neural network that stays coherent throughout the circuit remains difficult. We study a model that performs state preparation, register-index convolution, pooling, and classification using only unitary quantum operations before one terminal observable. It uses global amplitude encoding, a parameter-shared SU(2) kernel, and a measurement-free pooling block. We prove that this coherent block reproduces the corresponding measurement-based pooling channel on the reta"
+      },
+      {
+        "categories": [
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 50,
+        "text": "Quantum convolutional neural networks, variational quantum circuits, quantum machine learning, amplitude encoding, unitary pooling, NISQ computing, coherent quantum architectures."
+      },
+      {
+        "categories": [
+          "image_locality"
+        ],
+        "disposition": "review",
+        "line": 54,
+        "text": "Quantum machine learning has become an active research area that studies how quantum computing can be applied to data-driven, learning-based tasks. One recurring interest is how to bring useful inductive biases, such as locality, parameter sharing, and hierarchical feature extraction, into the quantum setting. Among classical models, the convolutional neural network has been especially successful because it exploits spatial structure in data, which motivated quantum convolutional neural networks"
+      },
+      {
+        "categories": [
+          "noise_or_robustness",
+          "hardware_scope",
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 56,
+        "text": "Several approaches have extended convolutional ideas to the quantum domain through structured variational circuits, usually referred to as QCNNs. These models tend to rely on hierarchical constructions that apply local quantum operations followed by dimensionality reduction~\\cite{ref46}. Recent work has explored a range of architectural variants, including hardware-aware QCNN designs that minimise circuit depth and qubit requirements, along with flexible convolutional schemes that adjust stride "
+      },
+      {
+        "categories": [
+          "noise_or_robustness",
+          "hardware_scope",
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 58,
+        "text": "Substantial as these advances are, several limitations still hinder effective deployment on near-term hardware. Reliance on measurement-based pooling or hybrid classical--quantum architectures requires mid-circuit measurement, qubit reset, and classical feed-forward, which are microsecond-scale operations where gates are nanosecond-scale, and which remain limited or unavailable on many devices. Many proposed architectures also employ globally entangling circuits or deep variational blocks, and t"
+      },
+      {
+        "categories": [
+          "noise_or_robustness",
+          "hardware_scope",
+          "image_locality"
+        ],
+        "disposition": "review",
+        "line": 60,
+        "text": "These limitations matter most on NISQ devices, where noise, short coherence times, and restricted qubit connectivity place tight constraints on circuit design. Architectures that depend on deep variational blocks or frequent mid-circuit measurements are particularly exposed to decoherence and error accumulation, which leads to unstable training and poor generalisation. Losing coherence between convolutional layers also undermines the hierarchical feature extraction that motivates convolutional a"
+      },
+      {
+        "categories": [
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 64,
+        "text": "Beyond its architectural construction, the study asks how the frozen model behaves under a reproducible multi-domain protocol. The historical MNIST single-seed result is retained as provenance; the Q1 aggregate supplies the performance estimates and uncertainty used for the final claims. The present work establishes simulator-level architectural consistency, not physical-device performance."
+      },
+      {
+        "categories": [
+          "noise_or_robustness",
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 85,
+        "text": "Quantum convolutional neural networks extend classical convolutional networks into the quantum domain by combining local unitary operations with hierarchical dimensionality reduction. Early formulations used structured variational circuits inspired by renormalisation techniques~\\cite{ref37}, while more recent work adopts hardware-aware adaptations that cut circuit depth and qubit requirements to suit near-term devices~\\cite{ref2,ref6,ref7}. Convolutional mechanisms that emphasise flexibility, in"
+      },
+      {
+        "categories": [
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 87,
+        "text": "\\subsection{Variational Quantum Classifiers and Trainability}"
+      },
+      {
+        "categories": [
+          "noise_or_robustness",
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 88,
+        "text": "The broader framework of variational quantum circuits (VQCs) underlies most quantum machine learning models~\\cite{ref40}. Optimisation typically relies on gradient-based methods such as the parameter-shift rule and stochastic descent variants~\\cite{ref13,ref21,ref41}. Increasing circuit depth and expressibility does not always help; it can produce barren plateaus, where gradient magnitudes vanish exponentially with system size~\\cite{ref14,ref17,ref19,ref38}. Several strategies soften these effec"
+      },
+      {
+        "categories": [
+          "noise_or_robustness"
+        ],
+        "disposition": "review",
+        "line": 91,
+        "text": "Dimensionality reduction in quantum models is often expressed through quantum autoencoder frameworks, which compress quantum states into lower-dimensional subspaces while preserving the relevant information~\\cite{ref25,ref26}. Extensions have explored image classification and information compression through structured encoding--decoding circuits~\\cite{ref3,ref23,ref29}. Autoencoders offer a principled route to quantum information compression, but they typically require extra circuit depth and ca"
+      },
+      {
+        "categories": [
+          "noise_or_robustness"
+        ],
+        "disposition": "review",
+        "line": 93,
+        "text": "\\subsection{Noise and Error Mitigation in Quantum Learning}"
+      },
+      {
+        "categories": [
+          "noise_or_robustness",
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 94,
+        "text": "Noise remains the primary obstacle to deploying quantum machine learning models on near-term hardware. Comprehensive reviews of quantum error mitigation point to strategies such as zero-noise extrapolation, data-driven correction, and probabilistic error cancellation~\\cite{ref22}. More recent approaches incorporate machine learning into the error mitigation pipeline, including neural-network-assisted correction and noise-agnostic data augmentation~\\cite{ref16,ref20}. While these methods improve "
+      },
+      {
+        "categories": [
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 147,
+        "text": "with the rightmost operator acting first. The six gates couple every pair of qubits in the register-index window. This all-to-all pattern provides bounded gate support at a fixed depth, while entanglement does not cross a window boundary. We report this as a structural property of the implemented register topology; it is not a proof of image-space locality or asymptotic trainability. The full convolution operator is"
+      },
+      {
+        "categories": [
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 176,
+        "text": "where operators act right to left and $\\epsilon = 0.02$ is a fixed (non-trainable) angle applied to the compressed qubit. Because $b$ is excluded from all subsequent operations, $R_Y^{(b)}(\\epsilon)$ has no effect on any observable of the retained register; it is retained here only because the reported parameter vector and its random initialisation stream are those of the executed model. Section~\\ref{sec:pooling-theory} makes this inertness precise. The global pooling operator is"
+      },
+      {
+        "categories": [
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 195,
+        "text": "Pooling in a QCNN is usually realised either by mid-circuit measurement of the compressed qubit with a classically conditioned correction on the retained qubit, or, as here, by a coherent two-qubit unitary. This section establishes the exact relationship between the two. The result is stronger than a qualitative preference: the block in~\\eqref{eq:poolblock} \\emph{reproduces} the measurement-based construction exactly, and does so without requiring mid-circuit measurement, qubit reset, or classic"
+      },
+      {
+        "categories": [
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 227,
+        "text": "\\item It does so while eliminating mid-circuit measurement, qubit reset, and classical feed-forward --- capabilities that may require additional control support on a target device. The advantage asserted here is architectural and simulation-scoped rather than an empirical hardware result."
+      },
+      {
+        "categories": [
+          "noise_or_robustness"
+        ],
+        "disposition": "review",
+        "line": 246,
+        "text": "Let $\\mathcal{D}_b$ be complete dephasing of $b$ in the computational basis and define"
+      },
+      {
+        "categories": [
+          "numerical_result",
+          "noise_or_robustness"
+        ],
+        "disposition": "review",
+        "line": 258,
+        "text": "Both statements are \\emph{a priori} predictions, made before measurement, and both are confirmed on the executed circuit. Evaluating the frozen $n=10$ model with its trained parameters on a density-matrix simulator, the coherent block and the explicit measure-and-condition channel of~\\eqref{eq:mcchannel} produce terminal expectation values agreeing to a maximum deviation of $2.2 \\times 10^{-16}$ --- floating-point round-off, against a tolerance of $10^{-12}$. Independently, inserting complete de"
+      },
+      {
+        "categories": [
+          "noise_or_robustness"
+        ],
+        "disposition": "review",
+        "line": 260,
+        "text": "Two controls establish that these null results are not artefacts of an insensitive readout. Removing the pooling unitary altogether changes the output by more than $10^{-6}$, and applying the \\emph{same} dephasing channel to the retained wires instead of the compressed ones changes it by $0.4094$ --- many orders of magnitude larger than the effect on the compressed wires. The channel is demonstrably active; the block simply cannot see what it erases."
+      },
+      {
+        "categories": [
+          "numerical_result",
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 263,
+        "text": "Theorem~\\ref{thm:exact} withdraws a claim commonly made for coherent pooling, including in earlier versions of this work: that measurement-based pooling destroys information which unitary pooling preserves. For observables of this circuit that statement is false, and Proposition~\\ref{prop:coh} quantifies why. What the theorem supports instead is a sharper and more defensible set of claims --- exact simulation of the measurement-based class in the frozen construction, elimination of mid-circuit m"
+      },
+      {
+        "categories": [
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 278,
+        "text": "enables joint feature extraction in the reduced Hilbert space. A final measurement-axis rotation $U_{\\text{phase}}(\\omega) = R_Z^{(0)}(\\omega)$ introduces a trainable bias term $\\omega$ in the expectation function, shifting the decision boundary in expectation-value space and increasing the projection's expressive capacity without added depth."
+      },
+      {
+        "categories": [
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 286,
+        "text": "The FQCNN implements global amplitude state preparation, shared register-index convolutional mixing, coherent dimensional compression, and measurement-aligned variational classification. The final rotation acts as a trainable bias in the quantum expectation space, which improves decision-boundary flexibility without adding entanglement complexity."
+      },
+      {
+        "categories": [
+          "image_locality"
+        ],
+        "disposition": "review",
+        "line": 290,
+        "text": "The learning objective is governed by a risk minimisation framework. Given a training dataset $\\mathcal{D}$, the model uses Binary Cross-Entropy (BCE) loss and minimises it by mapping the quantum expectation value to a bounded classification probability. The raw quantum expectation value $f_\\Theta(x^{(k)}) \\in [-1, 1]$ is then transformed into a standard classification probability $p^{(k)} \\in [0, 1]$ via a relative translation, allowing the mapping of true training labels to the binary domain $"
+      },
+      {
+        "categories": [
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 300,
+        "text": "On hardware the expectation value is estimated through repeated measurements. With $S$ shots, the estimator is"
+      },
+      {
+        "categories": [
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 307,
+        "text": "The reported statevector training uses the simulator's adjoint/backpropagation differentiation path, with the sequential lightning.qubit execution retained as the correctness oracle. For a hardware implementation, an alternative exact estimator is the parameter-shift rule~\\cite{ref42}. Incorporating the Binary Cross-Entropy cost formulation, its partial derivative with respect to a variational circuit parameter $\\theta$ can be evaluated as:"
+      },
+      {
+        "categories": [
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 312,
+        "text": "The displayed parameter-shift expression is therefore a hardware cost model, not the differentiation method used to obtain the simulator results in this study; its two shifted evaluations per parameter apply only when that estimator is selected."
+      },
+      {
+        "categories": [
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 315,
+        "text": "The optimisation loop utilises the Adam optimiser to adapt step sizes throughout the parameter landscape. The historical headline run used $\\eta = 0.005$, mini-batches of $M = 32$, gradient clipping, and an Exponential Moving Average (EMA) with decay $\\gamma = 0.99$ for at most 50 epochs with early stopping. The bounded Q1 comparison uses its separately declared 30-epoch protocol. These settings are reported as finite experimental choices, not as a proof that barren plateaus are absent."
+      },
+      {
+        "categories": [
+          "noise_or_robustness",
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 318,
+        "text": "For the simulator path, adjoint/backpropagation cost is determined by the retained state and circuit evaluation rather than by two parameter-shift executions per parameter. If parameter-shift is used on hardware, its leading evaluation count is two shifted circuits per selected parameter and datapoint, with shot cost set by the measurement budget. Statevector simulation scales as $\\mathcal{O}(2^n)$ in memory. The resource and any local-noise evidence reported below are explicitly simulation/fake"
+      },
+      {
+        "categories": [
+          "noise_or_robustness"
+        ],
+        "disposition": "review",
+        "line": 320,
+        "text": "\\subsection{Noise and Gradient Stability}"
+      },
+      {
+        "categories": [
+          "noise_or_robustness"
+        ],
+        "disposition": "review",
+        "line": 321,
+        "text": "\\subsubsection{Statistical measurement noise}"
+      },
+      {
+        "categories": [
+          "noise_or_robustness"
+        ],
+        "disposition": "review",
+        "line": 322,
+        "text": "With $\\rho(\\Theta; x) = |\\psi(\\Theta; x)\\rangle\\langle\\psi(\\Theta; x)|$ and Born's rule, $f_\\theta(x) = \\text{Tr}[\\rho Z_0]$. Since both shifted estimators are unbiased, so is the gradient estimator, $\\mathbb{E}[\\partial \\hat{f}/\\partial\\theta] = \\partial f/\\partial\\theta$, with variance scaling as $\\mathcal{O}(1/S)$. Statistical noise therefore introduces variance but no bias."
+      },
+      {
+        "categories": [
+          "noise_or_robustness",
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 324,
+        "text": "\\subsubsection{Hardware-induced quantum noise}"
+      },
+      {
+        "categories": [
+          "noise_or_robustness",
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 325,
+        "text": "Hardware noise replaces unitary evolution with a CPTP map $\\rho_{\\text{noisy}} = \\varepsilon(\\rho)$. Under the depolarising channel $\\varepsilon_{\\text{dep}}(\\rho) = (1 - p)\\rho + p\\, I/2^n$, the output is attenuated as $f_\\theta \\rightarrow (1 - p)f_\\theta$: the signal magnitude decreases linearly with no new directional bias. Under dephasing $\\varepsilon_{\\text{phase}}(\\rho) = (1 - p)\\rho + p Z\\rho Z$, off-diagonal elements are suppressed, reducing coherence and thus effective expressivity."
+      },
+      {
+        "categories": [
+          "noise_or_robustness"
+        ],
+        "disposition": "review",
+        "line": 327,
+        "text": "\\subsubsection{Noise propagation}"
+      },
+      {
+        "categories": [
+          "numerical_result",
+          "noise_or_robustness"
+        ],
+        "disposition": "review",
+        "line": 328,
+        "text": "Entangling operations have bounded support in the register-index topology, but global amplitude encoding prevents this fact from being interpreted as a bound on image-space noise propagation. End-to-end noisy accuracy is treated as an empirical question and is reported only for the declared local validation protocol."
+      },
+      {
+        "categories": [
+          "noise_or_robustness",
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 331,
+        "text": "If the noise channel is independent of $\\theta$, differentiation moves inside the trace, $\\partial f/\\partial\\theta = \\text{Tr}[\\varepsilon(\\partial\\rho/\\partial\\theta)Z_0]$. The resulting gradient behavior depends on the channel and circuit; no universal direction-preservation or trainability guarantee is inferred here."
+      },
+      {
+        "categories": [
+          "numerical_result"
+        ],
+        "disposition": "review",
+        "line": 349,
+        "text": "Training samples & 7,599 (60\\%, stratified) \\\\"
+      },
+      {
+        "categories": [
+          "numerical_result"
+        ],
+        "disposition": "review",
+        "line": 350,
+        "text": "Validation samples & 1,900 (15\\%, stratified) \\\\"
+      },
+      {
+        "categories": [
+          "numerical_result"
+        ],
+        "disposition": "review",
+        "line": 351,
+        "text": "Test samples & 3,166 (25\\%, stratified) \\\\"
+      },
+      {
+        "categories": [
+          "image_locality"
+        ],
+        "disposition": "review",
+        "line": 361,
+        "text": "Each input is min-max normalised to [0, 1], flattened to 784 values, zero-padded to 1024, and embedded directly into one ten-qubit state by global amplitude encoding. This state preparation does not preserve a spatial-neighbour relation between image pixels and register indices; all locality claims in the variational circuit are therefore register-index statements. Labels are mapped to $\\{+1, -1\\}$ for the Pauli-$Z$ expectation output. The corrected Q1 campaign uses 666 source examples per task "
+      },
+      {
+        "categories": [
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 379,
+        "text": "Quantum device & lightning.qubit (PennyLane) \\\\"
+      },
+      {
+        "categories": [
+          "numerical_result"
+        ],
+        "disposition": "review",
+        "line": 398,
+        "text": "Training accuracy & Historical single-seed reference \\\\"
+      },
+      {
+        "categories": [
+          "numerical_result"
+        ],
+        "disposition": "review",
+        "line": 399,
+        "text": "Validation accuracy & Historical single-seed reference \\\\"
+      },
+      {
+        "categories": [
+          "numerical_result"
+        ],
+        "disposition": "review",
+        "line": 400,
+        "text": "Test accuracy & See Q1 aggregate artifact \\\\"
+      },
+      {
+        "categories": [
+          "numerical_result",
+          "noise_or_robustness",
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 406,
+        "text": "The unitary construction preserves the global state until the terminal observable, and the pooling theorem establishes exact equivalence to the corresponding measure-and-condition channel for the stated block. The empirical contribution is assessed by the Q1 aggregate, pooling-transfer ablation, finite-size diagnostics, and local resource/noise evidence; no accuracy advantage, universal trainability, or generalisation guarantee is inferred from the historical single-seed gap."
+      },
+      {
+        "categories": [
+          "numerical_result"
+        ],
+        "disposition": "review",
+        "line": 428,
+        "text": "\\caption{Validated Q1 comparison accuracy (mean $\\pm$ standard deviation over five seeds). All arms use the same ordered samples, split manifest, and single final test evaluation; complete metrics and paired tests are archived in \\texttt{Results/evidence/q1\\_comparison.json}.}"
+      },
+      {
+        "categories": [
+          "numerical_result"
+        ],
+        "disposition": "review",
+        "line": 446,
+        "text": "\\caption{Q1 comparison accuracy (mean $\\pm$ standard deviation over five seeds) generated directly from \\texttt{Results/evidence/q1\\_comparison.json}. The figure is a descriptive within-study comparison; it is not a quantum-advantage claim.}"
+      },
+      {
+        "categories": [
+          "numerical_result"
+        ],
+        "disposition": "review",
+        "line": 450,
+        "text": "The primary comparison is within-study: logistic regression, a parameter-matched MLP, and TTN are evaluated on the same ordered samples, split manifests, and seed set as the FQCNN. The aggregate does not show FQCNN dominance: it is below logistic regression and the MLP on all four tasks, while exceeding TTN on all four in mean accuracy (with uncertainty and multiplicity-adjusted tests reported in the machine-readable artifact). We retain this bounded result rather than converting the architectur"
+      },
+      {
+        "categories": [
+          "noise_or_robustness"
+        ],
+        "disposition": "review",
+        "line": 452,
+        "text": "\\subsection{Noise Robustness}"
+      },
+      {
+        "categories": [
+          "numerical_result",
+          "noise_or_robustness",
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 453,
+        "text": "The pooling theorem and dephasing controls establish circuit-level identities, not end-to-end noise robustness. The Q1 package therefore reports a bounded local validation experiment using clean checkpoints, declared depolarising/dephasing channels, fixed validation subsets, and an isolated Qiskit/Aer environment. Those results are simulator evidence only; no accuracy-retention or device-noise claim is made beyond the exact tasks, seeds, shots, and noise levels recorded in the machine-readable a"
+      },
+      {
+        "categories": [
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 456,
+        "text": "Amplitude encoding fixes the state-vector width at the declared qubit count, while parameter sharing controls the number of variational slots. We report logical, decomposed, and transpiled resource counts for $n=4,6,8,10$ and a controlled fake-backend pooling comparison. These are local resource estimates, not a scalability theorem, a hardware execution result, or a deployment-readiness guarantee."
+      },
+      {
+        "categories": [
+          "noise_or_robustness",
+          "hardware_scope",
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 459,
+        "text": "The current evaluation is limited to four binary tasks drawn from three 28$\\times$28 grayscale dataset families, small training subsets, five-seed comparisons, finite-size diagnostics, and classical simulation/local noise models. The globally amplitude-encoded register is not an image-space convolutional representation, and the experiments do not establish quantum advantage, asymptotic trainability, noise robustness on a device, or real-QPU performance. Scaling to larger datasets, multi-class ta"
+      },
+      {
+        "categories": [
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 465,
+        "text": "Previous QCNNs rely on mid-circuit measurements or classical post-processing at pooling~\\cite{ref2,ref4,ref6}, which requires dynamic-circuit capability at each pooling layer. Theorem~\\ref{thm:exact} shows that the coherent block reproduces those constructions exactly on the retained register, so the contribution here is the removal of that requirement rather than the recovery of lost information. Here, encoding, convolution, pooling, and classification are merged into a single unitary transform"
+      },
+      {
+        "categories": [
+          "hardware_scope"
+        ],
+        "disposition": "review",
+        "line": 470,
+        "text": "The contribution is precisely delimited by Section~\\ref{sec:pooling-theory}. Theorem~\\ref{thm:exact} establishes that this block reproduces the corresponding measure-and-condition channel exactly, so it is not more expressive than measurement-based pooling; Proposition~\\ref{prop:containment} establishes that the wider unitary family strictly contains that class, so the frozen block is one explicitly simulated member of that family. What the block delivers is the same channel without mid-circuit "
+      },
+      {
+        "categories": [
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 473,
+        "text": "The kernel applies a fixed six-CNOT pattern in each 2 $\\times$ 2 register-index window and couples every pair within that window. The gate support is bounded and the per-window depth is fixed; because state preparation is global amplitude encoding, this should not be read as image-space locality or translational equivariance. Parameter sharing reduces allocation growth, while trainability is assessed only through the finite diagnostics reported in the evidence package, not inferred from locality"
+      },
+      {
+        "categories": [
+          "noise_or_robustness",
+          "hardware_scope",
+          "trainability_scope"
+        ],
+        "disposition": "review",
+        "line": 479,
+        "text": "We proposed a fully quantum-native convolutional neural network (FQCNN) that performs state preparation, convolution, pooling, and classification through a single coherent unitary path before the terminal observable. The exact pooling result identifies removal of mid-circuit control as the architectural contribution; the Q1 aggregate and transfer experiments quantify empirical behavior against matched baselines without presupposing an advantage. Resource, noise, and trainability statements are r"
+      }
+    ],
+    "path": "fqcnn.tex",
+    "sha256": "8dabd68b102b0ecfe2a3e18eb1039aaf7c4b0a5525b3985c99abd62b158f582f"
+  },
+  "repository": {
+    "ahead": 0,
+    "behind": 0,
+    "branch": "dev",
+    "dirty": true,
+    "dirty_paths": [
+      "TATUS.md",
+      "docs/paper_code_reconciliation.md",
+      "docs/superpowers/plans/2026-08-27-q1-journal-fast-track.md",
+      "experiments/q1_fast_track_analysis.py",
+      "fqcnn.tex",
+      ".claude/settings.local.json",
+      ".claude/worktrees/",
+      "Results/evidence/q1_claim_ledger.json",
+      "Results/evidence/q1_claim_ledger_draft.json",
+      "Results/evidence/q1_comparison.json",
+      "Results/evidence/q1_dataset_provenance.json",
+      "Results/evidence/q1_fake_backend_rehearsal.json",
+      "Results/evidence/q1_fast_track_inventory.json",
+      "Results/evidence/q1_noise_validation.json",
+      "Results/evidence/q1_pooling_practicality.json",
+      "Results/evidence/q1_pooling_transfer.json",
+      "Results/evidence/q1_resources.json",
+      "Results/headline_retrain_log.txt",
+      "Results/headline_retrain_stdout.txt",
+      "Results/phase3_expr_stdout.txt",
+      "Results/phase3_gradvar_stdout.txt",
+      "Results/q1_comparison/",
+      "Results/q1_pooling_transfer/",
+      "figs_final/q1_comparison.png",
+      "fqcnn.aux",
+      "fqcnn.log",
+      "fqcnn.pdf",
+      "kk.pdf"
+    ],
+    "git_sha": "a86c89180b3f65c87b265beceedb75d9ab51c5a3",
+    "upstream": "origin/dev"
+  },
+  "run_groups": [
+    {
+      "config": "e3_pool_coherent",
+      "dataset_pair": "0v1",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "1011bd59f40cfa5b620204b5725995ab38acecfc0bc19312cbf2c6b45c982d85",
+        "1c0e1e339862e06727b084f9d482884891c6e20caefc16277fad18838e0d5caa",
+        "1e10db7e90b5fb00b01c15dad61c006ec364968aa4dc79b0c690874ec08911c3",
+        "6c0cb11d92dfc0e11a1f55806f9def703b825f12a044b828f14b6307b5b59f6e",
+        "81fb5f33fe24dad328e0322b7fb864e1907e6b4a143e79c855977b0ac6d439e5"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_measurement",
+      "dataset_pair": "0v1",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "1011bd59f40cfa5b620204b5725995ab38acecfc0bc19312cbf2c6b45c982d85",
+        "1c0e1e339862e06727b084f9d482884891c6e20caefc16277fad18838e0d5caa",
+        "1e10db7e90b5fb00b01c15dad61c006ec364968aa4dc79b0c690874ec08911c3",
+        "6c0cb11d92dfc0e11a1f55806f9def703b825f12a044b828f14b6307b5b59f6e",
+        "81fb5f33fe24dad328e0322b7fb864e1907e6b4a143e79c855977b0ac6d439e5"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_none",
+      "dataset_pair": "0v1",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "1011bd59f40cfa5b620204b5725995ab38acecfc0bc19312cbf2c6b45c982d85",
+        "1c0e1e339862e06727b084f9d482884891c6e20caefc16277fad18838e0d5caa",
+        "1e10db7e90b5fb00b01c15dad61c006ec364968aa4dc79b0c690874ec08911c3",
+        "6c0cb11d92dfc0e11a1f55806f9def703b825f12a044b828f14b6307b5b59f6e",
+        "81fb5f33fe24dad328e0322b7fb864e1907e6b4a143e79c855977b0ac6d439e5"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_su4",
+      "dataset_pair": "0v1",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "1011bd59f40cfa5b620204b5725995ab38acecfc0bc19312cbf2c6b45c982d85",
+        "1c0e1e339862e06727b084f9d482884891c6e20caefc16277fad18838e0d5caa",
+        "1e10db7e90b5fb00b01c15dad61c006ec364968aa4dc79b0c690874ec08911c3",
+        "6c0cb11d92dfc0e11a1f55806f9def703b825f12a044b828f14b6307b5b59f6e",
+        "81fb5f33fe24dad328e0322b7fb864e1907e6b4a143e79c855977b0ac6d439e5"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_unitary",
+      "dataset_pair": "0v1",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "1011bd59f40cfa5b620204b5725995ab38acecfc0bc19312cbf2c6b45c982d85",
+        "1c0e1e339862e06727b084f9d482884891c6e20caefc16277fad18838e0d5caa",
+        "1e10db7e90b5fb00b01c15dad61c006ec364968aa4dc79b0c690874ec08911c3",
+        "6c0cb11d92dfc0e11a1f55806f9def703b825f12a044b828f14b6307b5b59f6e",
+        "81fb5f33fe24dad328e0322b7fb864e1907e6b4a143e79c855977b0ac6d439e5"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "pool_none",
+      "dataset_pair": "0v1",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "53f369e642c956b09718e7b8686cced1cc2c8979c346b3b4e99dcf4ce519768b",
+        "e2a4414b731944d288db10c53abed15c06a9f9623ac85c70e74477f98570f608"
+      ],
+      "valid_seeds": [
+        0,
+        1
+      ]
+    },
+    {
+      "config": "proposed",
+      "dataset_pair": "0v1",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "53f369e642c956b09718e7b8686cced1cc2c8979c346b3b4e99dcf4ce519768b",
+        "e2a4414b731944d288db10c53abed15c06a9f9623ac85c70e74477f98570f608"
+      ],
+      "valid_seeds": [
+        0,
+        1
+      ]
+    },
+    {
+      "config": "e3_pool_coherent",
+      "dataset_pair": "3v5",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "0cf019954ef28cedbb9669e8b7c9d01ba0a5e049bc98dd68666d23b7b8196b9f",
+        "1122e3a8763840c58ff56f2131ac7da897220b289d0304f781009224dcf8a274",
+        "135eae40c8a0235184bafdb46c492578130d457a9bad1e2a77ce0fed8a403bae",
+        "ba0e7d84d5a344e108b6e5e8e3def8a587758fb85b8a1a01a319c6d1e91f8728",
+        "e141d8c7e1df6d51de2073d39d3680a3ab3fc81b21edf7a3ebb11e2c379ac08b"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_measurement",
+      "dataset_pair": "3v5",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "0cf019954ef28cedbb9669e8b7c9d01ba0a5e049bc98dd68666d23b7b8196b9f",
+        "1122e3a8763840c58ff56f2131ac7da897220b289d0304f781009224dcf8a274",
+        "135eae40c8a0235184bafdb46c492578130d457a9bad1e2a77ce0fed8a403bae",
+        "ba0e7d84d5a344e108b6e5e8e3def8a587758fb85b8a1a01a319c6d1e91f8728",
+        "e141d8c7e1df6d51de2073d39d3680a3ab3fc81b21edf7a3ebb11e2c379ac08b"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_none",
+      "dataset_pair": "3v5",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "0cf019954ef28cedbb9669e8b7c9d01ba0a5e049bc98dd68666d23b7b8196b9f",
+        "1122e3a8763840c58ff56f2131ac7da897220b289d0304f781009224dcf8a274",
+        "135eae40c8a0235184bafdb46c492578130d457a9bad1e2a77ce0fed8a403bae",
+        "ba0e7d84d5a344e108b6e5e8e3def8a587758fb85b8a1a01a319c6d1e91f8728",
+        "e141d8c7e1df6d51de2073d39d3680a3ab3fc81b21edf7a3ebb11e2c379ac08b"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_su4",
+      "dataset_pair": "3v5",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "0cf019954ef28cedbb9669e8b7c9d01ba0a5e049bc98dd68666d23b7b8196b9f",
+        "1122e3a8763840c58ff56f2131ac7da897220b289d0304f781009224dcf8a274",
+        "135eae40c8a0235184bafdb46c492578130d457a9bad1e2a77ce0fed8a403bae",
+        "ba0e7d84d5a344e108b6e5e8e3def8a587758fb85b8a1a01a319c6d1e91f8728",
+        "e141d8c7e1df6d51de2073d39d3680a3ab3fc81b21edf7a3ebb11e2c379ac08b"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_unitary",
+      "dataset_pair": "3v5",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "0cf019954ef28cedbb9669e8b7c9d01ba0a5e049bc98dd68666d23b7b8196b9f",
+        "1122e3a8763840c58ff56f2131ac7da897220b289d0304f781009224dcf8a274",
+        "135eae40c8a0235184bafdb46c492578130d457a9bad1e2a77ce0fed8a403bae",
+        "ba0e7d84d5a344e108b6e5e8e3def8a587758fb85b8a1a01a319c6d1e91f8728",
+        "e141d8c7e1df6d51de2073d39d3680a3ab3fc81b21edf7a3ebb11e2c379ac08b"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_coherent",
+      "dataset_pair": "4v9",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "12406743185c94e33c708d412b7ce7a6abda6b46dc85c243a9a8c119df451e82",
+        "50e2cf8e89eb602f8088fc21e3552292a356aee3518790534c6808ec78ba5c53",
+        "6f2dcd1f514863ebb717edf48ae20dc0392cbdd340333b5cc0e2a5a522f35025",
+        "85a5997c15a86221af2bbbbe7fc4fe5f2705f48a82fefe46e7a8862aecf499b7",
+        "9d0376897b764a5f5bdc28214a1e91fc43acc827a239349d45b1307eb69b1b3b"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_measurement",
+      "dataset_pair": "4v9",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "12406743185c94e33c708d412b7ce7a6abda6b46dc85c243a9a8c119df451e82",
+        "50e2cf8e89eb602f8088fc21e3552292a356aee3518790534c6808ec78ba5c53",
+        "6f2dcd1f514863ebb717edf48ae20dc0392cbdd340333b5cc0e2a5a522f35025",
+        "85a5997c15a86221af2bbbbe7fc4fe5f2705f48a82fefe46e7a8862aecf499b7",
+        "9d0376897b764a5f5bdc28214a1e91fc43acc827a239349d45b1307eb69b1b3b"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_none",
+      "dataset_pair": "4v9",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "12406743185c94e33c708d412b7ce7a6abda6b46dc85c243a9a8c119df451e82",
+        "50e2cf8e89eb602f8088fc21e3552292a356aee3518790534c6808ec78ba5c53",
+        "6f2dcd1f514863ebb717edf48ae20dc0392cbdd340333b5cc0e2a5a522f35025",
+        "85a5997c15a86221af2bbbbe7fc4fe5f2705f48a82fefe46e7a8862aecf499b7",
+        "9d0376897b764a5f5bdc28214a1e91fc43acc827a239349d45b1307eb69b1b3b"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_su4",
+      "dataset_pair": "4v9",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "12406743185c94e33c708d412b7ce7a6abda6b46dc85c243a9a8c119df451e82",
+        "50e2cf8e89eb602f8088fc21e3552292a356aee3518790534c6808ec78ba5c53",
+        "6f2dcd1f514863ebb717edf48ae20dc0392cbdd340333b5cc0e2a5a522f35025",
+        "85a5997c15a86221af2bbbbe7fc4fe5f2705f48a82fefe46e7a8862aecf499b7",
+        "9d0376897b764a5f5bdc28214a1e91fc43acc827a239349d45b1307eb69b1b3b"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "config": "e3_pool_unitary",
+      "dataset_pair": "4v9",
+      "disposition": "keep_candidate",
+      "invalid_runs": [],
+      "split_ids": [
+        "12406743185c94e33c708d412b7ce7a6abda6b46dc85c243a9a8c119df451e82",
+        "50e2cf8e89eb602f8088fc21e3552292a356aee3518790534c6808ec78ba5c53",
+        "6f2dcd1f514863ebb717edf48ae20dc0392cbdd340333b5cc0e2a5a522f35025",
+        "85a5997c15a86221af2bbbbe7fc4fe5f2705f48a82fefe46e7a8862aecf499b7",
+        "9d0376897b764a5f5bdc28214a1e91fc43acc827a239349d45b1307eb69b1b3b"
+      ],
+      "valid_seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  ],
+  "schema": {
+    "name": "fqcnn_q1_fast_track_inventory",
+    "version": 1
+  },
+  "summary": {
+    "artifact_dispositions": {
+      "bounded_rerun": 1,
+      "keep_candidate": 25
+    },
+    "evidence_artifacts": 26,
+    "invalid_run_cells": 0,
+    "manuscript_findings": 57,
+    "run_groups": 17,
+    "valid_run_cells": 79
+  },
+  "verification": {
+    "command": "python -m pytest tests/ -q",
+    "passed": 616,
+    "skipped": 2
+  }
+}

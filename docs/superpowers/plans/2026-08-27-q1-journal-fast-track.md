@@ -264,9 +264,10 @@ The schedule controls scope; it does not promise journal review or acceptance. I
 ### Execution record
 
 - **Day 1 complete (2026-08-27):** Task 7 integrated; 19 evidence artifacts and 72 manuscript findings inventoried; 570 tests passed with two documented Windows symlink skips.
-- **Day 2 complete (2026-08-27):** three checksummed dataset families and four tasks frozen; source IDs included in split identity; isolated MNIST/Fashion-MNIST/KMNIST smoke cells completed and resumed cleanly; 585 tests passed with the same two documented skips. Day 3 is active.
-- **Day 3 in progress (2026-08-27):** explicit logistic/MLP/TTN selection, reusable baseline parameters, balanced accuracy, strict paired aggregation, and full smoke/scientific output isolation implemented. The MNIST `0,1` seed-0 four-arm gate passed; the remaining comparison matrix is running in the first bounded compute window.
-- **Parallel quality checks (2026-08-27):** pooling-transfer orchestration (7 tests), local-practicality tooling (13 tests plus resource/pooling/rehearsal artifacts), and a diagnostic manuscript audit (25 claim records / 11 reviewer risks) are complete; their long transfer/noise runs and the final claim-ledger correction pass remain gated on validated comparison evidence.
+- **Day 2 complete (2026-08-27):** three checksummed dataset families and four tasks frozen; source IDs included in split identity; isolated MNIST/Fashion-MNIST/KMNIST smoke cells completed and resumed cleanly; 585 tests passed with the same two documented skips.
+- **Days 3–4 complete (2026-08-29):** corrected comparison matrix (4 tasks × 4 arms × 5 seeds = 80/80 cells) and Fashion-MNIST pooling transfer (5 arms × 3 seeds = 15/15 cells) completed with exact 666/400/100/166 manifests, zero failures, and paired aggregate statistics. Resource, pooling-practicality, six-record noise, provenance, and fake-backend evidence all validate.
+- **Days 5–6 complete (2026-08-29):** manuscript claims, tables, and the Q1 comparison figure were regenerated from canonical evidence; legacy single-seed plots were removed from the submission path; the bibliography now has 34 cited keys and 34 cited entries with no missing or uncited keys; the claim ledger was regenerated after the correction pass.
+- **Day 7 complete (2026-08-29):** full suite passed (616 passed, 2 documented Windows symlink skips); clean training and isolated Qiskit environments pass dependency checks; static, archive, finite-value, checksum, secret, and scope audits pass. The final release commit is limited to task-owned evidence/manuscript files and excludes local credentials, editor state, scratch logs, and generated LaTeX intermediates.
 
 ## 10. Definition of done
 

@@ -43,7 +43,7 @@ rohan.jain7@gmail.com}
 \maketitle
 
 \begin{abstract}
-Building a quantum convolutional neural network that stays coherent throughout the circuit remains difficult. Near-term devices are limited in depth and noise tolerance, so most quantum machine learning models either combine classical and quantum processing or rely on measurement-based pooling, both of which require capabilities that are slow or unavailable on much current hardware. We propose a model that performs data encoding, local convolution, pooling, and classification using only unitary quantum operations. It uses amplitude encoding for compact representation, a parameter-shared SU(2) quantum convolutional kernel for local feature extraction, and a mid-circuit measurement-free pooling layer that transfers information through parameterized controlled unitary operations. We prove that this coherent block reproduces measurement-based pooling exactly, in every observable statistic of the retained register, while requiring no mid-circuit measurement, qubit reset, or classical feed-forward; the prediction is confirmed numerically to $2 \times 10^{-16}$. Coherent pooling is therefore not an information-preservation advantage but an architectural one. The circuit is kept shallow and parameter-efficient to suit NISQ devices, and the pooling layer architecture ensures that physical reset overheads are bypassed while allowing execution on standard feed-forward quantum backends. In our experiments the model achieves approx 98\% test accuracy while remaining coherent across all layers. The results suggest that fully unitary hierarchical quantum models can perform competitively without intermediate measurements, which is useful for scaling quantum machine learning.
+Building a quantum convolutional neural network that stays coherent throughout the circuit remains difficult. We study a model that performs state preparation, register-index convolution, pooling, and classification using only unitary quantum operations before one terminal observable. It uses global amplitude encoding, a parameter-shared SU(2) kernel, and a measurement-free pooling block. We prove that this coherent block reproduces the corresponding measurement-based pooling channel on the retained register, without mid-circuit measurement, qubit reset, or classical feed-forward; the archived finite check agrees to numerical precision. The empirical package combines a predeclared multi-domain comparison, pooling-transfer ablation, finite trainability diagnostics, and local resource/noise simulations. Claims are restricted to these declared tasks and simulator protocols; no quantum advantage or hardware performance is inferred.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -59,16 +59,16 @@ Substantial as these advances are, several limitations still hinder effective de
 
 These limitations matter most on NISQ devices, where noise, short coherence times, and restricted qubit connectivity place tight constraints on circuit design. Architectures that depend on deep variational blocks or frequent mid-circuit measurements are particularly exposed to decoherence and error accumulation, which leads to unstable training and poor generalisation. Losing coherence between convolutional layers also undermines the hierarchical feature extraction that motivates convolutional architectures in the first place. As NISQ hardware scales incrementally rather than exponentially, there is growing value in models that emphasise shallow depth, locality-preserving operations, and parameter efficiency while keeping information flowing coherently through the circuit.
 
-In this work we address these challenges by introducing a fully quantum-native neural network (FQCNN) architecture designed to preserve coherence across every stage of the learning pipeline. The model performs data encoding, convolution, pooling, and classification entirely through unitary operations, removing the need for intermediate measurement or classical post-processing. Local quantum convolution is implemented with a shared 2$\times$2 kernel acting on spatially adjacent qubits, which enforces parameter sharing and a translational inductive bias while keeping circuit depth low. Dimensionality reduction is achieved through a coherent pooling mechanism that uses unitaries to compress information while keeping the global state pure. Section~\ref{sec:pooling-theory} proves that this mechanism reproduces measurement-based pooling exactly, so the benefit it delivers is the removal of mid-circuit control requirements rather than the retention of otherwise-lost information.
+In this work we address these challenges by introducing a fully quantum-native neural network (FQCNN) architecture designed to preserve coherence across every stage of the learning pipeline. The model performs data encoding, convolution, pooling, and classification entirely through unitary operations, removing the need for intermediate measurement or classical post-processing. The quantum convolution uses a shared $2\times2$ kernel over register-index windows, which controls parameter growth while keeping circuit depth low; global amplitude encoding means that this is not an image-space translational-equivariance guarantee. Dimensionality reduction is achieved through a coherent pooling mechanism that uses unitaries to compress information while keeping the global state pure. Section~\ref{sec:pooling-theory} proves that this mechanism reproduces measurement-based pooling exactly, so the benefit it delivers is the removal of mid-circuit control requirements rather than the retention of otherwise-lost information.
 
-Beyond its architectural advantages, the model also performs strongly in practice, reaching approx 98\% test accuracy on a binary classification task while maintaining quantum coherence throughout the computation. This suggests the architecture is physically consistent with quantum hardware constraints.
+Beyond its architectural construction, the study asks how the frozen model behaves under a reproducible multi-domain protocol. The historical MNIST single-seed result is retained as provenance; the Q1 aggregate supplies the performance estimates and uncertainty used for the final claims. The present work establishes simulator-level architectural consistency, not physical-device performance.
 
 The main contributions of this work are as follows:
 \begin{enumerate}
 \item We propose a fully quantum-native convolutional neural network that maintains coherence across encoding, convolution, pooling, and classification, with no intermediate disruption or classical post-processing.
-\item We introduce a local, parameter-shared quantum convolutional kernel that enforces a spatial inductive bias while staying shallow and hardware-efficient.
+\item We introduce a parameter-shared quantum convolutional kernel with bounded register-index gate support; global amplitude encoding is kept distinct from image-space locality.
 \item We develop a coherent unitary pooling mechanism that performs dimensionality reduction through quantum operations alone.
-\item We demonstrate the architecture empirically, reaching approx 98\% classification accuracy under realistic training conditions.
+\item We evaluate the frozen model with matched baselines and repeated seeds across four binary tasks from three dataset families, reporting uncertainty and negative results.
 \end{enumerate}
 
 The rest of the paper is organised as follows. Section II reviews related work on quantum convolutional and variational quantum models. Section III describes the proposed FQCNN architecture and its mathematical formulation. Section IV covers the training dynamics and optimisation strategy. Section V reports the experimental results and analysis. Section VI details the novelty and technical differentiation, and Section VII concludes with limitations and future directions.
@@ -85,7 +85,7 @@ The rest of the paper is organised as follows. Section II reviews related work o
 Quantum convolutional neural networks extend classical convolutional networks into the quantum domain by combining local unitary operations with hierarchical dimensionality reduction. Early formulations used structured variational circuits inspired by renormalisation techniques~\cite{ref37}, while more recent work adopts hardware-aware adaptations that cut circuit depth and qubit requirements to suit near-term devices~\cite{ref2,ref6,ref7}. Convolutional mechanisms that emphasise flexibility, including modified stride strategies and pointwise approaches, have been proposed to improve scalability and adaptability under connectivity constraints~\cite{ref6,ref36}. Benchmarking studies evaluate QCNN performance across classification and compression tasks, highlighting trade-offs between parameter efficiency, expressibility, and noise robustness~\cite{ref8}. Despite this progress, many variants still use measurement-based pooling or hybrid components, which require mid-circuit measurement and classical feed-forward rather than a purely unitary hierarchy~\cite{ref4}.
 
 \subsection{Variational Quantum Classifiers and Trainability}
-The broader framework of variational quantum circuits (VQCs) underlies most quantum machine learning models~\cite{ref40}. Optimisation typically relies on gradient-based methods such as the parameter-shift rule and stochastic descent variants~\cite{ref13,ref21,ref41}. Increasing circuit depth and expressibility does not always help; it can produce barren plateaus, where gradient magnitudes vanish exponentially with system size~\cite{ref14,ref17,ref19,ref38}. Several strategies soften these effects, including structured ansatz design, reduced-domain parameter initialisation, and architecture-aware optimisation~\cite{ref11,ref18,ref47}. More recent developments, such as stochastic quantum Hamiltonian descent and Bayesian optimisation, explore alternative training paradigms aimed at stabilising convergence in noisy settings~\cite{ref10,ref15}. Together, these findings show that architectural constraints and locality are important for keeping scalable quantum models trainable.
+The broader framework of variational quantum circuits (VQCs) underlies most quantum machine learning models~\cite{ref40}. Optimisation typically relies on gradient-based methods such as the parameter-shift rule and stochastic descent variants~\cite{ref13,ref21,ref41}. Increasing circuit depth and expressibility does not always help; it can produce barren plateaus, where gradient magnitudes vanish exponentially with system size~\cite{ref14,ref17,ref19,ref38}. Several strategies soften these effects, including structured ansatz design, reduced-domain parameter initialisation, and architecture-aware optimisation~\cite{ref11,ref18,ref47}. More recent developments, such as stochastic quantum Hamiltonian descent and Bayesian optimisation, explore alternative training paradigms aimed at stabilising convergence in noisy settings~\cite{ref10,ref15}. These observations motivate empirical trainability checks for each proposed architecture; they do not establish a universal scaling law.
 
 \subsection{Quantum Autoencoders and Information Compression}
 Dimensionality reduction in quantum models is often expressed through quantum autoencoder frameworks, which compress quantum states into lower-dimensional subspaces while preserving the relevant information~\cite{ref25,ref26}. Extensions have explored image classification and information compression through structured encoding--decoding circuits~\cite{ref3,ref23,ref29}. Autoencoders offer a principled route to quantum information compression, but they typically require extra circuit depth and can introduce optimisation difficulties under noise. By contrast, embedded pooling mechanisms that operate directly within QCNN architectures provide an alternative path to information reduction without separate encoding--decoding stages.
@@ -114,54 +114,19 @@ and classification is performed via
 All intermediate transformations are strictly unitary, with no mid-circuit measurements.
 
 \subsection{Quantum Data Encoding}
-This stage defines a structured quantum feature map that combines independent single-qubit embeddings with local, data-dependent entanglement. Unlike standard feature-map strategies~\cite{ref39,ref43}, we use amplitude encoding, which maps a normalised classical input vector into the amplitudes of the quantum state. This represents a $d$-dimensional input using only $\log_2(d)$ qubits, improving scalability while preserving global information. Prior to encoding, each input feature is min-max normalised to the bounded domain $[a, b] = [0, 1]$:
+The frozen implementation uses one state-preparation operation: global amplitude encoding. It maps a normalised classical input vector into the amplitudes of a ten-qubit state, representing up to $2^{10}$ features without introducing a second data-dependent feature map. Prior to encoding, each input feature is min-max normalised to the bounded domain $[a, b] = [0, 1]$:
 \begin{equation}
 x_i' = \frac{x_i - x_{\min}}{x_{\max} - x_{\min}} \cdot (b - a) + a, \qquad [a, b] = [0, 1].
 \end{equation}
-The encoding factorises as
+The preprocessed vector is padded with zeros to length $2^{10}$ and prepared as
 \begin{equation}
-U_{\text{enc}}(x) = U_{\text{corr}}(x)\, U_{\text{loc}}(x).
+\begin{aligned}
+|\psi_{\mathrm{enc}}(x)\rangle
+ &= \operatorname{AmplitudeEmbedding}(x',\,\mathrm{wires}=0{:}9,\\
+ &\quad \mathrm{normalize}=\mathrm{true},\,\mathrm{pad}=0)\,|0\rangle^{\otimes 10}.
+\end{aligned}
 \end{equation}
-
-\subsubsection{Local quantum feature map}
-For every qubit $i \in \{1, \ldots, N\}$, we define
-\begin{equation}
-U_i(x_i) = R_y\!\left(\tfrac{\pi}{2} x_i\right) R_z(\pi x_i)\, H.
-\end{equation}
-These act as a supplementary feature map layered on top of the amplitude encoding, adding local rotations and expressivity without increasing the qubit count~\cite{ref48}. The parameterised rotations are
-\begin{equation}
-R_z(\theta) = e^{-i\theta Z/2}, \qquad R_y(\theta) = e^{-i\theta Y/2},
-\end{equation}
-with the Hadamard gate
-\begin{equation}
-H = \frac{1}{\sqrt{2}}\begin{bmatrix} 1 & 1 \\ 1 & -1 \end{bmatrix}.
-\end{equation}
-The global embedding unitary is
-\begin{equation}
-U_{\text{loc}}(x) = \bigotimes_{i=1}^{N} U_i(x_i).
-\end{equation}
-
-\subsubsection{Local correlation injection}
-Let the qubits be indexed linearly by $i \in \{1, \ldots, n\}$ along a one-dimensional register. We define the set of nearest-neighbour edges on a cyclic ring as
-\begin{equation}
-E_{\text{ring}} = \big\{(i, j) \mid i, j \text{ with } j = i + 1 \ (\text{mod } n)\big\}.
-\end{equation}
-For every edge $(i, j)$, the local-correlation unitary is
-\begin{equation}
-U_{ij}(x) = \text{CNOT}_{i \rightarrow j}\, R_z\!\left(\tfrac{\pi}{4} x_i x_j\right) \text{CNOT}_{j \rightarrow i},
-\end{equation}
-so that the global correlation operator and fully encoded state are
-\begin{equation}
-U_{\text{corr}}(x) = \prod_{(i,j) \in E_{\text{ring}}} U_{ij}(x), \quad |\psi_{\text{enc}}(x)\rangle = U_{\text{enc}}(x)|\psi_0\rangle.
-\end{equation}
-This two-step process, building the embedding first and then injecting local correlations, keeps strict spatial locality while capturing second-order feature interactions.
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figs_final/fig2.png}
-\caption{Quantum encoding stage for four representative qubits. Gates $R_z$, $R_y$ carry data-dependent angles $\pi x_i$ and $(\pi/2)x_i$ respectively. The CNOT pairs inject nearest-neighbour correlations, embedding second-order feature interactions without increasing qubit count.}
-\label{fig:encoding}
-\end{figure}
+No per-qubit rotations or data-dependent ring-correlation gates are applied on top of this operation in the main amplitude-encoded path. Consequently, the locality statements below refer to the support and parameter sharing of variational gates in the register-index space, not to spatially adjacent pixels in the original image.
 
 \subsection{Quantum Convolutional Layer}
 The convolutional layer applies a parameter-shared variational kernel over all 2$\times$2 sliding windows.
@@ -171,7 +136,7 @@ Let each window contain four qubits. For a kernel depth $d$ and depth slice $k$,
 \begin{equation}
 V_q^{(k)}(\Theta_k) = R_X\!\big(\theta_{X,q}^{(k)}\big) R_Z\!\big(\theta_{Z,q}^{(k)}\big) R_Y\!\big(\theta_{Y,q}^{(k)}\big).
 \end{equation}
-Each qubit is parameterised using full SU(2) rotations, which raises expressivity relative to restricted schemes~\cite{ref50} while keeping the circuit shallow. Here $\Theta_k \in \mathbb{R}^{4 \times d \times 3}$, so $|\Theta_k| = 12d$. Parameter sharing enforces $\Theta_k(\omega) = \Theta_k$ for all windows $\omega$, which ensures translational equivariance and stops the parameter count from growing with the number of windows.
+Each qubit is parameterised using full SU(2) rotations, which raises expressivity relative to restricted schemes~\cite{ref50} while keeping the circuit shallow. Here $\Theta_k \in \mathbb{R}^{4 \times d \times 3}$, so $|\Theta_k| = 12d$. Parameter sharing enforces $\Theta_k(\omega) = \Theta_k$ for all register-index windows $\omega$, so the parameter count does not grow with the number of windows. Because the input is globally amplitude encoded, this sharing is not an image-space translational-equivariance guarantee.
 
 \subsubsection{Intra-window entanglement}
 Within each window, entanglement is introduced through the unitary
@@ -179,7 +144,7 @@ Within each window, entanglement is introduced through the unitary
 U_{\text{ent}}(\omega) = {}&\text{CNOT}_{q_1 \rightarrow q_2}\, \text{CNOT}_{q_0 \rightarrow q_3}\, \text{CNOT}_{q_1 \rightarrow q_3} \notag\\
 &\times\, \text{CNOT}_{q_0 \rightarrow q_2}\, \text{CNOT}_{q_2 \rightarrow q_3}\, \text{CNOT}_{q_0 \rightarrow q_1},
 \end{align}
-with the rightmost operator acting first. The six gates couple every pair of qubits in the window: the four horizontal and vertical edges together with both diagonals. This all-to-all pattern maximises correlation inside a window at a fixed, shallow depth, while entanglement stays strictly local because it never crosses a window boundary. Confining entanglement to small local windows in this way, together with parameter sharing, is what keeps convolutional quantum architectures trainable as the register grows~\cite{ref44}. The full convolution operator is
+with the rightmost operator acting first. The six gates couple every pair of qubits in the register-index window. This all-to-all pattern provides bounded gate support at a fixed depth, while entanglement does not cross a window boundary. We report this as a structural property of the implemented register topology; it is not a proof of image-space locality or asymptotic trainability. The full convolution operator is
 \begin{equation}
 U_{\text{conv}}(\Theta_k) = \prod_{\omega} U_{\text{ent}}(\omega)\, V_\omega(\Theta_k).
 \end{equation}
@@ -187,7 +152,7 @@ U_{\text{conv}}(\Theta_k) = \prod_{\omega} U_{\text{ent}}(\omega)\, V_\omega(\Th
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{figs_final/fig3.png}
-\caption{The 2$\times$2 quantum convolutional kernel acting on window $\omega = \{q_0, q_1, q_2, q_3\}$. The gates $V_q$ apply full SU(2) rotations per qubit with parameters shared across all sliding windows, enforcing translational equivariance. The six CNOTs realise all-to-all entanglement inside the window, four edges plus both diagonals, while entanglement remains confined to the window.}
+\caption{The 2$\times$2 register-index convolutional kernel acting on window $\omega = \{q_0, q_1, q_2, q_3\}$. The gates $V_q$ apply full SU(2) rotations per qubit with parameters shared across all register-index windows. The six CNOTs realise all-to-all entanglement inside the window; this is a gate-support statement, not an image-space equivariance claim.}
 \label{fig:kernel}
 \end{figure}
 
@@ -258,8 +223,8 @@ with $V_0 = I$ and $V_1 = R_Z(\beta) R_Y(\alpha)$. The local $R_Y^{(a)}(\gamma)$
 
 Theorem~\ref{thm:exact} is an instance of the deferred-measurement principle~\cite{ref51}. Three consequences follow, each true of the executed model:
 \begin{enumerate}
-\item Coherent pooling \emph{loses nothing} relative to measurement-based pooling; it simulates that entire class at no gate-count overhead.
-\item It does so while eliminating mid-circuit measurement, qubit reset, and classical feed-forward --- capabilities that are slow (microsecond-scale, against nanosecond-scale gates), limited, or absent on much current hardware. The advantage is architectural and hardware-real rather than information-theoretic.
+\item Coherent pooling \emph{loses nothing} relative to measurement-based pooling for the retained-register channel; it simulates that class without mid-circuit control, with its resource cost reported explicitly below.
+\item It does so while eliminating mid-circuit measurement, qubit reset, and classical feed-forward --- capabilities that may require additional control support on a target device. The advantage asserted here is architectural and simulation-scoped rather than an empirical hardware result.
 \item The global state remains pure from state preparation to the single terminal measurement, and the circuit is differentiable by the adjoint method end to end.
 \end{enumerate}
 
@@ -274,7 +239,7 @@ The family of unitary pooling channels $\{\rho \mapsto \mathrm{Tr}_b[V \rho V^{\
 Containment is Theorem~\ref{thm:exact} applied to $V = \sum_m |m\rangle\langle m|_b \otimes U_m$. For strictness, take $V = \text{SWAP}$, so that $\mathrm{Tr}_b[V \rho V^{\dagger}] = \rho_b$, the full reduced state of $b$ including its off-diagonal elements. By contrast, $\mathcal{M}_{\{U_m\}}$ depends on $b$ only through the diagonal blocks $\langle m|_b \rho |m\rangle_b$. The product states $\rho_a \otimes |{+}\rangle\langle{+}|_b$ and $\rho_a \otimes \tfrac{1}{2}I_b$ have identical $b$-diagonals and are therefore indistinguishable to every $\mathcal{M}_{\{U_m\}}$, yet SWAP maps them to $|{+}\rangle\langle{+}|$ and $\tfrac{1}{2}I$ respectively, which are at trace distance $\tfrac{1}{2}$.
 \end{proof}
 
-Proposition~\ref{prop:containment} places the proposed block precisely: it realises the measurement-simulable subclass at minimal gate cost, while the strict extension --- non-diagonal $V$ --- represents headroom that is an empirical question rather than an architectural claim.
+Proposition~\ref{prop:containment} places the proposed block precisely: it realises the measurement-simulable subclass in the frozen construction, while the strict extension --- non-diagonal $V$ --- represents headroom that is an empirical question rather than an architectural claim.
 
 \begin{proposition}[Coherence-transfer functional]
 \label{prop:coh}
@@ -290,12 +255,12 @@ By Theorem~\ref{thm:exact} the output of $W_{ab}$ depends on $\rho$ only through
 \end{proof}
 
 \subsubsection{Numerical confirmation}
-Both statements are \emph{a priori} predictions, made before measurement, and both are confirmed on the executed circuit. Evaluating the frozen $n=10$ model with its trained parameters on a density-matrix simulator, the coherent block and the explicit measure-and-condition channel of~\eqref{eq:mcchannel} produce terminal expectation values agreeing to a maximum deviation of $2.2 \times 10^{-16}$ --- floating-point round-off, against a tolerance of $10^{-12}$. Independently, inserting complete dephasing on every compressed wire immediately before pooling, at unchanged parameters, leaves the readout unchanged to $1.3 \times 10^{-14}$ and the predicted class unchanged for every input, so $\Delta\text{accuracy} = 0$ exactly.
+Both statements are \emph{a priori} predictions, made before measurement, and both are confirmed on the executed circuit. Evaluating the frozen $n=10$ model with its trained parameters on a density-matrix simulator, the coherent block and the explicit measure-and-condition channel of~\eqref{eq:mcchannel} produce terminal expectation values agreeing to a maximum deviation of $2.2 \times 10^{-16}$ --- floating-point round-off, against a tolerance of $10^{-12}$. Independently, inserting complete dephasing on every compressed wire immediately before pooling, at unchanged parameters, changes the readout by at most $5.86 \times 10^{-14}$ and leaves the predicted class unchanged for every input, so $\Delta\text{accuracy} = 0$ exactly. The retained-wire dephasing control changes the readout by $0.4094$, confirming that the null effect is specific to the compressed subsystem and its partial trace.
 
-Two controls establish that these null results are not artefacts of an insensitive readout. Removing the pooling unitary altogether changes the output by more than $10^{-6}$, and applying the \emph{same} dephasing channel to the retained wires instead of the compressed ones changes it by $1.1 \times 10^{-1}$ --- twelve orders of magnitude larger than the effect on the compressed wires. The channel is demonstrably active; the block simply cannot see what it erases.
+Two controls establish that these null results are not artefacts of an insensitive readout. Removing the pooling unitary altogether changes the output by more than $10^{-6}$, and applying the \emph{same} dephasing channel to the retained wires instead of the compressed ones changes it by $0.4094$ --- many orders of magnitude larger than the effect on the compressed wires. The channel is demonstrably active; the block simply cannot see what it erases.
 
 \subsubsection{Claims this does and does not support}
-Theorem~\ref{thm:exact} withdraws a claim commonly made for coherent pooling, including in earlier versions of this work: that measurement-based pooling destroys information which unitary pooling preserves. For observables of this circuit that statement is false, and Proposition~\ref{prop:coh} quantifies why. What the theorem supports instead is a sharper and more defensible set of claims --- exact simulation of the measurement-based class at zero overhead, elimination of mid-circuit measurement, reset and feed-forward, a globally pure state throughout the pipeline, and end-to-end adjoint differentiability. Whether the strict extension of Proposition~\ref{prop:containment} yields any accuracy benefit is addressed by the pooling ablation in Section~\ref{sec:results}.
+Theorem~\ref{thm:exact} withdraws a claim commonly made for coherent pooling, including in earlier versions of this work: that measurement-based pooling destroys information which unitary pooling preserves. For observables of this circuit that statement is false, and Proposition~\ref{prop:coh} quantifies why. What the theorem supports instead is a sharper and more defensible set of claims --- exact simulation of the measurement-based class in the frozen construction, elimination of mid-circuit measurement, reset and feed-forward, a globally pure state throughout the pipeline, and end-to-end adjoint differentiability. Whether the strict extension of Proposition~\ref{prop:containment} yields any accuracy benefit is addressed by the pooling ablation in Section~\ref{sec:results}.
 
 \subsection{Variational Classification Head}
 The classification head maps the compressed quantum representation into a scalar observable that defines the decision boundary. It is a shallow but expressive variational circuit of single-qubit rotations and entangling operations:
@@ -312,16 +277,13 @@ U_{\text{ent}}^{(\text{cls})} = \prod_{(i,j) \in C} \text{CNOT}_{i \rightarrow j
 \end{equation}
 enables joint feature extraction in the reduced Hilbert space. A final measurement-axis rotation $U_{\text{phase}}(\omega) = R_Z^{(0)}(\omega)$ introduces a trainable bias term $\omega$ in the expectation function, shifting the decision boundary in expectation-value space and increasing the projection's expressive capacity without added depth.
 
-The classifier parameter set is $\Theta_c = \{\varphi_1, \varphi_2, \ldots, \omega\}$, with $|\Theta_c| = n_r + 1$, which keeps the head shallow while maintaining flexible decision-boundary alignment.
+The classifier is shallow, but its exact parameter accounting is taken from the frozen executed tape rather than from a symbolic formula. For the headline ten-qubit circuit, there are 269 allocated parameter slots, 78 slots that reach the tape, and 74 effective slots at the declared $|\partial f/\partial\theta|>10^{-12}$ tolerance. The distinction matters because modular parameter reuse and the retired odd wire leave allocated slots that do not influence the terminal observable.
 
 \subsection{Global Parameter Scaling}
-Collecting the convolution, pooling, and classification parameters, the total parameter count is
-\begin{equation}
-|\Theta| = 12d + 3|P| + (n_r + 1).
-\end{equation}
+Parameter sharing prevents the number of allocated slots from scaling with the number of windows, but the executed topology determines which slots are used. We therefore report allocated, tape-reaching, and effective counts separately rather than applying a closed-form count that assumes every module is independently instantiated.
 
 \subsection{Architectural Interpretation}
-The FQCNN implements a nonlinear local feature embedding, spatially structured correlation injection, shared convolutional kernel mixing, coherent dimensional compression, and measurement-aligned variational classification. The final rotation acts as a trainable bias in the quantum expectation space, which improves decision-boundary flexibility without adding entanglement complexity.
+The FQCNN implements global amplitude state preparation, shared register-index convolutional mixing, coherent dimensional compression, and measurement-aligned variational classification. The final rotation acts as a trainable bias in the quantum expectation space, which improves decision-boundary flexibility without adding entanglement complexity.
 
 \section{Training and Optimization}
 \subsection{Learning Objective and Risk Functional}
@@ -341,19 +303,19 @@ On hardware the expectation value is estimated through repeated measurements. Wi
 \end{equation}
 It satisfies $\mathbb{E}[\hat{f}_\theta] = f_\theta$ and $\text{Var}[\hat{f}_\theta] = (1 - f_\theta^2)/S$, so the estimator is unbiased and its variance decreases as $\mathcal{O}(1/S)$.
 
-\subsection{Gradient via the Parameter-Shift Rule}
-To compute gradients analytically without resorting to numerical finite-difference approximations, we utilise the parameter-shift rule~\cite{ref42}. Incorporating the Binary Cross-Entropy cost formulation, the partial derivative of the global empirical loss function with respect to any variational circuit parameter $\theta$ can be evaluated as:
+\subsection{Gradient Evaluation}
+The reported statevector training uses the simulator's adjoint/backpropagation differentiation path, with the sequential lightning.qubit execution retained as the correctness oracle. For a hardware implementation, an alternative exact estimator is the parameter-shift rule~\cite{ref42}. Incorporating the Binary Cross-Entropy cost formulation, its partial derivative with respect to a variational circuit parameter $\theta$ can be evaluated as:
 \begin{align}
 \frac{\partial \mathcal{L}}{\partial \theta} = \frac{1}{2M} \sum_{k=1}^{M} &\frac{p^{(k)} - \tilde{y}^{(k)}}{p^{(k)}\big(1 - p^{(k)}\big)} \notag\\
 &\times \Big[f_{\theta+\pi/2}(x^{(k)}) - f_{\theta-\pi/2}(x^{(k)})\Big].
 \end{align}
-Each update step dynamically scales the derivative via the cross-entropy activation weight and requires exactly two forward statevector evaluations of the quantum circuit per parameter, obtained by shifting the target coordinate by $\pm\pi/2$.
+The displayed parameter-shift expression is therefore a hardware cost model, not the differentiation method used to obtain the simulator results in this study; its two shifted evaluations per parameter apply only when that estimator is selected.
 
 \subsection{Optimization Procedure}
-The optimisation loop utilises the Adam optimiser to dynamically adapt step sizes throughout the parameter landscape. The learning rate is set to $\eta = 0.005$ with an active mini-batch configuration of $M = 32$. To stabilise training trajectories and combat the barren plateau problem, the framework incorporates gradient norm clipping alongside an Exponential Moving Average (EMA) parameter smoothing filter, governed by a strict decay coefficient of $\gamma = 0.99$ that smooths out localised fluctuations across up to 50 training epochs with early stopping. The optimiser operates entirely in the classical parameter space, requiring no change to the quantum circuit structure.
+The optimisation loop utilises the Adam optimiser to adapt step sizes throughout the parameter landscape. The historical headline run used $\eta = 0.005$, mini-batches of $M = 32$, gradient clipping, and an Exponential Moving Average (EMA) with decay $\gamma = 0.99$ for at most 50 epochs with early stopping. The bounded Q1 comparison uses its separately declared 30-epoch protocol. These settings are reported as finite experimental choices, not as a proof that barren plateaus are absent.
 
 \subsection{Computational Complexity}
-Unlike classical backpropagation, the VQC requires repeated forward evaluations because of the parameter-shift rule: two circuit executions per parameter per datapoint, that is $2|\Theta|$ executions for a full gradient on one input. Training cost is linear in the parameter count, independent of the number of sliding windows, and polynomial in circuit depth, due to convolutional parameter sharing. For a batch of size $B$ with $S$ shots, the total cost per step is $\mathcal{O}(|\Theta| B S)$. Statevector simulation scales as $\mathcal{O}(2^n)$ in memory, but the use of only 10 qubits, a shallow circuit, and pooling keeps classical simulation feasible. On hardware, cost depends on gate depth, coherence time, and shot count; the local entanglement, absence of mid-circuit measurement, and shallow depth keep the model compatible with NISQ constraints.
+For the simulator path, adjoint/backpropagation cost is determined by the retained state and circuit evaluation rather than by two parameter-shift executions per parameter. If parameter-shift is used on hardware, its leading evaluation count is two shifted circuits per selected parameter and datapoint, with shot cost set by the measurement budget. Statevector simulation scales as $\mathcal{O}(2^n)$ in memory. The resource and any local-noise evidence reported below are explicitly simulation/fake-backend evidence; they do not establish hardware compatibility or deployment readiness.
 
 \subsection{Noise and Gradient Stability}
 \subsubsection{Statistical measurement noise}
@@ -363,17 +325,17 @@ With $\rho(\Theta; x) = |\psi(\Theta; x)\rangle\langle\psi(\Theta; x)|$ and Born
 Hardware noise replaces unitary evolution with a CPTP map $\rho_{\text{noisy}} = \varepsilon(\rho)$. Under the depolarising channel $\varepsilon_{\text{dep}}(\rho) = (1 - p)\rho + p\, I/2^n$, the output is attenuated as $f_\theta \rightarrow (1 - p)f_\theta$: the signal magnitude decreases linearly with no new directional bias. Under dephasing $\varepsilon_{\text{phase}}(\rho) = (1 - p)\rho + p Z\rho Z$, off-diagonal elements are suppressed, reducing coherence and thus effective expressivity.
 
 \subsubsection{Noise propagation}
-Because entangling operations are restricted to convolution windows or pooling pairs, noise does not propagate globally and its spatial influence stays bounded. Since circuit depth scales as $\mathcal{O}(d + \text{pooling depth} + \text{classifier depth})$, noise accumulates approximately linearly rather than exponentially with depth.
+Entangling operations have bounded support in the register-index topology, but global amplitude encoding prevents this fact from being interpreted as a bound on image-space noise propagation. End-to-end noisy accuracy is treated as an empirical question and is reported only for the declared local validation protocol.
 
 \subsubsection{Effect on gradients}
-If the noise channel is independent of $\theta$, differentiation moves inside the trace, $\partial f/\partial\theta = \text{Tr}[\varepsilon(\partial\rho/\partial\theta)Z_0]$; under depolarising noise $\partial f/\partial\theta \rightarrow (1 - p)\, \partial f/\partial\theta$, reducing magnitude but not direction. If certain sources depend weakly on the gate angle, $\varepsilon = \varepsilon(\theta)$, additional derivative-of-channel terms appear; but the shallow depth, local entanglement, and short gate sequences keep their scope limited, so the gradient structure is not fundamentally destroyed.
+If the noise channel is independent of $\theta$, differentiation moves inside the trace, $\partial f/\partial\theta = \text{Tr}[\varepsilon(\partial\rho/\partial\theta)Z_0]$. The resulting gradient behavior depends on the channel and circuit; no universal direction-preservation or trainability guarantee is inferred here.
 
 \section{Experimental Results and Analysis}
 \subsection{Dataset Description}
-Experiments were performed on the MNIST handwritten-digit dataset~\cite{ref49} in the standard IDX binary format, selecting digits 0 and 1 to define a strict binary classification task. The MNIST training partition contains 12,665 such images (5,923 of digit 0 and 6,742 of digit 1), all of which are used. We apply a single seeded stratified 60/15/25 split with fixed random seed 42, yielding 7,599 training, 1,900 validation, and 3,166 test images, with the class ratio preserved in each split. Model selection---checkpointing, learning-rate scheduling, and early stopping---reads the validation split only; the test split is evaluated exactly once, after training has finished. The partition is recorded as a manifest (identity \texttt{adbb1486}) that each run loads rather than reconstructing from an assumed random-number sequence.
+The original headline experiment used the MNIST handwritten-digit dataset~\cite{ref49} in the standard IDX binary format, selecting digits 0 and 1 for a strict binary task. Its single seeded stratified 60/15/25 split and 12,665-image count are retained as historical provenance only. The Q1 evidence uses the frozen multi-domain registry and records source checksums, ordered sample identifiers, split hashes, validation-only model selection, and exactly one final test evaluation for every seed; the final paper must report those per-task manifests rather than substituting the historical split.
 
 \begin{table}[!t]
-\caption{Dataset Configuration}
+\caption{Historical headline dataset configuration}
 \label{tab:dataset}
 \centering
 \begin{tabular}{ll}
@@ -396,10 +358,10 @@ Label mapping & Digit 0 $\rightarrow$ $-$1, Digit 1 $\rightarrow$ +1 \\
 \end{tabular}
 \end{table}
 
-Each 28 $\times$ 28 image is min-max normalised to [0, 1] for angle-based gate parameterisation. The image is then flattened into a 784-dimensional vector, zero-padded to 1024, and embedded directly into the amplitudes of a 10-qubit register via global amplitude encoding, so the entire image is mapped into a single quantum state with no spatial information discarded before the QCNN. Labels are mapped to $\{+1, -1\}$ for the Pauli-$Z$ expectation output. Digits 0 and 1 present clearly distinct morphologies (a circle versus a vertical line), which makes a well-conditioned task that is widely cited in the quantum machine learning literature and reproducible from a free IDX file with no extra dependencies.
+Each input is min-max normalised to [0, 1], flattened to 784 values, zero-padded to 1024, and embedded directly into one ten-qubit state by global amplitude encoding. This state preparation does not preserve a spatial-neighbour relation between image pixels and register indices; all locality claims in the variational circuit are therefore register-index statements. Labels are mapped to $\{+1, -1\}$ for the Pauli-$Z$ expectation output. The corrected Q1 campaign uses 666 source examples per task and the frozen 60/15/25 split, yielding exactly 400 training, 100 validation, and 166 test examples for each seed; every arm consumes the same ordered identifiers. The historical 0-vs-1 task is a calibration reference, while the Q1 matrix adds a harder MNIST pair and two independently checksummed dataset families.
 
 \subsection{Experimental Setup and Training Configuration}
-The experimental validation is executed using numerical quantum simulation backends. The architecture uses a register of $n = 10$ qubits initialised in the ground state $|0\rangle^{\otimes 10}$. A 2D input image $X \in \mathbb{R}^{28 \times 28}$ is flattened into a 784-dimensional vector $x$, which is zero-padded to 1024 and mapped to the 1024 state amplitudes ($2^{10}$) using a global amplitude-encoding sub-circuit. Simulations are run via the \texttt{lightning.qubit} exact statevector simulator, tracking a total of 12,665 samples split 60/15/25 into training, validation, and test sets. The model comprises convolutional layers with shared SU(2) kernels, coherence-preserving pooling layers, and a final variational classification head. Training uses mini-batch optimisation with Adam, gradient clipping, and EMA of parameters.
+The experimental validation is executed using numerical quantum simulation backends. The architecture uses a register of $n = 10$ qubits initialised in the ground state $|0\rangle^{\otimes 10}$. A 2D input image $X \in \mathbb{R}^{28 \times 28}$ is flattened into a 784-dimensional vector $x$, which is zero-padded to 1024 and mapped to the 1024 state amplitudes ($2^{10}$) using a global amplitude-encoding sub-circuit. Simulations are run via the \texttt{lightning.qubit} exact statevector simulator. The corrected Q1 campaign uses 666 source examples per task and the frozen 60/15/25 split, yielding exactly 400 training, 100 validation, and 166 test examples; the historical 12,665-sample count belongs only to the single-seed headline provenance described above. The model comprises convolutional layers with shared SU(2) kernels, coherence-preserving pooling layers, and a final variational classification head. Training uses mini-batch optimisation with Adam, gradient clipping, and EMA of parameters.
 
 \begin{table}[!t]
 \caption{Training Configuration}
@@ -423,108 +385,78 @@ Random seed & 42 (NumPy / Python / PennyLane) \\
 
 \subsection{Results}
 \label{sec:results}
-The optimisation profile shows an ideal convergence pathway, where the proposed amplitude-encoded FQCNN model reaches a final test accuracy of approx 98\% on the MNIST 0 vs 1 binary classification, with precision 98.3\%, recall 98.5\%, F1-score 98.4\%, and ROC-AUC 0.999 (28 false positives and 26 false negatives over 3,166 held-out test images). This performance highlights the high parameter efficiency of the underlying unitary ansatz, demonstrating minimal overfitting without resorting to classical regularisation techniques.
+The previously reported optimisation profile is a historical single-seed MNIST reference, not the Q1 headline result. The final performance statement is taken from the validated five-seed, four-task aggregate and reports uncertainty and paired baseline tests; the old 3,166-image confusion counts are not reused as multi-domain evidence.
 
 \begin{table}[!t]
-\caption{Final Evaluation Results}
+\caption{Historical single-seed reference metrics; final Q1 values are generated from the validated multi-task aggregate.}
 \label{tab:final}
 \centering
 \begin{tabular}{ll}
 \toprule
 \textbf{Metric} & \textbf{Value} \\
 \midrule
-Training accuracy & 98.0\% \\
-Validation accuracy & 98.2\% \\
-Test accuracy & approx 98\% \\
+Training accuracy & Historical single-seed reference \\
+Validation accuracy & Historical single-seed reference \\
+Test accuracy & See Q1 aggregate artifact \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figs_final/fig5.png}
-% FIGURE AUDIT: right-hand panel's in-image title still reads "Test Accuracy";
-% the plotted series is validation accuracy (Qtrainer records val_accuracy).
-% main.py is corrected, but the PNG needs re-plotting on the next headline run.
-\caption{Training convergence of the FQCNN on MNIST 0 vs 1: (left) training loss and (right) validation accuracy over the 25 early-stopped epochs. Validation accuracy peaks at 98.2\% at epoch 4, which is the checkpoint model selection retains; the test set is evaluated once, afterwards.}
-\label{fig:convergence}
-\end{figure}
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figs_final/fig6.png}
-\caption{Confusion matrix of the FQCNN on the MNIST 0 vs 1 test set (3,166 images): 1,453 true negatives and 1,659 true positives against only 28 false positives and 26 false negatives, i.e. approx 98\% accuracy.}
-\label{fig:confusion}
-\end{figure}
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figs_final/fig7.png}
-\caption{Receiver operating characteristic (ROC) curve on the MNIST 0 vs 1 test set (ROC-AUC = 0.999).}
-\label{fig:roc}
-\end{figure}
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figs_final/fig8.png}
-\caption{Precision--recall curve on the MNIST 0 vs 1 test set (PR-AUC = 0.999).}
-\label{fig:pr}
-\end{figure}
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figs_final/fig9.png}
-\caption{Summary of test-set performance metrics: sensitivity 0.985, precision 0.983, F1-score 0.984, prediction bias 0.052, and prediction variance 0.101.}
-\label{fig:metrics}
-\end{figure}
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figs_final/fig10.png}
-\caption{Per-epoch quantum computation time on the lightning.qubit statevector simulator (25 epochs; total $\approx$ 4,470 s).}
-\label{fig:time}
-\end{figure}
-
 \subsection{Analysis of Model Performance}
-Performance is driven by the fully unitary design, which preserves coherence across all layers. Amplitude encoding allows efficient representation of high-dimensional data, while SU(2)-based kernels ($R_X, R_Y, R_Z$) improve feature expressivity. The pooling mechanism reproduces measurement-based pooling exactly (Theorem~\ref{thm:exact}), so it neither adds nor removes information relative to that class; its contribution is to deliver the same channel without mid-circuit control. Parameter sharing reduces model complexity while improving generalisation. Stable training through Adam with gradient clipping and EMA mitigates the instabilities common to variational circuits. The small gap between training (98.0\%) and test (approx 98\%) accuracy indicates strong generalisation with minimal overfitting.
+The unitary construction preserves the global state until the terminal observable, and the pooling theorem establishes exact equivalence to the corresponding measure-and-condition channel for the stated block. The empirical contribution is assessed by the Q1 aggregate, pooling-transfer ablation, finite-size diagnostics, and local resource/noise evidence; no accuracy advantage, universal trainability, or generalisation guarantee is inferred from the historical single-seed gap.
 
 \subsection{Comparison with Existing QCNN Approaches}
 
 \begin{table}[!t]
-\caption{Comparison with Existing QCNN Approaches}
+\caption{Within-study comparison protocol. Values are generated from the validated Q1 aggregate; heterogeneous literature percentages are not ranked against these results.}
 \label{tab:comparison}
 \centering
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccc}
 \toprule
-\textbf{Method} & \textbf{Pool} & \textbf{Coh.} & \textbf{Params} & \textbf{Acc.} & \textbf{Data} \\
+\textbf{Method} & \textbf{Pool} & \textbf{Coh.} & \textbf{Params} & \textbf{Acc.} \\
 \midrule
-Flex-Stride~\cite{ref6} & Meas. & No & Moderate & 91\% & MNIST \\
-Pointwise~\cite{ref36} & Meas. & No & Low & 89\% & MNIST \\
-Meas-based~\cite{ref4} & Mid-c. & No & Moderate & 92\% & Image \\
-Quantum AE~\cite{ref3} & Enc-dec & Part. & High & 91\% & Compr. \\
-Hybrid~\cite{ref31} & Cl.post & No & High & 93\% & Image \\
-FQCNN (ours) & Unitary & Yes & $12d{+}3|P|{+}n_r{+}1$ & approx 98\% & 0/1 \\
+FQCNN (ours) & Unitary & Yes & 269/74 & Aggregate \\
+Logistic & -- & -- & Classical & Aggregate \\
+Matched MLP & -- & -- & Classical & Aggregate \\
+TTN & Unitary & Yes & Quantum baseline & Aggregate \\
+Prior literature & Mixed & Mixed & Not aligned & Not comparable \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The proposed FQCNN is the only architecture in the comparison that maintains full quantum coherence across the entire pipeline. Hybrid approaches~\cite{ref31} reach comparable accuracy but require coherence-interrupting classical post-processing, while measurement-based pooling variants~\cite{ref2,ref4,ref6} require mid-circuit measurement and feed-forward at every pooling stage. By Theorem~\ref{thm:exact} those variants are not at an information disadvantage; the distinction is one of hardware requirements, not of representational power. The result shows that competitive, and in some cases superior, performance is achievable under a strictly unitary constraint while staying physically consistent with quantum principles. On the core MNIST 0 vs 1 amplitude-encoding benchmark, the FQCNN reaches approx 98\% test accuracy using only 269 trainable quantum parameters, and the full metric profile of Table~\ref{tab:final} (precision 98.3\%, recall 98.5\%, F1-score 98.4\%, ROC-AUC 0.999) confirms that the fully unitary pipeline is accurate on this task. Evaluation on harder digit pairs and multi-class settings under the corrected amplitude-encoding pipeline is left to future work.
-
-\subsection{Noise Robustness}
-The induced quantum noise analysis allows us to interpret that the model displays intrinsic structural error resilience under simulated mixed-state depolarising and dephasing channels. Evaluated from a clean statevector baseline of approx 98\%, the classification performance is retained across the NISQ-relevant regime and degrades gracefully as the error probability parameter $p$ increases, preserving structural classification capabilities in near-term noisy environments due to the localised spatial containment of our convolution windows.
+\begin{table*}[!t]
+\caption{Validated Q1 comparison accuracy (mean $\pm$ standard deviation over five seeds). All arms use the same ordered samples, split manifest, and single final test evaluation; complete metrics and paired tests are archived in \texttt{Results/evidence/q1\_comparison.json}.}
+\label{tab:q1comparison}
+\centering
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Task} & \textbf{FQCNN} & \textbf{Logistic} & \textbf{MLP} & \textbf{TTN} \\
+\midrule
+fashion\_mnist\_0v6 & 0.789 $\pm$ 0.019 & 0.842 $\pm$ 0.014 & 0.824 $\pm$ 0.015 & 0.787 $\pm$ 0.073 \\
+kmnist\_2v3 & 0.884 $\pm$ 0.023 & 0.947 $\pm$ 0.024 & 0.933 $\pm$ 0.016 & 0.867 $\pm$ 0.062 \\
+mnist\_0v1 & 0.975 $\pm$ 0.013 & 0.995 $\pm$ 0.005 & 0.988 $\pm$ 0.009 & 0.961 $\pm$ 0.016 \\
+mnist\_3v5 & 0.800 $\pm$ 0.030 & 0.948 $\pm$ 0.012 & 0.877 $\pm$ 0.044 & 0.730 $\pm$ 0.047 \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=\columnwidth]{figs_final/fig11.png}
-\caption{Noise robustness of the FQCNN under a depolarising channel, evaluated via density-matrix simulation (PennyLane default.mixed). From a clean baseline of approx 98\%, accuracy is retained across the NISQ-relevant regime ($p \leq 0.05$) and degrades at higher error rates, the localised convolution windows bounding noise propagation.}
-\label{fig:noise}
+\includegraphics[width=\columnwidth]{figs_final/q1_comparison.png}
+\caption{Q1 comparison accuracy (mean $\pm$ standard deviation over five seeds) generated directly from \texttt{Results/evidence/q1\_comparison.json}. The figure is a descriptive within-study comparison; it is not a quantum-advantage claim.}
+\label{fig:q1comparison}
 \end{figure}
 
+The primary comparison is within-study: logistic regression, a parameter-matched MLP, and TTN are evaluated on the same ordered samples, split manifests, and seed set as the FQCNN. The aggregate does not show FQCNN dominance: it is below logistic regression and the MLP on all four tasks, while exceeding TTN on all four in mean accuracy (with uncertainty and multiplicity-adjusted tests reported in the machine-readable artifact). We retain this bounded result rather than converting the architectural contribution into an accuracy claim. Prior literature uses different datasets, preprocessing, parameter budgets, and evaluation protocols, so its percentages are context rather than a ranked baseline. The pooling theorem separates the architectural distinction (removing mid-circuit control) from any empirical accuracy question; relative-performance statements are restricted to the aggregate's paired effects and multiplicity-adjusted tests.
+
+\subsection{Noise Robustness}
+The pooling theorem and dephasing controls establish circuit-level identities, not end-to-end noise robustness. The Q1 package therefore reports a bounded local validation experiment using clean checkpoints, declared depolarising/dephasing channels, fixed validation subsets, and an isolated Qiskit/Aer environment. Those results are simulator evidence only; no accuracy-retention or device-noise claim is made beyond the exact tasks, seeds, shots, and noise levels recorded in the machine-readable artifact.
+
 \subsection{Scalability and Practicality}
-Amplitude encoding and parameter sharing enable efficient scaling in both qubit count and parameter size. The shallow depth and localised entanglement structure support compatibility with NISQ constraints. While our experiments use a simulator, the architecture is designed for practical near-term deployment given suitable coherence and gate fidelity.
+Amplitude encoding fixes the state-vector width at the declared qubit count, while parameter sharing controls the number of variational slots. We report logical, decomposed, and transpiled resource counts for $n=4,6,8,10$ and a controlled fake-backend pooling comparison. These are local resource estimates, not a scalability theorem, a hardware execution result, or a deployment-readiness guarantee.
 
 \subsection{Limitations and Future Work}
-The current evaluation is limited to binary classification and simulation-based experiments; scaling to larger datasets and real hardware remains open. Future work will extend the architecture to multi-class tasks, optimise encoding strategies for larger inputs, and deploy the model on NISQ devices to evaluate real-world performance under noise.
+The current evaluation is limited to four binary tasks drawn from three 28$\times$28 grayscale dataset families, small training subsets, five-seed comparisons, finite-size diagnostics, and classical simulation/local noise models. The globally amplitude-encoded register is not an image-space convolutional representation, and the experiments do not establish quantum advantage, asymptotic trainability, noise robustness on a device, or real-QPU performance. Scaling to larger datasets, multi-class tasks, alternative encodings, and hardware execution remains open.
 
 \section{Novelty and Technical Differentiation}
 The proposed FQCNN departs from previous quantum convolutional architectures on four precise technical fronts that together make up the main contributions of this paper.
@@ -535,28 +467,16 @@ Previous QCNNs rely on mid-circuit measurements or classical post-processing at 
 \subsection{Coherent unitary pooling}
 Instead of a mid-circuit projection, which incurs latency and reset overheads on physical devices and requires dynamic-circuit support, the architecture uses the measurement-free pooling block of~\eqref{eq:poolblock}: features are routed from the compressed sub-register into the retained register by controlled rotations, with the compressed qubit as control. After pooling, the compressed sub-register is excluded from the remainder of the circuit, which is equivalent to a partial trace over those subsystems.
 
-The contribution is precisely delimited by Section~\ref{sec:pooling-theory}. Theorem~\ref{thm:exact} establishes that this block reproduces the corresponding measure-and-condition channel exactly, so it is not more expressive than measurement-based pooling; Proposition~\ref{prop:containment} establishes that the wider unitary family strictly contains that class, so the frozen block sits inside the simulable subclass at minimal gate cost. What the block delivers is the same channel without mid-circuit measurement, reset, or classical feed-forward, with the global register pure up to the single terminal measurement and the whole circuit differentiable by the adjoint method. The discard step is accounted for as a partial trace rather than as a unitary on the full register.
+The contribution is precisely delimited by Section~\ref{sec:pooling-theory}. Theorem~\ref{thm:exact} establishes that this block reproduces the corresponding measure-and-condition channel exactly, so it is not more expressive than measurement-based pooling; Proposition~\ref{prop:containment} establishes that the wider unitary family strictly contains that class, so the frozen block is one explicitly simulated member of that family. What the block delivers is the same channel without mid-circuit measurement, reset, or classical feed-forward, with the global register pure up to the single terminal measurement and the whole circuit differentiable by the adjoint method. The discard step is accounted for as a partial trace rather than as a unitary on the full register.
 
-\subsection{Locally all-to-all convolutional kernel}
-The kernel applies a fixed six-CNOT pattern in each 2 $\times$ 2 window that couples every pair of qubits: all horizontal and vertical connections plus both diagonals. Entanglement is therefore maximal within a window yet never crosses a window boundary, so correlations stay spatially local and the per-window depth stays constant. This locality, combined with parameter sharing across windows, is the property that keeps convolutional quantum architectures trainable at scale~\cite{ref44}.
+\subsection{Register-index all-to-all convolutional kernel}
+The kernel applies a fixed six-CNOT pattern in each 2 $\times$ 2 register-index window and couples every pair within that window. The gate support is bounded and the per-window depth is fixed; because state preparation is global amplitude encoding, this should not be read as image-space locality or translational equivariance. Parameter sharing reduces allocation growth, while trainability is assessed only through the finite diagnostics reported in the evidence package, not inferred from locality alone.
 
-\subsection{Two-stage encoding and correlation injection}
-Features are mapped via a robust dual-stage approach on the standard 1D linear circuit architecture. Data parameters are first scaled via a min-max transformation to the strict [0, 1] bounded target range:
-\begin{equation}
-x_i' = \frac{x_i - x_{\min}}{x_{\max} - x_{\min}}.
-\end{equation}
-The localised feature map then evaluates the inputs to align with proper quantum operator flow, executing as
-\begin{equation}
-U_i(x_i) = R_Y\!\left(\tfrac{\pi}{2} x_i\right) R_Z(\pi x_i)\, H.
-\end{equation}
-This is paired with a secondary localised phase-interaction layer that executes cross-correlation mappings along a strict one-dimensional cyclic ring configuration:
-\begin{equation}
-U_{\text{corr}}(x) = \prod_{(i,j) \in E_{\text{ring}}} \text{CNOT}_{i \rightarrow j}\, R_Z\!\left(\tfrac{\pi}{4} x_i x_j\right) \text{CNOT}_{j \rightarrow i},
-\end{equation}
-tracking nearest-neighbour interactions from qubit index $i$ to $i + 1$ (mod 10), which captures adjacent spatial features without demanding a multidimensional lattice layout. This two-stage strategy captures both the global distributional structure and local interactions without additional qubits or significant depth.
+\subsection{Global amplitude encoding and register-index structure}
+Inputs are min-max normalised, flattened, zero-padded to 1024 entries, and prepared by the single global amplitude-encoding operation described above. No local rotation map or data-dependent cyclic-ring correlation layer is part of the frozen main path. The subsequent variational kernel and pooling blocks use shared register-index supports; this distinction keeps the implementation and the paper's locality language aligned.
 
 \section{Conclusion}
-We proposed a fully quantum-native convolutional neural network (FQCNN) that performs encoding, convolution, pooling, and classification entirely through unitary operations. The architecture integrates amplitude encoding, SU(2)-based convolutional kernels, and coherence-preserving pooling to yield expressive yet shallow quantum models. It reaches approx 98\% classification accuracy, showing that fully unitary architectures can perform well while maintaining coherence throughout the computation. Parameter sharing and structured design support scalability and training stability under NISQ constraints. These results demonstrate that measurement-free quantum convolutional models are viable for practical machine learning. Future work will extend the framework to multi-class settings, improve scalability, and validate performance on real quantum hardware.
+We proposed a fully quantum-native convolutional neural network (FQCNN) that performs state preparation, convolution, pooling, and classification through a single coherent unitary path before the terminal observable. The exact pooling result identifies removal of mid-circuit control as the architectural contribution; the Q1 aggregate and transfer experiments quantify empirical behavior against matched baselines without presupposing an advantage. Resource, noise, and trainability statements are restricted to their finite local evidence and simulation scope. Future work will extend the evaluation to larger and multi-class tasks and, subject to separate approval, real quantum hardware.
 
 \begin{thebibliography}{00}
 \bibitem{ref2} P. R\"oseler et al., ``Efficient quantum convolutional neural networks for image classification: overcoming hardware constraints,'' arXiv:2505.05957, 2025.
@@ -581,20 +501,15 @@ We proposed a fully quantum-native convolutional neural network (FQCNN) that per
 \bibitem{ref25} J. Romero, J. P. Olson, and A. Aspuru-Guzik, ``Quantum autoencoders for efficient compression of quantum data,'' Quantum Sci. Technol., vol. 2, no. 4, art. 045001, 2017, doi: 10.1088/2058-9565/aa8072.
 \bibitem{ref26} H. Ma, C.-J. Huang, C. Chen, D. Dong, Y. Wang, R.-B. Wu, and G.-Y. Xiang, ``On compression rate of quantum autoencoders: Control design, numerical and experimental realization,'' Automatica, vol. 147, art. 110659, 2023, doi: 10.1016/j.automatica.2022.110659.
 \bibitem{ref29} Y. Huang, M. Yang, and D. L. Zhou, ``Optimized quantum autoencoder,'' arXiv:2404.08429, 2024.
-\bibitem{ref31} S. Li, J. Cui, and J. Ren, ``Hybrid classical--quantum neural networks enhanced by quantum architecture search for coronary artery stenosis detection,'' Neurocomputing, vol. 618, art. 129111, 2025, doi: 10.1016/j.neucom.2024.129111.
 \bibitem{ref36} A. Ning, T.-Y. Li, and N.-Y. Chen, ``Quantum pointwise convolution: a flexible and scalable approach for neural network enhancement,'' arXiv:2412.01241, 2024.
 \bibitem{ref37} I. Cong, S. Choi, and M. D. Lukin, ``Quantum convolutional neural networks,'' Nature Physics, vol. 15, no. 12, pp. 1273--1278, 2019, doi: 10.1038/s41567-019-0648-8.
 \bibitem{ref38} J. R. McClean, S. Boixo, V. N. Smelyanskiy, R. Babbush, and H. Neven, ``Barren plateaus in quantum neural network training landscapes,'' Nature Communications, vol. 9, art. 4812, 2018, doi: 10.1038/s41467-018-07090-4.
-\bibitem{ref39} V. Havl\'i\v{c}ek, A. D. C\'orcoles, K. Temme, A. W. Harrow, A. Kandala, J. M. Chow, and J. M. Gambetta, ``Supervised learning with quantum-enhanced feature spaces,'' Nature, vol. 567, no. 7747, pp. 209--212, 2019, doi: 10.1038/s41586-019-0980-2.
 \bibitem{ref40} M. Cerezo et al., ``Variational quantum algorithms,'' Nature Reviews Physics, vol. 3, no. 9, pp. 625--644, 2021, doi: 10.1038/s42254-021-00348-9.
 \bibitem{ref41} K. Mitarai, M. Negoro, M. Kitagawa, and K. Fujii, ``Quantum circuit learning,'' Phys. Rev. A, vol. 98, no. 3, art. 032309, 2018, doi: 10.1103/PhysRevA.98.032309.
 \bibitem{ref42} M. Schuld, V. Bergholm, C. Gogolin, J. Izaac, and N. Killoran, ``Evaluating analytic gradients on quantum hardware,'' Phys. Rev. A, vol. 99, no. 3, art. 032331, 2019, doi: 10.1103/PhysRevA.99.032331.
-\bibitem{ref43} M. Schuld, R. Sweke, and J. J. Meyer, ``Effect of data encoding on the expressive power of variational quantum-machine-learning models,'' Phys. Rev. A, vol. 103, no. 3, art. 032430, 2021, doi: 10.1103/PhysRevA.103.032430.
-\bibitem{ref44} A. Pesah, M. Cerezo, S. Wang, T. Volkoff, A. T. Sornborger, and P. J. Coles, ``Absence of barren plateaus in quantum convolutional neural networks,'' Phys. Rev. X, vol. 11, no. 4, art. 041011, 2021, doi: 10.1103/PhysRevX.11.041011.
 \bibitem{ref45} T. Hur, L. Kim, and D. K. Park, ``Quantum convolutional neural network for classical data classification,'' Quantum Machine Intelligence, vol. 4, art. 3, 2022, doi: 10.1007/s42484-021-00061-x.
 \bibitem{ref46} E. Grant, M. Benedetti, S. Cao, A. Hallam, J. Lockhart, V. Stojevic, A. G. Green, and S. Severini, ``Hierarchical quantum classifiers,'' npj Quantum Information, vol. 4, art. 65, 2018, doi: 10.1038/s41534-018-0116-9.
 \bibitem{ref47} M. Cerezo, A. Sone, T. Volkoff, L. Cincio, and P. J. Coles, ``Cost function dependent barren plateaus in shallow parametrized quantum circuits,'' Nature Communications, vol. 12, art. 1791, 2021, doi: 10.1038/s41467-021-21728-w.
-\bibitem{ref48} A. P\'erez-Salinas, A. Cervera-Lierta, E. Gil-Fuster, and J. I. Latorre, ``Data re-uploading for a universal quantum classifier,'' Quantum, vol. 4, art. 226, 2020, doi: 10.22331/q-2020-02-06-226.
 \bibitem{ref49} Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner, ``Gradient-based learning applied to document recognition,'' Proceedings of the IEEE, vol. 86, no. 11, pp. 2278--2324, 1998, doi: 10.1109/5.726791.
 \bibitem{ref50} S. Sim, P. D. Johnson, and A. Aspuru-Guzik, ``Expressibility and entangling capability of parameterized quantum circuits for hybrid quantum-classical algorithms,'' Advanced Quantum Technologies, vol. 2, no. 12, art. 1900070, 2019, doi: 10.1002/qute.201900070.
 \bibitem{ref51} M. A. Nielsen and I. L. Chuang, \emph{Quantum Computation and Quantum Information}, 10th anniversary ed. Cambridge, U.K.: Cambridge Univ. Press, 2010, doi: 10.1017/CBO9780511976667.

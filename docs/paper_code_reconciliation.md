@@ -4,8 +4,8 @@
 disagree, the paper moves to match the code. This table records the disposition of
 every mismatch found in Phase 0. The 2026-08-27 Q1 fast-track correction pass applies
 the architecture, parameter-count, differentiation, locality, and scope dispositions
-directly; remaining numerical and citation items stay explicitly pending until their
-canonical artifacts are complete.
+directly; the 2026-08-29 closure pass binds the numerical claims to the canonical
+comparison, transfer, noise, provenance, and inventory artifacts.
 
 **Evidence sources:** `tests/fixtures/headline_signature.json` (executed topology),
 `tests/fixtures/effective_params.json` (gradient audit),
@@ -141,12 +141,14 @@ ref32, ref33, ref34, ref35. IEEE style does not permit uncited references, so ea
 be cited or removed — an editorial decision for the authors. Notably, both problematic entries
 above fall in this set.
 
-### Remaining Phase 9 work
+### Phase 9 follow-up before Q1 closure
 
 - DOIs for the 37 entries that still lack them.
 - Decide ref1 and ref27; decide the 12 uncited entries.
 - Sentence-level citation audit (Phase 9 item 6), including `ref44` propping up the
-  image-locality claim, which reconciliation row 5 already flags.
+  image-locality claim, which reconciliation row 5 already flags. This item was
+  subsequently closed in the Q1 citation pass below after the image-locality wording
+  was narrowed and the unused entries were removed.
 
 ### Second pass (2026-07-26): uncited entries removed, DOIs completed
 
@@ -173,11 +175,11 @@ discarded and the DOI resolved separately. Fuzzy bibliographic matching is not v
 
 `pdflatex` x3: 12 pages, zero undefined references or citations.
 
-**Remaining Phase 9 item:** preprints are 28% of the list against the ~20% target. All 11 are
+**Historical Phase 9 note:** preprints were 28% of the list against the ~20% target. All 11 are
 2024--25 submissions with no journal version yet, so closing the gap means citing fewer
-preprints -- an editorial choice, not a metadata fix. The sentence-level citation audit
-(Phase 9 item 6) also remains, including `ref44` propping up the image-locality claim flagged
-in reconciliation row 11.
+preprints -- an editorial choice, not a metadata fix. The sentence-level citation audit and
+the `ref44` image-locality issue were closed by the Q1 citation pass below; the remaining
+preprint ratio is an editorial choice, not a correctness blocker.
 
 ## Row 10 resolved (2026-07-26)
 
@@ -205,5 +207,22 @@ and simulator gradients are identified as adjoint/backpropagation, with
 parameter-shift retained only as a hardware cost model. Legacy one-seed figures and
 heterogeneous literature percentages are labelled as historical/contextual rather
 than Q1 evidence. The validated five-seed comparison table is sourced from
-`Results/evidence/q1_comparison.json`; local-noise and pooling-transfer claims remain
-gated on their respective artifacts.
+`Results/evidence/q1_comparison.json`; local-noise and pooling-transfer claims are
+bound to `Results/evidence/q1_noise_validation.json` and
+`Results/evidence/q1_pooling_transfer.json`.
+
+## Q1 citation and claim closure (2026-08-29)
+
+The final citation pass parses `fqcnn.tex` and confirms that every citation key has one
+matching bibliography entry and every retained bibliography entry is cited: 34 cited
+keys, 34 entries, zero missing keys, and zero uncited entries. The four entries that
+were left over after removing the superseded data-encoding and hybrid-model discussion
+(`ref31`, `ref39`, `ref43`, and `ref48`) were removed rather than cited out of context.
+The previously considered `ref44` trainability citation is not present; the manuscript
+now states register-index locality and finite empirical trainability results without a
+cross-study or universal-scaling inference. Broad literature sentences in the
+introduction and related-work section retain only citations whose scope matches the
+sentence, while all performance, resource, noise, and pooling numbers are sourced from
+the repository's hashed evidence artifacts and are not compared as cross-study rankings.
+This bounded audit closes the citation-scope gate; venue-specific editorial review and
+independent novelty assessment remain external to the repository.
