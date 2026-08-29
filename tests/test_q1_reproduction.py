@@ -27,7 +27,8 @@ def test_pytest_counts_reads_junit_summary(tmp_path: Path):
 
 def test_report_redaction_removes_absolute_workstation_paths(tmp_path: Path):
     raw = r'C:\Users\author\AppData\Local\Temp\run\pytest.xml C:\Program Files\MiKTeX\bin'
-    redacted = reproduction._redact(raw, tmp_path)
+    escaped_raw = raw.replace("\\", "\\\\")
+    redacted = reproduction._redact(raw + " " + escaped_raw, tmp_path)
     assert "C:\\" not in redacted
     assert "<temporary>" not in redacted  # arbitrary paths are redacted generically
     assert "<absolute-path>" in redacted

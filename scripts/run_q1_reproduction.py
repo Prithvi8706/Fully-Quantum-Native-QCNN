@@ -30,7 +30,7 @@ except ImportError:  # direct ``python scripts/run_q1_reproduction.py`` invocati
 
 
 _ABSOLUTE_WINDOWS_PATH = re.compile(
-    r"(?i)[A-Z]:[\\/](?:[^\\/\r\n\"']+[\\/])*[^\\/\r\n\"']+"
+    r"(?i)[A-Z]:[\\/]+(?:[^\\/\r\n\"']+[\\/]+)*[^\\/\r\n\"']+"
 )
 
 
