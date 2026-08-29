@@ -54,10 +54,26 @@ RELEASE_LINT_PATHS = (
     "tests/test_dataset_registry.py",
     "tests/test_evidence_provenance.py",
     "tests/test_pooling_equivalence.py",
+    "tests/test_q1_local_evidence.py",
     "tests/test_q1_fast_track.py",
     "tests/test_q1_pooling_transfer.py",
     "tests/test_q1_reproduction.py",
     "tests/test_q1_submission_package.py",
+)
+
+QISKIT_SCHEDULE_CHECK = (
+    "from experiments import q1_local_evidence as e\n"
+    "state = e._build_state_preparation(4)\n"
+    "body = e._build_model_body(4, 'unitary', seed=0)\n"
+    "assert state.count_ops().get('initialize') == 1\n"
+    "assert body.count_ops().get('initialize', 0) == 0\n"
+    "assert body.count_ops().get('cry') == 3\n"
+    "assert body.count_ops().get('crz') == 3\n"
+    "assert body.count_ops().get('cx', 0) > 0\n"
+    "dynamic = e._build_model_body(4, 'measurement', seed=0)\n"
+    "counts = {str(k): int(v) for k, v in dynamic.count_ops().items()}\n"
+    "assert counts.get('measure') == 3\n"
+    "assert counts.get('if_else') == 3\n"
 )
 
 
@@ -285,10 +301,25 @@ def build_report(root: Path, output: Path) -> dict[str, Any]:
                 timeout=300,
             )
         )
+        checks.append(
+            run_command(
+                root,
+                "isolated Qiskit schedule contract",
+                [os.fspath(qiskit_python), "-c", QISKIT_SCHEDULE_CHECK],
+                timeout=300,
+            )
+        )
     else:
         checks.append(
             {
                 "label": "isolated Qiskit dependency check",
+                "status": "skipped",
+                "reason": "isolated Qiskit environment not present",
+            }
+        )
+        checks.append(
+            {
+                "label": "isolated Qiskit schedule contract",
                 "status": "skipped",
                 "reason": "isolated Qiskit environment not present",
             }

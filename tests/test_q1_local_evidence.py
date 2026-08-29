@@ -12,6 +12,13 @@ import pytest
 
 from experiments import q1_local_evidence as evidence
 
+try:
+    import qiskit  # noqa: F401
+except ImportError:
+    HAS_QISKIT = False
+else:
+    HAS_QISKIT = True
+
 
 def test_local_evidence_scope_and_resource_axes_are_frozen():
     assert evidence.RESOURCE_QUBITS == (4, 6, 8, 10)
@@ -68,6 +75,10 @@ def test_hash_is_canonical_and_does_not_allow_nonfinite_values():
         evidence._json_hash({"value": float("nan")})
 
 
+@pytest.mark.skipif(
+    not HAS_QISKIT,
+    reason="Qiskit schedule contracts run in the isolated .venv-qiskit environment",
+)
 def test_qiskit_circuit_schedule_separates_state_and_model_components():
     state = evidence._build_state_preparation(4)
     body = evidence._build_model_body(4, "unitary", seed=0)
@@ -78,6 +89,10 @@ def test_qiskit_circuit_schedule_separates_state_and_model_components():
     assert body.count_ops().get("cx") > 0
 
 
+@pytest.mark.skipif(
+    not HAS_QISKIT,
+    reason="Qiskit schedule contracts run in the isolated .venv-qiskit environment",
+)
 def test_measurement_style_schedule_is_explicitly_dynamic():
     body = evidence._build_model_body(4, "measurement", seed=0)
     counts = {str(name): int(value) for name, value in body.count_ops().items()}

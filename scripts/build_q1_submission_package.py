@@ -110,7 +110,11 @@ SECRET_PATTERNS = {
     "github_token": re.compile(
         rb"(?:gh[pousr]_[A-Za-z0-9]{36,255}|github_pat_[A-Za-z0-9_]{50,255})"
     ),
-    "openai_api_key": re.compile(rb"sk-(?:proj-)?[A-Za-z0-9_-]{20,}"),
+    # Require a token boundary so ordinary words such as ``task-by`` do not
+    # create a false ``sk-`` match.
+    "openai_api_key": re.compile(
+        rb"(?<![A-Za-z0-9])sk-(?:proj-)?[A-Za-z0-9_-]{20,}"
+    ),
     "slack_token": re.compile(rb"xox[baprs]-[A-Za-z0-9-]{10,}"),
     "google_api_key": re.compile(rb"AIza[0-9A-Za-z_-]{35}"),
     "stripe_live_key": re.compile(rb"[rs]k_live_[0-9A-Za-z]{16,}"),
