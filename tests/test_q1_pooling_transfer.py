@@ -82,6 +82,14 @@ def test_transfer_aggregate_validates_and_summarizes_five_arms(tmp_path):
         len(payload["arms"][arm]["cells"]) == 3
         for arm in transfer.POOLING_ARMS
     )
+    source_paths = {
+        item["path"] for item in payload["provenance"]["source_files"]
+    }
+    assert "experiments/q1_pooling_transfer.py" in source_paths
+    assert "QCNN/circuits.py" in source_paths
+    assert payload["provenance"]["environment"]["lock_files"][0]["path"] == (
+        "requirements-lock.txt"
+    )
 
 
 def test_transfer_rejects_smoke_role_even_when_artifact_is_complete(tmp_path):

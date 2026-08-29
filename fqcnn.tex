@@ -1,4 +1,4 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[journal]{IEEEtran}
 \IEEEoverridecommandlockouts
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
@@ -15,30 +15,11 @@
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
 
-\title{FQCNN: A Fully Quantum-Native Convolutional\\ Neural Network with Coherent Unitary Pooling}
+\title{FQCNN: A Fully Quantum-Native Convolutional Neural Network with Coherent Unitary Pooling}
 
-\author{\IEEEauthorblockN{Aasa Singh Bhui}
-\IEEEauthorblockA{\textit{School of Computer Science} \\
-\textit{and Engineering} \\
-\textit{Vellore Institute of Technology}\\
-Vellore, India \\
-Fourth-year B.Tech, Computer Science \\
-aasasingh2005@gmail.com}
-\and
-\IEEEauthorblockN{Prithvi Raghu}
-\IEEEauthorblockA{\textit{School of Computer Science} \\
-\textit{and Engineering} \\
-\textit{Vellore Institute of Technology}\\
-Vellore, India \\
-Third-year B.Tech, Computer Science \\
-prithviraghu080706@gmail.com}
-\and
-\IEEEauthorblockN{Rohan Jain}
-\IEEEauthorblockA{\textit{Director of DevOps \& Delivery} \\
-\textit{AstraZeneca}\\
-Gaithersburg, Maryland, USA \\
-rohan.jain7@gmail.com}
-}
+\author{Aasa Singh Bhui, Prithvi Raghu, and Rohan Jain%
+\thanks{Aasa Singh Bhui and Prithvi Raghu are with the School of Computer Science and Engineering, Vellore Institute of Technology, Vellore, India (e-mail: aasasingh2005@gmail.com; prithviraghu080706@gmail.com).}%
+\thanks{Rohan Jain is with AstraZeneca, Gaithersburg, Maryland, USA (e-mail: rohan.jain7@gmail.com).}}
 
 \maketitle
 
@@ -55,20 +36,20 @@ Quantum machine learning has become an active research area that studies how qua
 
 Several approaches have extended convolutional ideas to the quantum domain through structured variational circuits, usually referred to as QCNNs. These models tend to rely on hierarchical constructions that apply local quantum operations followed by dimensionality reduction~\cite{ref46}. Recent work has explored a range of architectural variants, including hardware-aware QCNN designs that minimise circuit depth and qubit requirements, along with flexible convolutional schemes that adjust stride or windowing to improve scalability on near-term noisy intermediate-scale quantum (NISQ) devices~\cite{ref2,ref6,ref7}. To gauge practical performance, benchmarking studies have analysed QCNN behaviour across classification and compression tasks, drawing out the trade-offs between expressibility, parameter count, and trainability~\cite{ref8}. In many existing implementations, pooling is realised through mid-circuit measurements or classical post-processing, which imposes dynamic-circuit requirements on the hardware and interrupts the purely unitary evolution of the register~\cite{ref4}. Other studies have looked at trainability challenges in QCNN architectures, including the barren plateau phenomenon, which has motivated architectural constraints and mitigation strategies aimed at stabilising the learning dynamics~\cite{ref11}.
 
-Substantial as these advances are, several limitations still hinder effective deployment on near-term hardware. Reliance on measurement-based pooling or hybrid classical--quantum architectures requires mid-circuit measurement, qubit reset, and classical feed-forward, which are microsecond-scale operations where gates are nanosecond-scale, and which remain limited or unavailable on many devices. Many proposed architectures also employ globally entangling circuits or deep variational blocks, and these intensify noise accumulation and gradient instability as the system grows. Hardware-aware designs reduce the resource requirements, but often at the cost of expressivity or coherence preservation. A gap therefore remains: we still lack QCNN architectures that hold full quantum coherence across the whole learning pipeline while staying shallow, parameter-efficient, and trainable under realistic noise and connectivity constraints.
+When a pooling construction uses measurement-conditioned corrections, its implementation requires mid-circuit measurement and classical control. The availability, latency, and calibration cost of those operations are platform dependent, so their removal is an architectural distinction rather than, by itself, evidence of a hardware speedup. Deep or highly connected variational circuits can also accumulate noise and face difficult optimisation landscapes, but those effects must be measured for a specified circuit and device rather than inferred from an architecture label alone.
 
-These limitations matter most on NISQ devices, where noise, short coherence times, and restricted qubit connectivity place tight constraints on circuit design. Architectures that depend on deep variational blocks or frequent mid-circuit measurements are particularly exposed to decoherence and error accumulation, which leads to unstable training and poor generalisation. Losing coherence between convolutional layers also undermines the hierarchical feature extraction that motivates convolutional architectures in the first place. As NISQ hardware scales incrementally rather than exponentially, there is growing value in models that emphasise shallow depth, locality-preserving operations, and parameter efficiency while keeping information flowing coherently through the circuit.
+This motivates two bounded questions. First, can the stated measure-and-condition pooling channel be represented by a coherent unitary block without dynamic control? Second, how does one frozen implementation behave under matched data splits, finite simulator experiments, and explicit local-noise and resource protocols? We answer those questions without claiming that the resulting circuit is universally trainable, noise robust, or ready for physical deployment.
 
 In this work we address these challenges by introducing a fully quantum-native neural network (FQCNN) architecture designed to preserve coherence across every stage of the learning pipeline. The model performs data encoding, convolution, pooling, and classification entirely through unitary operations, removing the need for intermediate measurement or classical post-processing. The quantum convolution uses a shared $2\times2$ kernel over register-index windows, which controls parameter growth while keeping circuit depth low; global amplitude encoding means that this is not an image-space translational-equivariance guarantee. Dimensionality reduction is achieved through a coherent pooling mechanism that uses unitaries to compress information while keeping the global state pure. Section~\ref{sec:pooling-theory} proves that this mechanism reproduces measurement-based pooling exactly, so the benefit it delivers is the removal of mid-circuit control requirements rather than the retention of otherwise-lost information.
 
-Beyond its architectural construction, the study asks how the frozen model behaves under a reproducible multi-domain protocol. The historical MNIST single-seed result is retained as provenance; the Q1 aggregate supplies the performance estimates and uncertainty used for the final claims. The present work establishes simulator-level architectural consistency, not physical-device performance.
+Beyond its architectural construction, the study asks how the frozen model behaves under a reproducible multi-domain protocol. The historical MNIST single-seed result is retained as provenance; the primary aggregate supplies the performance estimates and uncertainty used for the final claims. The present work establishes simulator-level architectural consistency, not physical-device performance.
 
 The main contributions of this work are as follows:
 \begin{enumerate}
 \item We propose a fully quantum-native convolutional neural network that maintains coherence across encoding, convolution, pooling, and classification, with no intermediate disruption or classical post-processing.
 \item We introduce a parameter-shared quantum convolutional kernel with bounded register-index gate support; global amplitude encoding is kept distinct from image-space locality.
 \item We develop a coherent unitary pooling mechanism that performs dimensionality reduction through quantum operations alone.
-\item We evaluate the frozen model with matched baselines and repeated seeds across four binary tasks from three dataset families, reporting uncertainty and negative results.
+\item We evaluate the frozen model with same-split classical and quantum baselines across four binary tasks from three dataset families, reporting uncertainty and negative results.
 \end{enumerate}
 
 The rest of the paper is organised as follows. Section II reviews related work on quantum convolutional and variational quantum models. Section III describes the proposed FQCNN architecture and its mathematical formulation. Section IV covers the training dynamics and optimisation strategy. Section V reports the experimental results and analysis. Section VI details the novelty and technical differentiation, and Section VII concludes with limitations and future directions.
@@ -192,7 +173,7 @@ After pooling, only the retained qubits $a$ stay active; the compressed qubits $
 \subsection{Unitary Versus Measurement-Based Pooling}
 \label{sec:pooling-theory}
 
-Pooling in a QCNN is usually realised either by mid-circuit measurement of the compressed qubit with a classically conditioned correction on the retained qubit, or, as here, by a coherent two-qubit unitary. This section establishes the exact relationship between the two. The result is stronger than a qualitative preference: the block in~\eqref{eq:poolblock} \emph{reproduces} the measurement-based construction exactly, and does so without requiring mid-circuit measurement, qubit reset, or classical feed-forward.
+A measurement-based QCNN pooling block can measure the compressed qubit and apply a classically conditioned correction to the retained qubit. The construction here instead uses a coherent two-qubit unitary. This section establishes the exact relationship between those two specified blocks: the block in~\eqref{eq:poolblock} \emph{reproduces} the stated measurement-based channel exactly, without requiring mid-circuit measurement, qubit reset, or classical feed-forward.
 
 \subsubsection{Setup}
 Fix a pair $(a,b) \in P$ and let $\rho$ be the joint state of $(a,b)$ immediately before pooling. A \emph{measure-and-condition} pooling step measures $b$ in the computational basis and, on outcome $m \in \{0,1\}$, applies $U_m \in SU(2)$ to $a$. Averaged over outcomes, the retained register undergoes the channel
@@ -228,7 +209,7 @@ Theorem~\ref{thm:exact} is an instance of the deferred-measurement principle~\ci
 \item The global state remains pure from state preparation to the single terminal measurement, and the circuit is differentiable by the adjoint method end to end.
 \end{enumerate}
 
-It also follows immediately that $R_Y^{(b)}(\epsilon)$ in~\eqref{eq:poolblock} is inert: it acts only on $b$, and the partial trace over $b$ absorbs it. A direct numerical audit confirms this, with a maximum readout deviation of $8.3 \times 10^{-16}$ when the gate is removed entirely.
+It also follows immediately that $R_Y^{(b)}(\epsilon)$ in~\eqref{eq:poolblock} is inert: it acts only on $b$, and the partial trace over $b$ absorbs it. This is an analytic invariant of the stated retained-register channel, independent of the fixed angle's numerical value.
 
 \begin{proposition}[Strict containment]
 \label{prop:containment}
@@ -236,7 +217,7 @@ The family of unitary pooling channels $\{\rho \mapsto \mathrm{Tr}_b[V \rho V^{\
 \end{proposition}
 
 \begin{proof}
-Containment is Theorem~\ref{thm:exact} applied to $V = \sum_m |m\rangle\langle m|_b \otimes U_m$. For strictness, take $V = \text{SWAP}$, so that $\mathrm{Tr}_b[V \rho V^{\dagger}] = \rho_b$, the full reduced state of $b$ including its off-diagonal elements. By contrast, $\mathcal{M}_{\{U_m\}}$ depends on $b$ only through the diagonal blocks $\langle m|_b \rho |m\rangle_b$. The product states $\rho_a \otimes |{+}\rangle\langle{+}|_b$ and $\rho_a \otimes \tfrac{1}{2}I_b$ have identical $b$-diagonals and are therefore indistinguishable to every $\mathcal{M}_{\{U_m\}}$, yet SWAP maps them to $|{+}\rangle\langle{+}|$ and $\tfrac{1}{2}I$ respectively, which are at trace distance $\tfrac{1}{2}$.
+Containment is Theorem~\ref{thm:exact} applied to $V = \sum_m |m\rangle\langle m|_b \otimes U_m$. For strictness, take $V = e^{i\pi/4}\mathrm{SWAP} \in SU(4)$. Its global phase cancels from the channel, so $\mathrm{Tr}_b[V \rho V^{\dagger}] = \rho_b$, the full reduced state of $b$ including its off-diagonal elements. By contrast, $\mathcal{M}_{\{U_m\}}$ depends on $b$ only through the diagonal blocks $\langle m|_b \rho |m\rangle_b$. The product states $\rho_a \otimes |{+}\rangle\langle{+}|_b$ and $\rho_a \otimes \tfrac{1}{2}I_b$ have identical $b$-diagonals and are therefore indistinguishable to every $\mathcal{M}_{\{U_m\}}$, yet $V$ maps them to $|{+}\rangle\langle{+}|$ and $\tfrac{1}{2}I$ respectively, which are at trace distance $\tfrac{1}{2}$.
 \end{proof}
 
 Proposition~\ref{prop:containment} places the proposed block precisely: it realises the measurement-simulable subclass in the frozen construction, while the strict extension --- non-diagonal $V$ --- represents headroom that is an empirical question rather than an architectural claim.
@@ -246,55 +227,48 @@ Proposition~\ref{prop:containment} places the proposed block precisely: it reali
 Let $\mathcal{D}_b$ be complete dephasing of $b$ in the computational basis and define
 \begin{equation}
 \Delta_{\mathrm{coh}}(V) = \big\| \mathrm{Tr}_b[V \rho V^{\dagger}] - \mathrm{Tr}_b[V \mathcal{D}_b(\rho) V^{\dagger}] \big\|_1 .
+\label{eq:cohfunctional}
 \end{equation}
-Then $\Delta_{\mathrm{coh}}(W_{ab}) = 0$ for every $\rho$, whereas $\Delta_{\mathrm{coh}}(\text{SWAP}) > 0$.
+Then $\Delta_{\mathrm{coh}}(W_{ab}) = 0$ for every $\rho$, whereas $\Delta_{\mathrm{coh}}(e^{i\pi/4}\mathrm{SWAP}) > 0$.
 \end{proposition}
 
 \begin{proof}
-By Theorem~\ref{thm:exact} the output of $W_{ab}$ depends on $\rho$ only through $\langle m|_b \rho |m\rangle_b$, which $\mathcal{D}_b$ leaves invariant; hence the two terms coincide. For SWAP the witness in Proposition~\ref{prop:containment} gives $\Delta_{\mathrm{coh}} = \tfrac{1}{2}$ on $\rho_a \otimes |{+}\rangle\langle{+}|_b$.
+By Theorem~\ref{thm:exact} the output of $W_{ab}$ depends on $\rho$ only through $\langle m|_b \rho |m\rangle_b$, which $\mathcal{D}_b$ leaves invariant; hence the two terms coincide. For $e^{i\pi/4}\mathrm{SWAP}$ the witness in Proposition~\ref{prop:containment} gives $\Delta_{\mathrm{coh}} = 1$ on $\rho_a \otimes |{+}\rangle\langle{+}|_b$ under the trace-norm definition in~\eqref{eq:cohfunctional}; the corresponding trace distance is $\tfrac{1}{2}$.
 \end{proof}
 
 \subsubsection{Numerical confirmation}
-Both statements are \emph{a priori} predictions, made before measurement, and both are confirmed on the executed circuit. Evaluating the frozen $n=10$ model with its trained parameters on a density-matrix simulator, the coherent block and the explicit measure-and-condition channel of~\eqref{eq:mcchannel} produce terminal expectation values agreeing to a maximum deviation of $2.2 \times 10^{-16}$ --- floating-point round-off, against a tolerance of $10^{-12}$. Independently, inserting complete dephasing on every compressed wire immediately before pooling, at unchanged parameters, changes the readout by at most $5.86 \times 10^{-14}$ and leaves the predicted class unchanged for every input, so $\Delta\text{accuracy} = 0$ exactly. The retained-wire dephasing control changes the readout by $0.4094$, confirming that the null effect is specific to the compressed subsystem and its partial trace.
+The analytic statements are also checked on the executed circuit. Evaluating the frozen $n=10$ model with its trained parameters on a density-matrix simulator, the coherent block and the explicit measure-and-condition channel of~\eqref{eq:mcchannel} produce terminal expectation values agreeing to a maximum deviation of $2.2 \times 10^{-16}$ --- floating-point round-off, against a tolerance of $10^{-12}$. Independently, inserting complete dephasing on every compressed wire immediately before pooling, at unchanged parameters, changes the readout by at most $5.86 \times 10^{-14}$ and leaves the predicted class unchanged for all eight evaluated inputs, so the observed accuracy difference on this check is zero. The retained-wire dephasing control changes the readout by $0.4094$, confirming that the null effect is specific to the compressed subsystem and its partial trace.
 
-Two controls establish that these null results are not artefacts of an insensitive readout. Removing the pooling unitary altogether changes the output by more than $10^{-6}$, and applying the \emph{same} dephasing channel to the retained wires instead of the compressed ones changes it by $0.4094$ --- many orders of magnitude larger than the effect on the compressed wires. The channel is demonstrably active; the block simply cannot see what it erases.
+The retained-wire control establishes that the null result is not merely an insensitive readout: applying the same dephasing channel to retained rather than compressed wires changes the output by $0.4094$, many orders of magnitude larger than the compressed-wire effect. This comparison is the canonical control archived with the dephasing evidence.
 
 \subsubsection{Claims this does and does not support}
-Theorem~\ref{thm:exact} withdraws a claim commonly made for coherent pooling, including in earlier versions of this work: that measurement-based pooling destroys information which unitary pooling preserves. For observables of this circuit that statement is false, and Proposition~\ref{prop:coh} quantifies why. What the theorem supports instead is a sharper and more defensible set of claims --- exact simulation of the measurement-based class in the frozen construction, elimination of mid-circuit measurement, reset and feed-forward, a globally pure state throughout the pipeline, and end-to-end adjoint differentiability. Whether the strict extension of Proposition~\ref{prop:containment} yields any accuracy benefit is addressed by the pooling ablation in Section~\ref{sec:results}.
+Theorem~\ref{thm:exact} does not support the claim that the stated coherent block preserves retained-register information that the corresponding measurement-based block destroys: for observables of this circuit, the two channels are identical. What the theorem supports instead is a narrower set of claims --- exact simulation of the stated measurement-based class in the frozen construction, elimination of mid-circuit measurement, reset and feed-forward, a globally pure state throughout the pipeline, and end-to-end adjoint differentiability. Whether the strict extension of Proposition~\ref{prop:containment} yields any accuracy benefit is addressed by the pooling ablation in Section~\ref{sec:results}.
 
 \subsection{Variational Classification Head}
-The classification head maps the compressed quantum representation into a scalar observable that defines the decision boundary. It is a shallow but expressive variational circuit of single-qubit rotations and entangling operations:
-\begin{equation}
-U_{\text{cls}}(\Theta_c) = R_Z^{(0)}(\omega)\, U_{\text{ent}}^{(\text{cls})}\, U_{\text{rot}}^{(\text{cls})},
-\end{equation}
-where
-\begin{equation}
-U_{\text{rot}}^{(\text{cls})} = \prod_{i=1}^{n_r} R_Y(\varphi_i)
-\end{equation}
-lets each retained qubit adjust its contribution to the decision observable, and
-\begin{equation}
-U_{\text{ent}}^{(\text{cls})} = \prod_{(i,j) \in C} \text{CNOT}_{i \rightarrow j}
-\end{equation}
-enables joint feature extraction in the reduced Hilbert space. A final measurement-axis rotation $U_{\text{phase}}(\omega) = R_Z^{(0)}(\omega)$ introduces a trainable bias term $\omega$ in the expectation function, shifting the decision boundary in expectation-value space and increasing the projection's expressive capacity without added depth.
+The classification head maps the compressed representation to a Pauli-$Z$ expectation on the first active wire. Its description follows the executed circuit rather than a simplified symbolic surrogate. On each of at most the first four active wires $q_i$, it applies $R_X(\theta_{2i})$, $R_Y(\theta_{2i+1})$, and $R_Z(\theta_{2i+8})$ in sequence. A nearest-neighbour CNOT chain with a wraparound CNOT is followed by $R_X(\theta_{2i+16})$ and $R_Y(\theta_{2i+17})$ on those wires, then one additional CNOT from the first to the second active wire when at least two remain. The implementation allocates a 32-slot classifier vector and uses modular indexing so the same layout applies across supported register sizes.
 
-The classifier is shallow, but its exact parameter accounting is taken from the frozen executed tape rather than from a symbolic formula. For the headline ten-qubit circuit, there are 269 allocated parameter slots, 78 slots that reach the tape, and 74 effective slots at the declared $|\partial f/\partial\theta|>10^{-12}$ tolerance. The distinction matters because modular parameter reuse and the retired odd wire leave allocated slots that do not influence the terminal observable.
+A final $R_Z(\theta_{31})$ is syntactically applied to the readout wire immediately before measuring $Z$. Because this gate commutes with the measured observable, it cannot change the expectation and has exactly zero gradient; it is retained only to preserve the frozen parameter layout and is not a trainable bias. For the headline ten-qubit circuit, there are 269 allocated parameter slots, 78 slots that reach the tape, and 74 effective slots at the declared $|\partial f/\partial\theta|>10^{-12}$ tolerance. The distinction matters because unused convolutional arrays, unpaired wires, and structurally inert gates leave allocated slots that do not influence the terminal observable.
 
 \subsection{Global Parameter Scaling}
 Parameter sharing prevents the number of allocated slots from scaling with the number of windows, but the executed topology determines which slots are used. We therefore report allocated, tape-reaching, and effective counts separately rather than applying a closed-form count that assumes every module is independently instantiated.
 
 \subsection{Architectural Interpretation}
-The FQCNN implements global amplitude state preparation, shared register-index convolutional mixing, coherent dimensional compression, and measurement-aligned variational classification. The final rotation acts as a trainable bias in the quantum expectation space, which improves decision-boundary flexibility without adding entanglement complexity.
+The FQCNN implements global amplitude state preparation, shared register-index convolutional mixing, coherent dimensional compression, and variational classification before a terminal Pauli-$Z$ expectation. Its effective capacity is described by the executed-tape and gradient audits above; no expressive benefit is attributed to the inert terminal $R_Z$.
 
 \section{Training and Optimization}
 \subsection{Learning Objective and Risk Functional}
-The learning objective is governed by a risk minimisation framework. Given a training dataset $\mathcal{D}$, the model uses Binary Cross-Entropy (BCE) loss and minimises it by mapping the quantum expectation value to a bounded classification probability. The raw quantum expectation value $f_\Theta(x^{(k)}) \in [-1, 1]$ is then transformed into a standard classification probability $p^{(k)} \in [0, 1]$ via a relative translation, allowing the mapping of true training labels to the binary domain $\tilde{y}^{(k)} \in \{0, 1\}$:
+The learning objective is governed by empirical risk minimisation. The model maps the quantum expectation value $f_\Theta(x^{(k)})$ to a bounded probability and maps labels to $\tilde{y}^{(k)} \in \{0,1\}$:
 \begin{equation}
-p^{(k)} = \frac{f_\Theta(x^{(k)}) + 1}{2},
+p^{(k)} = \frac{\operatorname{clip}\!\left(f_\Theta(x^{(k)}),-1,1\right) + 1}{2}.
 \end{equation}
+The executed class-weighted Binary Cross-Entropy (BCE) objective is
 \begin{equation}
-\mathcal{L}(\Theta) = -\frac{1}{M} \sum_{k=1}^{M} \Big[\tilde{y}^{(k)} \log p^{(k)} + \big(1 - \tilde{y}^{(k)}\big) \log\big(1 - p^{(k)}\big)\Big],
+\begin{aligned}
+\mathcal{L}(\Theta) = -\frac{1}{M} \sum_{k=1}^{M} \Big[&w_{+}\tilde{y}^{(k)} \log\!\big(p^{(k)}+\varepsilon\big) \\
+&+ w_{-}\big(1 - \tilde{y}^{(k)}\big) \log\!\big(1 - p^{(k)}+\varepsilon\big)\Big],
+\end{aligned}
 \end{equation}
-where $M$ is the operational mini-batch size. The choice of Binary Cross-Entropy is mathematically justified to maximise the statistical divergence between true and predicted class assignments which are close to the decision boundary.
+where $M$ is the mini-batch size, $w_{+}$ and $w_{-}$ are computed from the training split only, and $\varepsilon=10^{-7}$ prevents singular logarithms. This is a weighted Bernoulli negative log-likelihood.
 
 \subsection{Measurement Estimation Model}
 On hardware the expectation value is estimated through repeated measurements. With $S$ shots, the estimator is
@@ -304,25 +278,27 @@ On hardware the expectation value is estimated through repeated measurements. Wi
 It satisfies $\mathbb{E}[\hat{f}_\theta] = f_\theta$ and $\text{Var}[\hat{f}_\theta] = (1 - f_\theta^2)/S$, so the estimator is unbiased and its variance decreases as $\mathcal{O}(1/S)$.
 
 \subsection{Gradient Evaluation}
-The reported statevector training uses the simulator's adjoint/backpropagation differentiation path, with the sequential lightning.qubit execution retained as the correctness oracle. For a hardware implementation, an alternative exact estimator is the parameter-shift rule~\cite{ref42}. Incorporating the Binary Cross-Entropy cost formulation, its partial derivative with respect to a variational circuit parameter $\theta$ can be evaluated as:
+The reported statevector training uses the simulator's adjoint/backpropagation differentiation path, with the sequential \texttt{lightning.qubit} execution retained as the correctness oracle. For a hardware implementation, gates with a two-eigenvalue generator admit an exact occurrence-level parameter-shift estimator~\cite{ref42}. In the interior of the clipping interval, the executed BCE formulation gives
 \begin{align}
-\frac{\partial \mathcal{L}}{\partial \theta} = \frac{1}{2M} \sum_{k=1}^{M} &\frac{p^{(k)} - \tilde{y}^{(k)}}{p^{(k)}\big(1 - p^{(k)}\big)} \notag\\
-&\times \Big[f_{\theta+\pi/2}(x^{(k)}) - f_{\theta-\pi/2}(x^{(k)})\Big].
+\frac{\partial \mathcal{L}}{\partial \theta} = -\frac{1}{2M} \sum_{k=1}^{M}
+\left[\frac{w_{+}\tilde{y}^{(k)}}{p^{(k)}+\varepsilon}
+-\frac{w_{-}(1-\tilde{y}^{(k)})}{1-p^{(k)}+\varepsilon}\right]
+\frac{\partial f_{\Theta}(x^{(k)})}{\partial \theta}.
 \end{align}
-The displayed parameter-shift expression is therefore a hardware cost model, not the differentiation method used to obtain the simulator results in this study; its two shifted evaluations per parameter apply only when that estimator is selected.
+where, for one eligible gate occurrence $j$, $\partial f/\partial\theta_j = \tfrac{1}{2}(f_{j,+}-f_{j,-})$ with shifts $\pm\pi/2$. If one trainable slot is reused in $r$ gate occurrences, the chain rule sums those occurrence-level derivatives, requiring up to $2r$ shifted circuit evaluations absent a specialised grouped rule. This is a hardware cost model, not the differentiation method used for the reported simulator results.
 
 \subsection{Optimization Procedure}
 The optimisation loop utilises the Adam optimiser to adapt step sizes throughout the parameter landscape. The historical headline run used $\eta = 0.005$, mini-batches of $M = 32$, gradient clipping, and an Exponential Moving Average (EMA) with decay $\gamma = 0.99$ for at most 50 epochs with early stopping. The bounded Q1 comparison uses its separately declared 30-epoch protocol. These settings are reported as finite experimental choices, not as a proof that barren plateaus are absent.
 
 \subsection{Computational Complexity}
-For the simulator path, adjoint/backpropagation cost is determined by the retained state and circuit evaluation rather than by two parameter-shift executions per parameter. If parameter-shift is used on hardware, its leading evaluation count is two shifted circuits per selected parameter and datapoint, with shot cost set by the measurement budget. Statevector simulation scales as $\mathcal{O}(2^n)$ in memory. The resource and any local-noise evidence reported below are explicitly simulation/fake-backend evidence; they do not establish hardware compatibility or deployment readiness.
+For the simulator path, adjoint/backpropagation cost is determined by the retained state and circuit evaluation rather than by parameter-shift executions. If parameter-shift is used on hardware, its leading evaluation count is two shifted circuits per eligible gate occurrence and datapoint, with additional accounting for reused slots and shot cost set by the measurement budget. Statevector simulation scales as $\mathcal{O}(2^n)$ in memory. The resource and any local-noise evidence reported below are explicitly simulation/fake-backend evidence; they do not establish hardware compatibility or deployment readiness.
 
 \subsection{Noise and Gradient Stability}
 \subsubsection{Statistical measurement noise}
-With $\rho(\Theta; x) = |\psi(\Theta; x)\rangle\langle\psi(\Theta; x)|$ and Born's rule, $f_\theta(x) = \text{Tr}[\rho Z_0]$. Since both shifted estimators are unbiased, so is the gradient estimator, $\mathbb{E}[\partial \hat{f}/\partial\theta] = \partial f/\partial\theta$, with variance scaling as $\mathcal{O}(1/S)$. Statistical noise therefore introduces variance but no bias.
+With $\rho(\Theta; x) = |\psi(\Theta; x)\rangle\langle\psi(\Theta; x)|$ and Born's rule, $f_\theta(x) = \text{Tr}[\rho Z_0]$. Each shifted expectation estimator is unbiased with variance scaling as $\mathcal{O}(1/S)$, so their linear parameter-shift estimate of $\partial f/\partial\theta$ is unbiased. A finite-shot plug-in estimator of the Binary Cross-Entropy gradient need not be unbiased, however, because the loss is nonlinear in the estimated probability and requires clipping near 0 and 1.
 
 \subsubsection{Hardware-induced quantum noise}
-Hardware noise replaces unitary evolution with a CPTP map $\rho_{\text{noisy}} = \varepsilon(\rho)$. Under the depolarising channel $\varepsilon_{\text{dep}}(\rho) = (1 - p)\rho + p\, I/2^n$, the output is attenuated as $f_\theta \rightarrow (1 - p)f_\theta$: the signal magnitude decreases linearly with no new directional bias. Under dephasing $\varepsilon_{\text{phase}}(\rho) = (1 - p)\rho + p Z\rho Z$, off-diagonal elements are suppressed, reducing coherence and thus effective expressivity.
+Hardware noise replaces unitary evolution with a completely positive trace-preserving map $\rho_{\text{noisy}} = \varepsilon(\rho)$. Under the stated global depolarising model $\varepsilon_{\text{dep}}(\rho) = (1 - p)\rho + p\, I/2^n$, a traceless Pauli-$Z$ expectation is attenuated by $(1-p)$. Under the phase-flip model $\varepsilon_{\text{phase}}(\rho) = (1 - p)\rho + p Z\rho Z$, computational-basis off-diagonal terms are rescaled according to the affected wire. Neither identity alone predicts end-to-end accuracy; the bounded local simulations below evaluate specified channels and noise levels.
 
 \subsubsection{Noise propagation}
 Entangling operations have bounded support in the register-index topology, but global amplitude encoding prevents this fact from being interpreted as a bound on image-space noise propagation. End-to-end noisy accuracy is treated as an empirical question and is reported only for the declared local validation protocol.
@@ -411,15 +387,15 @@ The unitary construction preserves the global state until the terminal observabl
 \caption{Within-study comparison protocol. Values are generated from the validated Q1 aggregate; heterogeneous literature percentages are not ranked against these results.}
 \label{tab:comparison}
 \centering
-\begin{tabular}{lcccc}
+\begin{tabular}{@{}lcccl@{}}
 \toprule
-\textbf{Method} & \textbf{Pool} & \textbf{Coh.} & \textbf{Params} & \textbf{Acc.} \\
+\textbf{Method} & \textbf{Pool} & \textbf{Coh.} & \textbf{Params} & \textbf{Source} \\
 \midrule
-FQCNN (ours) & Unitary & Yes & 269/74 & Aggregate \\
-Logistic & -- & -- & Classical & Aggregate \\
-Matched MLP & -- & -- & Classical & Aggregate \\
-TTN & Unitary & Yes & Quantum baseline & Aggregate \\
-Prior literature & Mixed & Mixed & Not aligned & Not comparable \\
+FQCNN (ours) & U & Yes & 269/74 & Q1 aggregate \\
+Logistic & -- & -- & 785 & Q1 aggregate \\
+MLP (2-unit) & -- & -- & 1,573 & Q1 aggregate \\
+TTN & U & Yes & -- & Q1 aggregate \\
+Prior literature & Mixed & Mixed & -- & Context only \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -447,7 +423,7 @@ mnist\_3v5 & 0.800 $\pm$ 0.030 & 0.948 $\pm$ 0.012 & 0.877 $\pm$ 0.044 & 0.730 $
 \label{fig:q1comparison}
 \end{figure}
 
-The primary comparison is within-study: logistic regression, a parameter-matched MLP, and TTN are evaluated on the same ordered samples, split manifests, and seed set as the FQCNN. The aggregate does not show FQCNN dominance: it is below logistic regression and the MLP on all four tasks, while exceeding TTN on all four in mean accuracy (with uncertainty and multiplicity-adjusted tests reported in the machine-readable artifact). We retain this bounded result rather than converting the architectural contribution into an accuracy claim. Prior literature uses different datasets, preprocessing, parameter budgets, and evaluation protocols, so its percentages are context rather than a ranked baseline. The pooling theorem separates the architectural distinction (removing mid-circuit control) from any empirical accuracy question; relative-performance statements are restricted to the aggregate's paired effects and multiplicity-adjusted tests.
+The primary comparison is within-study: logistic regression, a compact two-unit dense MLP, and TTN are evaluated on the same ordered samples, split manifests, and seed set as the FQCNN. The logistic model has 785 trainable coefficients for the 784 flattened pixels, while the two-unit MLP has 1,573 dense parameters; the MLP is therefore not parameter-matched to the FQCNN's 269 allocated/74 effective quantum slots, and this conservative capacity mismatch is disclosed rather than hidden. The aggregate does not show FQCNN dominance: it is below logistic regression and the MLP on all four tasks, while exceeding TTN on all four in mean accuracy (with uncertainty and multiplicity-adjusted tests reported in the machine-readable artifact). We retain this bounded result rather than converting the architectural contribution into an accuracy claim. Prior literature uses different datasets, preprocessing, parameter budgets, and evaluation protocols, so its percentages are context rather than a ranked baseline. The pooling theorem separates the architectural distinction (removing mid-circuit control) from any empirical accuracy question; relative-performance statements are restricted to the aggregate's paired effects and multiplicity-adjusted tests.
 
 \subsection{Noise Robustness}
 The pooling theorem and dephasing controls establish circuit-level identities, not end-to-end noise robustness. The Q1 package therefore reports a bounded local validation experiment using clean checkpoints, declared depolarising/dephasing channels, fixed validation subsets, and an isolated Qiskit/Aer environment. Those results are simulator evidence only; no accuracy-retention or device-noise claim is made beyond the exact tasks, seeds, shots, and noise levels recorded in the machine-readable artifact.
@@ -462,7 +438,7 @@ The current evaluation is limited to four binary tasks drawn from three 28$\time
 The proposed FQCNN departs from previous quantum convolutional architectures on four precise technical fronts that together make up the main contributions of this paper.
 
 \subsection{Fully unitary pipeline}
-Previous QCNNs rely on mid-circuit measurements or classical post-processing at pooling~\cite{ref2,ref4,ref6}, which requires dynamic-circuit capability at each pooling layer. Theorem~\ref{thm:exact} shows that the coherent block reproduces those constructions exactly on the retained register, so the contribution here is the removal of that requirement rather than the recovery of lost information. Here, encoding, convolution, pooling, and classification are merged into a single unitary transform with no intermediate measurements. This is a significant practical advantage, since mid-circuit measurement relies on classical control that is not yet ubiquitous on NISQ hardware.
+Previous QCNNs rely on mid-circuit measurements or classical post-processing at pooling~\cite{ref2,ref4,ref6}, which requires dynamic-circuit capability at each pooling layer. Theorem~\ref{thm:exact} shows that the coherent block reproduces those constructions exactly on the retained register, so the contribution here is the removal of that requirement rather than the recovery of lost information. Here, encoding, convolution, pooling, and classification are merged into a single unitary transform with no intermediate measurements. This is an architectural compatibility distinction; whether it improves an implementation depends on the target device, compiler, and control stack, and is not established by the simulator-only study here.
 
 \subsection{Coherent unitary pooling}
 Instead of a mid-circuit projection, which incurs latency and reset overheads on physical devices and requires dynamic-circuit support, the architecture uses the measurement-free pooling block of~\eqref{eq:poolblock}: features are routed from the compressed sub-register into the retained register by controlled rotations, with the compressed qubit as control. After pooling, the compressed sub-register is excluded from the remainder of the circuit, which is equivalent to a partial trace over those subsystems.
@@ -476,7 +452,7 @@ The kernel applies a fixed six-CNOT pattern in each 2 $\times$ 2 register-index 
 Inputs are min-max normalised, flattened, zero-padded to 1024 entries, and prepared by the single global amplitude-encoding operation described above. No local rotation map or data-dependent cyclic-ring correlation layer is part of the frozen main path. The subsequent variational kernel and pooling blocks use shared register-index supports; this distinction keeps the implementation and the paper's locality language aligned.
 
 \section{Conclusion}
-We proposed a fully quantum-native convolutional neural network (FQCNN) that performs state preparation, convolution, pooling, and classification through a single coherent unitary path before the terminal observable. The exact pooling result identifies removal of mid-circuit control as the architectural contribution; the Q1 aggregate and transfer experiments quantify empirical behavior against matched baselines without presupposing an advantage. Resource, noise, and trainability statements are restricted to their finite local evidence and simulation scope. Future work will extend the evaluation to larger and multi-class tasks and, subject to separate approval, real quantum hardware.
+We proposed a fully quantum-native convolutional neural network (FQCNN) that performs state preparation, convolution, pooling, and classification through a single coherent unitary path before the terminal observable. The exact pooling result identifies removal of mid-circuit control as the architectural contribution; the Q1 aggregate and transfer experiments quantify empirical behavior against same-split baselines without presupposing an advantage. Resource, noise, and trainability statements are restricted to their finite local evidence and simulation scope. Future work will extend the evaluation to larger and multi-class tasks and, subject to separate approval, real quantum hardware.
 
 \begin{thebibliography}{00}
 \bibitem{ref2} P. R\"oseler et al., ``Efficient quantum convolutional neural networks for image classification: overcoming hardware constraints,'' arXiv:2505.05957, 2025.

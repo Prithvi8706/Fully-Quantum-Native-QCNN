@@ -23,6 +23,7 @@ from experiments.pooling_analysis import (
     _readouts_with_hooks,
     _trace_distance,
     readouts,
+    run_pooling_controls,
     run_e4,
 )
 
@@ -61,9 +62,13 @@ def test_kraus_branches_are_the_theorem_s_two_unitaries():
     alpha, beta, gamma = (float(v) for v in QuantumNativePooling.pair_angles(ANGLES, 0))
     k0, k1 = QuantumNativePooling.measurement_channel_kraus(ANGLES, 0)
 
-    ry = lambda t: np.array([[np.cos(t / 2), -np.sin(t / 2)],
-                             [np.sin(t / 2), np.cos(t / 2)]], dtype=complex)
-    rz = lambda t: np.array([[np.exp(-0.5j * t), 0], [0, np.exp(0.5j * t)]], dtype=complex)
+    def ry(t):
+        return np.array([[np.cos(t / 2), -np.sin(t / 2)],
+                         [np.sin(t / 2), np.cos(t / 2)]], dtype=complex)
+
+    def rz(t):
+        return np.array(
+            [[np.exp(-0.5j * t), 0], [0, np.exp(0.5j * t)]], dtype=complex)
 
     u0 = ry(gamma)
     u1 = ry(gamma) @ rz(beta) @ ry(alpha)
@@ -134,6 +139,20 @@ def test_pool_none_actually_differs():
     assert np.abs(unitary - none).max() > 1e-6
 
 
+@pytest.mark.slow
+def test_canonical_pooling_controls_archive_both_nonvacuity_checks():
+    result = run_pooling_controls(
+        image_size=SMALL_IMAGE, n_inputs=2, use_archived_weights=False)
+
+    assert result['schema']['name'] == 'fqcnn_q1_pooling_controls'
+    assert result['status'] == 'pass'
+    assert result['inert_discard_rotation']['removed_operations_per_circuit'] > 0
+    assert result['inert_discard_rotation']['max_abs_difference'] <= E1_TOLERANCE
+    assert result['no_pooling_positive_control']['max_abs_difference'] > 1e-6
+    assert result['provenance']['environment']['lock_files'][0]['path'] == (
+        'requirements-lock.txt')
+
+
 def test_dephasing_really_dephases():
     """PhaseFlip(0.5) must send rho -> diag(rho), or E2 measures nothing."""
     dev = qml.device('default.mixed', wires=1)
@@ -181,7 +200,7 @@ def test_e2_control_dephasing_kept_wires_does_change_things(small_setup):
 def test_swap_witnesses_strict_containment():
     """Proposition 2: unitary pooling strictly contains measure-and-condition.
 
-    Witness V = SWAP. It carries rho_b onto the retained register *including*
+    Witness V = exp(i*pi/4) SWAP, which lies in SU(4). It carries rho_b onto the retained register *including*
     off-diagonal coherences. No measure-and-condition map can do that -- such a
     map sees rho_b only through its diagonal. So dephasing b before the block is
     detectable for SWAP and undetectable for the frozen block, which is exactly

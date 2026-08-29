@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+from pathlib import Path
 
 import numpy as np
 import pennylane as qml
@@ -37,13 +38,25 @@ from QCNN.config.Qconfig import QuantumNativeConfig
 from QCNN.encoding import PureQuantumEncoder
 from QCNN.models.QCNNModel import PureQuantumNativeCNN
 from QCNN.utils import run_artifacts, state_metrics
-from experiments import statistics
+from experiments import evidence_provenance, statistics
 
 # Theorem 1 predicts exact equality; this is the numerical-noise allowance for a
 # density-matrix simulation, and the threshold UPGRADE_PLAN.md 2.3 sets for E1.
 E1_TOLERANCE = 1e-12
 
 EVIDENCE_PATH = os.path.join('Results', 'evidence', 'e1_pooling_equivalence.json')
+POOLING_CONTROLS_PATH = os.path.join(
+    'Results', 'evidence', 'q1_pooling_controls.json')
+POOLING_CONTROL_SOURCES = (
+    'experiments/evidence_provenance.py',
+    'experiments/pooling_analysis.py',
+    'QCNN/circuits.py',
+    'QCNN/freeze.py',
+    'QCNN/config/Qconfig.py',
+    'QCNN/layers/QPool.py',
+    'QCNN/models/QCNNModel.py',
+)
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _config(image_size: int, pooling_mode: str) -> QuantumNativeConfig:
@@ -62,6 +75,133 @@ def readouts(cfg, params, inputs, device: str = 'default.mixed') -> np.ndarray:
         return circuits.build_circuit(x, params, cfg)
 
     return np.array([float(circuit(x)) for x in inputs])
+
+
+def _is_inert_discard_rotation(operation) -> bool:
+    """Identify the frozen block's sole hard-coded ``RY(0.02)`` operation."""
+    if operation.name != 'RY' or len(operation.data) != 1:
+        return False
+    value = np.asarray(operation.data[0])
+    return value.ndim == 0 and float(value) == 0.02
+
+
+@qml.transform
+def _remove_inert_discard_rotations(tape):
+    """Evaluation-only transform; the frozen source circuit remains unchanged."""
+    operations = [
+        operation for operation in tape.operations
+        if not _is_inert_discard_rotation(operation)
+    ]
+    transformed = qml.tape.QuantumScript(
+        operations, tape.measurements, shots=tape.shots)
+    return [transformed], lambda results: results[0]
+
+
+def _readouts_without_inert_discard_rotations(
+        cfg, params, inputs, device: str = 'default.qubit'):
+    dev = qml.device(device, wires=cfg.n_qubits)
+
+    @qml.qnode(dev)
+    def circuit(x):
+        return circuits.build_circuit(x, params, cfg)
+
+    circuit.construct((inputs[0],), {})
+    removed_per_circuit = sum(
+        _is_inert_discard_rotation(operation)
+        for operation in circuit.tape.operations
+    )
+    if removed_per_circuit == 0:
+        raise RuntimeError('pooling-control transform found no inert discard rotations')
+    transformed = _remove_inert_discard_rotations(circuit)
+    return (
+        np.asarray([float(transformed(x)) for x in inputs]),
+        int(removed_per_circuit),
+    )
+
+
+def run_pooling_controls(
+    image_size: int = freeze.HEADLINE_IMAGE_SIZE,
+    n_inputs: int = 8,
+    use_archived_weights: bool = True,
+    provenance_root: Path = _REPOSITORY_ROOT,
+) -> dict:
+    """Archive the inert-gate and no-pooling non-vacuity controls together."""
+    if n_inputs < 1:
+        raise ValueError('pooling controls require at least one input')
+    cfg_unitary = _config(image_size, 'unitary')
+    cfg_none = _config(image_size, 'none')
+    model = PureQuantumNativeCNN(cfg_unitary)
+    if use_archived_weights and cfg_unitary.n_qubits == freeze.HEADLINE_N_QUBITS:
+        flat = freeze.load_archived_params(model)
+        weights = 'archived headline weights'
+        weight_artifact = {
+            'path': Path(freeze.HEADLINE_WEIGHTS).as_posix(),
+            'sha256': evidence_provenance.sha256_file(
+                Path(provenance_root) / freeze.HEADLINE_WEIGHTS),
+        }
+    else:
+        flat = model._flatten_params(model.quantum_params)
+        weights = 'seeded initial weights'
+        weight_artifact = None
+    params = model._unflatten_params(flat)
+
+    rng = np.random.default_rng(freeze.REGRESSION_INPUT_SEED)
+    inputs = PureQuantumEncoder.precompute_amplitudes(
+        rng.random((n_inputs, 2 ** cfg_unitary.n_qubits)), cfg_unitary.n_qubits)
+
+    device = 'default.qubit'
+    unitary = readouts(cfg_unitary, params, inputs, device=device)
+    without_inert, removed_per_circuit = _readouts_without_inert_discard_rotations(
+        cfg_unitary, params, inputs, device=device)
+    without_pooling = readouts(cfg_none, params, inputs, device=device)
+
+    inert_difference = np.abs(unitary - without_inert)
+    pooling_difference = np.abs(unitary - without_pooling)
+    positive_control_threshold = 1e-6
+    inert_passes = bool(inert_difference.max() <= E1_TOLERANCE)
+    pooling_passes = bool(pooling_difference.max() > positive_control_threshold)
+    return {
+        'schema': {'name': 'fqcnn_q1_pooling_controls', 'version': 1},
+        'status': 'pass' if inert_passes and pooling_passes else 'fail',
+        'claim_scope': (
+            'fixed-parameter simulator controls for the frozen pooling block; '
+            'not an accuracy, hardware, or gate-optimality result'),
+        'protocol': {
+            'n_qubits': int(cfg_unitary.n_qubits),
+            'image_size': int(image_size),
+            'n_inputs': int(n_inputs),
+            'input_seed': int(freeze.REGRESSION_INPUT_SEED),
+            'model_seed': int(freeze.HEADLINE_SEED),
+            'weights': weights,
+            'weight_artifact': weight_artifact,
+            'device': device,
+        },
+        'inert_discard_rotation': {
+            'operation': 'RY(0.02) on each compressed wire',
+            'evaluation_method': (
+                'remove matching operations from an evaluation tape; '
+                'do not modify the frozen source circuit'),
+            'removed_operations_per_circuit': removed_per_circuit,
+            'tolerance': E1_TOLERANCE,
+            'baseline_readouts': unitary.tolist(),
+            'removed_readouts': without_inert.tolist(),
+            'abs_differences': inert_difference.tolist(),
+            'max_abs_difference': float(inert_difference.max()),
+            'passes': inert_passes,
+        },
+        'no_pooling_positive_control': {
+            'reference': 'unitary pooling',
+            'comparator': 'pooling disabled',
+            'threshold': positive_control_threshold,
+            'reference_readouts': unitary.tolist(),
+            'comparator_readouts': without_pooling.tolist(),
+            'abs_differences': pooling_difference.tolist(),
+            'max_abs_difference': float(pooling_difference.max()),
+            'passes': pooling_passes,
+        },
+        'provenance': evidence_provenance.build_binding(
+            Path(provenance_root), source_paths=POOLING_CONTROL_SOURCES),
+    }
 
 
 def run_e1(image_size: int = freeze.HEADLINE_IMAGE_SIZE, n_inputs: int = 8,
@@ -510,11 +650,33 @@ def _report_e2(result: dict) -> None:
 
 def main():
     ap = argparse.ArgumentParser(description='E1/E2 pooling validation')
-    ap.add_argument('--experiment', choices=['e1', 'e2', 'e3', 'e4', 'both'], default='both')
+    ap.add_argument(
+        '--experiment', choices=['e1', 'e2', 'e3', 'e4', 'controls', 'both'],
+        default='both')
     ap.add_argument('--image-size', type=int, default=freeze.HEADLINE_IMAGE_SIZE)
     ap.add_argument('--n-inputs', type=int, default=8)
     ap.add_argument('--out', default=EVIDENCE_PATH)
     args = ap.parse_args()
+
+    if args.experiment == 'controls':
+        result = run_pooling_controls(
+            image_size=args.image_size, n_inputs=args.n_inputs)
+        out = args.out
+        if out == EVIDENCE_PATH:
+            out = POOLING_CONTROLS_PATH
+        os.makedirs(os.path.dirname(out) or '.', exist_ok=True)
+        with open(out, 'w') as fh:
+            json.dump(result, fh, indent=2, sort_keys=True, allow_nan=False)
+            fh.write('\n')
+        print(json.dumps({
+            'output': out,
+            'status': result['status'],
+            'inert_max_abs_difference': result[
+                'inert_discard_rotation']['max_abs_difference'],
+            'no_pooling_max_abs_difference': result[
+                'no_pooling_positive_control']['max_abs_difference'],
+        }, sort_keys=True))
+        return 0 if result['status'] == 'pass' else 1
 
     if args.experiment == 'e3':
         result = run_e3()

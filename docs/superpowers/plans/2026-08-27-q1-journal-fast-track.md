@@ -39,7 +39,7 @@ The paper does **not** claim state-of-the-art image classification, proven absen
 | Old task | Q1 fast-track decision | Minimum retained evidence |
 |---|---|---|
 | 8 — harder-dataset adapters | **Keep, narrow** | Thin deterministic adapters for MNIST, Fashion-MNIST, and KMNIST; one predeclared binary task per family plus MNIST `0,1` calibration. |
-| 9 — full baseline/statistical campaign | **Keep, narrow** | Five seeds; proposed FQCNN, logistic regression, matched MLP, and one hierarchical quantum baseline. |
+| 9 — full baseline/statistical campaign | **Keep, narrow** | Five seeds; proposed FQCNN, logistic regression, compact two-unit MLP, and one hierarchical quantum baseline. |
 | 10 — effective dimension and inductive bias | **Replace** | Use existing DLA, gradient, expressibility, generalization, and simulability evidence. Remove image-locality claims; no new effective-dimension framework. |
 | 11 — full one-factor ablation grid | **Replace** | Use the completed pooling-arm grid and add one three-seed Fashion-MNIST transfer check. |
 | 12 — pooling hardware practicality | **Keep, narrow** | One controlled local fake-backend comparison of the principal pooling arms. |
@@ -83,8 +83,17 @@ from the former 70% presubset calculation is not admissible.
 Primary comparators:
 
 - logistic regression;
-- effective-parameter-matched MLP;
+- compact two-unit dense MLP, with its larger parameter count reported explicitly;
 - TTN as the hierarchical quantum comparator.
+
+**Baseline accounting correction (2026-08-29):** “matched” means paired on the
+same ordered samples, split identity, seed set, and selection protocol; it does
+not mean equal dense parameter count. With 784 flattened input features, the
+smallest supported dense MLP has two hidden units and 1,573 trainable parameters
+(`784*2 + 2 + 2 + 1`), versus 785 logistic coefficients and 269 FQCNN allocated
+slots (74 effective). The MLP is therefore reported as a compact two-unit
+comparator, never as parameter-matched; this conservative capacity mismatch is
+part of the result and is disclosed in the manuscript and aggregate protocol.
 
 Cong and Hur may be included only when their already implemented paths finish inside the same compute cap. They are strengthening arms, not completion gates. CNN, new literature implementations, and additional datasets are out of scope.
 
@@ -96,7 +105,7 @@ Cong and Hur may be included only when their already implemented paths finish in
 | Effective parameters | 269 allocated, 78 tape-reaching, 74 effective at the committed tolerance | `tests/fixtures/effective_params.json` |
 | Pooling theory | Exact equivalence, dephasing, information-dynamics, and negative/null findings validate | Existing E1/E2/E4/T5 evidence |
 | Multi-domain performance | Four predeclared tasks across three dataset families, five seeds, exact split/sample provenance | Bounded Q1 comparison campaign |
-| Baselines | Logistic regression, matched MLP, and TTN on identical data; paired where identities permit | Existing baseline modules with selector support |
+| Baselines | Logistic regression, compact two-unit MLP, and TTN on identical data; paired where identities permit | Existing baseline modules with selector support |
 | Statistics | Per-task mean, standard deviation, 95% CI, paired deltas/tests, effect sizes, and Holm correction for declared primary comparisons | One bounded aggregation module |
 | Ablation | Existing five-seed pooling grid plus three-seed Fashion-MNIST pooling transfer check | Existing arms and bounded fill run |
 | Trainability/model analysis | Existing DLA, gradient-variance, expressibility, generalization, and simulability artifacts; negative DLA result retained | Existing Phase 3 evidence |
@@ -163,7 +172,7 @@ python -m experiments.q1_fast_track_analysis inventory --manuscript fqcnn.tex --
 
 **Outcome:** The primary empirical evidence for the Q1-targeted paper.
 
-1. Run proposed, logistic, matched MLP, and TTN on all four tasks with seeds `0..4`.
+1. Run proposed, logistic, compact two-unit MLP, and TTN on all four tasks with seeds `0..4`.
 2. Reuse any existing proposed cells only when dataset, ordered IDs, split hash, protocol, revision, and artifact validation all match.
 3. Validate the first new cell before unattended continuation.
 4. Run the existing pooling arms on Fashion-MNIST `0,6` with seeds `0..2` as the cross-domain ablation check. Reuse the existing five-seed MNIST pooling grid.

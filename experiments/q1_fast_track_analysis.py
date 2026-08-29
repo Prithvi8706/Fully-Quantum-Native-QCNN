@@ -19,6 +19,7 @@ import numpy as np
 from QCNN.utils import run_artifacts
 from QCNN.utils.dataset_registry import Q1_TASKS
 from QCNN.utils.metrics import compute_classification_metrics
+from experiments import evidence_provenance
 from experiments import statistics as qstats
 
 
@@ -27,6 +28,40 @@ COMPARISON_SCHEMA = {"name": "fqcnn_q1_comparison", "version": 1}
 COMPARISON_ARMS = ("proposed", "logistic", "mlp", "ttn")
 COMPARISON_METRICS = (
     "accuracy", "balanced_accuracy", "f1", "roc_auc", "pr_auc")
+CLASSICAL_CAPACITY = {
+    "input_features": 784,
+    "logistic": {
+        "trainable_parameters": 785,
+        "accounting": "784 coefficients plus one intercept",
+    },
+    "mlp": {
+        "hidden_layer_sizes": [2],
+        "trainable_parameters": 1573,
+        "accounting": "784*2 + 2 hidden biases + 2 output weights + 1 output bias",
+        "matching_status": "not_parameter_matched_to_fqcnn",
+        "selection_note": (
+            "target_params=269 selects the smallest supported dense hidden layer; "
+            "the resulting capacity is reported explicitly"
+        ),
+    },
+}
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+COMPARISON_PROVENANCE_SOURCES = (
+    "experiments/evidence_provenance.py",
+    "experiments/q1_fast_track_analysis.py",
+    "experiments/run_experiments.py",
+    "experiments/statistics.py",
+    "baselines/classical_cnn.py",
+    "baselines/quantum_baselines.py",
+    "QCNN/circuits.py",
+    "QCNN/config/Qconfig.py",
+    "QCNN/layers/QPool.py",
+    "QCNN/models/QCNNModel.py",
+    "QCNN/utils/dataset_registry.py",
+    "QCNN/utils/metrics.py",
+    "QCNN/utils/run_artifacts.py",
+    "QCNN/utils/splits.py",
+)
 _UNFINISHED_STATES = {"failed", "partial", "pending", "queued", "running"}
 _CLAIM_PATTERNS = {
     "numerical_result": re.compile(r"(?:\\approx|\b\d+(?:\.\d+)?\\?%|\baccuracy\b)", re.I),
@@ -398,6 +433,7 @@ def build_comparison(
     seeds: Sequence[int] = tuple(range(5)),
     tasks: Optional[Sequence[Tuple[str, Sequence[int], str]]] = None,
     arms: Sequence[str] = COMPARISON_ARMS,
+    provenance_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Validate and aggregate only the frozen Q1 comparison matrix."""
     tasks = tuple(Q1_TASKS if tasks is None else tasks)
@@ -485,12 +521,17 @@ def build_comparison(
     return {
         "schema": COMPARISON_SCHEMA,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "provenance": evidence_provenance.build_binding(
+            _REPOSITORY_ROOT if provenance_root is None else Path(provenance_root),
+            source_paths=COMPARISON_PROVENANCE_SOURCES,
+        ),
         "protocol": {
             "tasks_frozen_before_test_inspection": True,
             "seeds": list(seeds),
             "arms": list(arms),
             "metrics": list(COMPARISON_METRICS),
             "primary_reference": "proposed",
+            "classical_capacity": CLASSICAL_CAPACITY,
             "multiplicity": {
                 "method": "Holm-Bonferroni",
                 "alpha": correction["alpha"],

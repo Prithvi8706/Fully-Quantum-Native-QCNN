@@ -75,14 +75,27 @@ DATASETS: Dict[str, DatasetSpec] = {
     "mnist": DatasetSpec(
         key="mnist",
         display_name="MNIST",
-        version="official IDX snapshot",
+        version="official uncompressed IDX snapshot (checksum-pinned local release)",
         directory="MNIST",
         homepage="https://yann.lecun.com/exdb/mnist/",
         license="source terms and citation apply",
         files=tuple(
             SourceFile(
                 partition, kind, filename.replace("-idx", ".idx"),
-                None, None, compressed=False,
+                None,
+                {
+                    "train-images.idx3-ubyte": "6bbc9ace898e44ae57da46a324031adb",
+                    "train-labels.idx1-ubyte": "a25bea736e30d166cdddb491f175f624",
+                    "t10k-images.idx3-ubyte": "2646ac647ad5339dbf082846283269ea",
+                    "t10k-labels.idx1-ubyte": "27ae3e4e09519cfbb04c329615203637",
+                }[filename.replace("-idx", ".idx")],
+                compressed=False,
+                sha256={
+                    "train-images.idx3-ubyte": "ba891046e6505d7aadcbbe25680a0738ad16aec93bde7f9b65e87a2fc25776db",
+                    "train-labels.idx1-ubyte": "65a50cbbf4e906d70832878ad85ccda5333a97f0f4c3dd2ef09a8a9eef7101c5",
+                    "t10k-images.idx3-ubyte": "0fa7898d509279e482958e8ce81c8e77db3f2f8254e26661ceb7762c4d494ce7",
+                    "t10k-labels.idx1-ubyte": "ff7bcfd416de33731a308c3f266cc351222c34898ecbeaf847f06e48f7ec33f2",
+                }[filename.replace("-idx", ".idx")],
             )
             for (partition, kind), filename in _IDX_NAMES.items()
         ),
@@ -347,6 +360,7 @@ def load_binary_quantum(
 
 def provenance(dataset: str, data_root: Path = Path("datasets")) -> dict:
     spec = get_spec(dataset)
+    local_only = all(source.url is None for source in spec.files)
     return {
         "dataset": spec.key,
         "display_name": spec.display_name,
@@ -355,6 +369,12 @@ def provenance(dataset: str, data_root: Path = Path("datasets")) -> dict:
         "license": spec.license,
         "labels": list(spec.labels),
         "source_files": validate_source(dataset, data_root),
+        "source_policy": {
+            "local_only": local_only,
+            "registry_fetch_enabled": not local_only,
+            "checksum_validation": "fail-closed MD5 and SHA-256",
+            "all_sha256_pinned": all(source.sha256 is not None for source in spec.files),
+        },
         "sample_id_format": f"{dataset}:<source_partition>:<zero-padded-source-index>",
     }
 

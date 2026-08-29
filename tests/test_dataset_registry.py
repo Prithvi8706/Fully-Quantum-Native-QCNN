@@ -40,12 +40,21 @@ def test_q1_tasks_are_frozen_before_test_inspection():
     )
 
 
-def test_remote_sources_require_tls_and_pinned_sha256():
+def test_all_sources_pin_sha256_and_remote_sources_require_tls():
+    for dataset in dataset_registry.DATASETS:
+        for source in dataset_registry.get_spec(dataset).files:
+            assert source.sha256 is not None
+            assert len(source.sha256) == 64
     for dataset in ("fashion_mnist", "kmnist"):
         for source in dataset_registry.get_spec(dataset).files:
             assert source.url.startswith("https://")
-            assert source.sha256 is not None
-            assert len(source.sha256) == 64
+
+
+def test_mnist_is_a_checksum_pinned_local_snapshot():
+    spec = dataset_registry.get_spec("mnist")
+    assert "checksum-pinned local release" in spec.version
+    assert all(source.url is None for source in spec.files)
+    assert all(source.md5 is not None and source.sha256 is not None for source in spec.files)
 
 
 @pytest.mark.parametrize(

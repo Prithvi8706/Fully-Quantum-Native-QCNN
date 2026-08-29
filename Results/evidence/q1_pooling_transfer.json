@@ -831,7 +831,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-08-29T14:36:01.433198+00:00",
+  "generated_at_utc": "2026-08-29T17:11:31.125964+00:00",
   "manifests": {
     "0": {
       "dataset_id": "fashion_mnist_0v6_n666",
@@ -909,6 +909,92 @@
     "task": "fashion_mnist_0v6",
     "train_sample_size": 400
   },
+  "provenance": {
+    "environment": {
+      "lock_files": [
+        {
+          "bytes": 888,
+          "path": "requirements-lock.txt",
+          "sha256": "d731ba28b02eb9c7cd39ecdacc193f8eae6f34dfddf528fea5c0b9af63827efe"
+        }
+      ],
+      "packages": {
+        "numpy": "1.26.4",
+        "pennylane": "0.38.0",
+        "pennylane-lightning": "0.38.0",
+        "scikit-learn": "1.6.1",
+        "scipy": "1.13.1"
+      },
+      "python": "3.9.13"
+    },
+    "hash_algorithm": "sha256",
+    "schema": {
+      "name": "fqcnn_evidence_provenance",
+      "version": 1
+    },
+    "source_files": [
+      {
+        "bytes": 2810,
+        "path": "experiments/evidence_provenance.py",
+        "sha256": "646d57c5bee428dd63c1b881307b0c44d1f4f347faa07e82113c4beace721e5f"
+      },
+      {
+        "bytes": 27970,
+        "path": "experiments/q1_pooling_transfer.py",
+        "sha256": "d5e27c3740bab7bea136f3a109156617a7e7abb5868998211cfc4e2124804ad4"
+      },
+      {
+        "bytes": 32061,
+        "path": "experiments/run_experiments.py",
+        "sha256": "9c5ffc4c4932484f526e3dd4800d6795bb6e0d8eae96a9e1415fd7330b8f9917"
+      },
+      {
+        "bytes": 7125,
+        "path": "experiments/statistics.py",
+        "sha256": "1ce3bf4d3619a4219ac728424bd21be055149c6017e90e0278d5609daafffe3c"
+      },
+      {
+        "bytes": 5878,
+        "path": "QCNN/circuits.py",
+        "sha256": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09"
+      },
+      {
+        "bytes": 7524,
+        "path": "QCNN/config/Qconfig.py",
+        "sha256": "6deeb6c445a5116a2e67d6b08262bdf59ff0633ac000cfa900204c714592447e"
+      },
+      {
+        "bytes": 14484,
+        "path": "QCNN/layers/QPool.py",
+        "sha256": "f10169f5cbd06646159276ce62011171e6bcee911a8ff7fe3ba163fd58ff9601"
+      },
+      {
+        "bytes": 9571,
+        "path": "QCNN/models/QCNNModel.py",
+        "sha256": "d63083b6120503e0616db37e65d879d88ba1863a6f7b24352512ab70fb5f03ce"
+      },
+      {
+        "bytes": 16352,
+        "path": "QCNN/utils/dataset_registry.py",
+        "sha256": "f77f285955fcf8b643e00f05f5011755db9c7a7ad2ac7747bb8618cb5fd057b8"
+      },
+      {
+        "bytes": 7003,
+        "path": "QCNN/utils/metrics.py",
+        "sha256": "4c0859738a30376f286ccf320eaf7c1701c4f088c6bee24a78384b820dc0a664"
+      },
+      {
+        "bytes": 8888,
+        "path": "QCNN/utils/run_artifacts.py",
+        "sha256": "e4aba5e47ace04c120c6e591f27112aef1829b870dc3c0b892e832de3e1d2bfe"
+      },
+      {
+        "bytes": 6139,
+        "path": "QCNN/utils/splits.py",
+        "sha256": "3520c7b18db43090b10b586a6d24310ba73d2a7e817cbb96e7cef7d77f7a9cf1"
+      }
+    ]
+  },
   "schema": {
     "name": "fqcnn_q1_pooling_transfer",
     "version": 1
@@ -973,6 +1059,12 @@
         "url": "https://fashion-mnist.s3.eu-central-1.amazonaws.com/t10k-labels-idx1-ubyte.gz"
       }
     ],
+    "source_policy": {
+      "all_sha256_pinned": true,
+      "checksum_validation": "fail-closed MD5 and SHA-256",
+      "local_only": false,
+      "registry_fetch_enabled": true
+    },
     "version": "Zalando Research official IDX release"
   }
 }

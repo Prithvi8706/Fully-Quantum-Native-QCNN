@@ -3,7 +3,7 @@
     "name": "fqcnn_q1_claim_ledger",
     "version": 2
   },
-  "generated_at_utc": "2026-08-29T14:42:17.4543392Z",
+  "generated_at_utc": "2026-08-29T17:20:13.515798Z",
   "status": "ready_for_release",
   "purpose": "Machine-readable audit of numerical and scope-sensitive claims against the current manuscript and the evidence available at ledger generation time. A claim is not publication-ready unless its status is supported or supported_with_scope and every required action is closed.",
   "scope": {
@@ -12,7 +12,7 @@
     "reconciliation": "docs/paper_code_reconciliation.md",
     "comparison_artifact": "Results/evidence/q1_comparison.json",
     "evidence_rule": "Bind every numerical claim to a hashed artifact and preserve the exact simulator, split, seed, and scope. Do not upgrade a mathematical identity, a finite diagnostic, a local simulation, or a historical single-seed result into an accuracy, hardware, or asymptotic claim.",
-    "observation": "The corrected Q1 comparison and pooling-transfer campaigns are complete and parseable: 80/80 comparison cells and 15/15 transfer cells have complete status, with no failed runs. All 20 comparison manifests and 3 transfer manifests use n_total=666 with train/validation/test=400/100/166. The latest manuscript explicitly separates this Q1 protocol from the historical 12,665-sample provenance, uses a Q1 aggregate figure, and has a completed citation-scope pass; only medium provenance and packaging notes remain."
+    "observation": "The corrected Q1 comparison and pooling-transfer campaigns are complete and parseable: 80/80 comparison cells and 15/15 transfer cells have complete status, with no failed runs. All manifests use n_total=666 with train/validation/test=400/100/166. Dataset checksums, aggregate provenance, and fixed-input pooling controls are now archived; the remaining release gate is clean reproduction and package verification."
   },
   "status_legend": {
     "supported": "The cited evidence directly supports the bounded statement.",
@@ -26,16 +26,16 @@
     "ready_for_release": "No high-severity claim or release blocker remains; listed medium notes are bounded release-hygiene limitations."
   },
   "source_hashes_sha256": {
-    "fqcnn.tex": "8dabd68b102b0ecfe2a3e18eb1039aaf7c4b0a5525b3985c99abd62b158f582f",
-    "docs/paper_code_reconciliation.md": "97f56bd925f357643206e9f0eae89d413b62825d786b006175c36a1f5b4c1a04",
+    "fqcnn.tex": "27d85d0dea8ec9e11b480f04cba9c4e76b6a456e15e7db8fe099592d5523f08c",
+    "docs/paper_code_reconciliation.md": "d0f9fbdc727df0edc6426c5f1498d40c40d792db58f03732dc644b89cbb2d3bc",
     "Results/evidence/q1_fast_track_inventory.json": "b2d82ed83eec6b097d098c56340290a53e18df7ccabfafe54a740f7b3070ef4b",
-    "experiments/q1_fast_track_analysis.py": "c947742befe3de5cd52f1a3a8fe3c3fac35a29628ddf448aa966ffae382738ca",
+    "experiments/q1_fast_track_analysis.py": "e3ab58ad3a3972794f0a351e362d5b08ec7c88085530147d23cb33f41612d8a7",
     "experiments/q1_local_evidence.py": "45b88b75a0a6a6429d575a3768e02338467ad2a27dd5ded66e26eace867fd179",
-    "experiments/q1_pooling_transfer.py": "5a50687cd8c2c43afe06c044dcab605fad3fecd5755d99a4233006d91ba13ae8",
+    "experiments/q1_pooling_transfer.py": "d5e27c3740bab7bea136f3a109156617a7e7abb5868998211cfc4e2124804ad4",
     "experiments/run_experiments.py": "9c5ffc4c4932484f526e3dd4800d6795bb6e0d8eae96a9e1415fd7330b8f9917",
     "QCNN/circuits.py": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09",
     "QCNN/training/Qtrainer.py": "c8d468556b5376e7c4396cd2f07666cdf5a473d7a138eb48d8ad2e8d6ad609eb",
-    "QCNN/utils/dataset_registry.py": "5d427de2d631d61ba82639165263caca0cbd9da570b1e69adf55a5f078150870",
+    "QCNN/utils/dataset_registry.py": "f77f285955fcf8b643e00f05f5011755db9c7a7ad2ac7747bb8618cb5fd057b8",
     "QCNN/utils/metrics.py": "4c0859738a30376f286ccf320eaf7c1701c4f088c6bee24a78384b820dc0a664",
     "QCNN/utils/run_artifacts.py": "e4aba5e47ace04c120c6e591f27112aef1829b870dc3c0b892e832de3e1d2bfe",
     "QCNN/utils/splits.py": "3520c7b18db43090b10b586a6d24310ba73d2a7e817cbb96e7cef7d77f7a9cf1",
@@ -43,19 +43,39 @@
     "requirements-qiskit-lock.txt": "97ea5292428d071769f500866f06f32d408f1720731b6a2e5751f14bbe9bd6a8",
     "tests/fixtures/effective_params.json": "6c5021a78d4fce3ddecc331f08ec88ec4c7b252d8c0d74405b3f94d61622947f",
     "tests/fixtures/headline_signature.json": "773080573f9da762aaae93bfa46128cfc272854ad8cc31f0392c1233f77f6b54",
-    "tests/fixtures/headline_expectations.npz": "46072f1eb8763b0233e42382253c3b602176f07feeb591ee0e173c840d93ab0e"
+    "tests/fixtures/headline_expectations.npz": "46072f1eb8763b0233e42382253c3b602176f07feeb591ee0e173c840d93ab0e",
+    "scripts/build_q1_submission_package.py": "21909f6e815155bf692b502b77de4a03c2fe6430b2b38ae209770525a21ae489",
+    "scripts/refresh_q1_claim_ledger.py": "7f4e2aa93205086a8cc0aee2802e6bf54ad322579490544860833bf86e7a74cf",
+    "scripts/run_q1_reproduction.py": "2303c30693e39b170bc1a8c773c18c09a35dca773bc85cb6449718a3e1edf560"
   },
   "artifact_inventory": [
     {
       "id": "A-001",
       "path": "Results/evidence/q1_comparison.json",
       "status": "pass",
-      "sha256": "73f3dbb8665a36e8c21b4dbc995d63e8001ff6e742bca562b9db4e2e63ae1ee6",
+      "sha256": "4911e90ce71b63b5e8f326e1f57738cb071e47c79e3ca5327939ee446bd862f3",
       "protocol": {
         "tasks": 4,
-        "arms": ["proposed", "logistic", "mlp", "ttn"],
-        "seeds": [0, 1, 2, 3, 4],
-        "metrics": ["accuracy", "balanced_accuracy", "f1", "roc_auc", "pr_auc"],
+        "arms": [
+          "proposed",
+          "logistic",
+          "mlp",
+          "ttn"
+        ],
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "metrics": [
+          "accuracy",
+          "balanced_accuracy",
+          "f1",
+          "roc_auc",
+          "pr_auc"
+        ],
         "multiplicity": "Holm-Bonferroni, alpha=0.05, 12 Wilcoxon tests",
         "tasks_frozen_before_test_inspection": true
       },
@@ -73,10 +93,19 @@
       "id": "A-002",
       "path": "Results/evidence/q1_dataset_provenance.json",
       "status": "supported_with_scope",
-      "sha256": "32f32731c202cdca7cbf38efd7c073ef48d5a1f53efcd08183b904fb062ffbed",
+      "sha256": "4c44bdf3c1211d7d26d3815a13e29bf20724d776b5b4cf6cb78fea81e947bb8d",
       "protocol": {
-        "datasets": ["mnist", "fashion_mnist", "kmnist"],
-        "frozen_tasks": ["mnist:0,1", "mnist:3,5", "fashion_mnist:0,6", "kmnist:2,3"],
+        "datasets": [
+          "mnist",
+          "fashion_mnist",
+          "kmnist"
+        ],
+        "frozen_tasks": [
+          "mnist:0,1",
+          "mnist:3,5",
+          "fashion_mnist:0,6",
+          "kmnist:2,3"
+        ],
         "source_checksum_policy": "SHA-256 expected/observed for Fashion-MNIST and KMNIST; local MNIST IDX records observed SHA-256 with no expected remote checksum"
       },
       "limitations": [
@@ -88,8 +117,17 @@
       "path": "Results/evidence/e1_pooling_equivalence.json",
       "status": "pass",
       "sha256": "126eed664de340370af37047eaeebf540732e0c03005ca47eb152114dfe344e0",
-      "protocol": {"experiment": "E1", "device": "default.mixed", "n_inputs": 8, "n_qubits": 10, "tolerance": 1e-12},
-      "key_result": {"max_abs_difference": 2.220446049250313e-16, "passes": true},
+      "protocol": {
+        "experiment": "E1",
+        "device": "default.mixed",
+        "n_inputs": 8,
+        "n_qubits": 10,
+        "tolerance": 1e-12
+      },
+      "key_result": {
+        "max_abs_difference": 2.220446049250313e-16,
+        "passes": true
+      },
       "scope": "Finite archived-weight numerical confirmation of the stated theorem; the theorem itself is the general mathematical result."
     },
     {
@@ -98,7 +136,7 @@
       "status": "pass",
       "sha256": "2dea23e372ffc9ed9301616c3ff5aa1ea45cd6e8e657656576e8d195fcfa1a6a",
       "key_result": {
-        "compressed_wire_max_abs_readout_delta": 5.8619775700208265e-14,
+        "compressed_wire_max_abs_readout_delta": 5.861977570020827e-14,
         "compressed_wire_max_trace_distance": 7.974176874370184e-14,
         "decisions_unchanged": true,
         "delta_accuracy": 0.0,
@@ -113,12 +151,27 @@
       "status": "pass",
       "sha256": "401ff57a545b987982a9e15ee95475f145ed11d8365a09fb63f7454703be3e1e",
       "protocol": {
-        "tasks": ["mnist:3,5", "fashion_mnist:0,6"],
-        "seeds": [0, 1, 2],
+        "tasks": [
+          "mnist:3,5",
+          "fashion_mnist:0,6"
+        ],
+        "seeds": [
+          0,
+          1,
+          2
+        ],
         "validation_samples_per_record": 25,
         "shots": 128,
-        "levels": [0.0, 0.005, 0.01, 0.02],
-        "noise_models": ["depolarizing", "dephasing"],
+        "levels": [
+          0.0,
+          0.005,
+          0.01,
+          0.02
+        ],
+        "noise_models": [
+          "depolarizing",
+          "dephasing"
+        ],
         "retraining": false,
         "test_data_used": false,
         "checkpoints_loaded": 6,
@@ -126,16 +179,40 @@
       },
       "descriptive_accuracy_ranges_by_level": {
         "depolarizing": {
-          "0.0": [0.48, 0.68],
-          "0.005": [0.40, 0.56],
-          "0.01": [0.36, 0.56],
-          "0.02": [0.40, 0.56]
+          "0.0": [
+            0.48,
+            0.68
+          ],
+          "0.005": [
+            0.4,
+            0.56
+          ],
+          "0.01": [
+            0.36,
+            0.56
+          ],
+          "0.02": [
+            0.4,
+            0.56
+          ]
         },
         "dephasing": {
-          "0.0": [0.48, 0.68],
-          "0.005": [0.40, 0.68],
-          "0.01": [0.40, 0.64],
-          "0.02": [0.44, 0.64]
+          "0.0": [
+            0.48,
+            0.68
+          ],
+          "0.005": [
+            0.4,
+            0.68
+          ],
+          "0.01": [
+            0.4,
+            0.64
+          ],
+          "0.02": [
+            0.44,
+            0.64
+          ]
         }
       },
       "scope": "Local Aer simulations with clean validation checkpoints; not calibration-accurate device noise, not fake-backend execution, and not QPU data."
@@ -145,13 +222,49 @@
       "path": "Results/evidence/q1_pooling_practicality.json",
       "status": "pass",
       "sha256": "91c70bd35918f8e7cdac2de67fd60f3aa2c8e620d788f842f3c23195153e5eca",
-      "protocol": {"backend": "FakePeekskill", "n_qubits": 4, "optimization_level": 1, "seed_transpiler": 42, "same_backend_settings": true},
+      "protocol": {
+        "backend": "FakePeekskill",
+        "n_qubits": 4,
+        "optimization_level": 1,
+        "seed_transpiler": 42,
+        "same_backend_settings": true
+      },
       "arms": {
-        "pool_none": {"logical_size": 78, "decomposed_size": 78, "transpiled_size": 381, "transpiled_depth": 225, "dynamic": false},
-        "pool_measurement": {"logical_size": 87, "decomposed_size": 87, "transpiled_size": 401, "transpiled_depth": 240, "dynamic": true},
-        "pool_unitary": {"logical_size": 90, "decomposed_size": 108, "transpiled_size": 457, "transpiled_depth": 280, "dynamic": false},
-        "pool_coherent": {"logical_size": 90, "decomposed_size": 117, "transpiled_size": 493, "transpiled_depth": 309, "dynamic": false},
-        "pool_su4": {"logical_size": 81, "decomposed_size": 111, "transpiled_size": 475, "transpiled_depth": 278, "dynamic": false}
+        "pool_none": {
+          "logical_size": 78,
+          "decomposed_size": 78,
+          "transpiled_size": 381,
+          "transpiled_depth": 225,
+          "dynamic": false
+        },
+        "pool_measurement": {
+          "logical_size": 87,
+          "decomposed_size": 87,
+          "transpiled_size": 401,
+          "transpiled_depth": 240,
+          "dynamic": true
+        },
+        "pool_unitary": {
+          "logical_size": 90,
+          "decomposed_size": 108,
+          "transpiled_size": 457,
+          "transpiled_depth": 280,
+          "dynamic": false
+        },
+        "pool_coherent": {
+          "logical_size": 90,
+          "decomposed_size": 117,
+          "transpiled_size": 493,
+          "transpiled_depth": 309,
+          "dynamic": false
+        },
+        "pool_su4": {
+          "logical_size": 81,
+          "decomposed_size": 111,
+          "transpiled_size": 475,
+          "transpiled_depth": 278,
+          "dynamic": false
+        }
       },
       "scope": "Structural local transpilation comparison only; it does not measure transfer accuracy or prove gate optimality."
     },
@@ -160,12 +273,51 @@
       "path": "Results/evidence/q1_resources.json",
       "status": "pass",
       "sha256": "a5b4e23fc2168766bbecca1bb5d88d33931d6102d13967aacace19fa4652ab0c",
-      "protocol": {"qubits": [4, 6, 8, 10], "backend": "FakePeekskill", "optimization_level": 1, "seed_transpiler": 42, "pooling_mode": "unitary"},
+      "protocol": {
+        "qubits": [
+          4,
+          6,
+          8,
+          10
+        ],
+        "backend": "FakePeekskill",
+        "optimization_level": 1,
+        "seed_transpiler": 42,
+        "pooling_mode": "unitary"
+      },
       "total_counts": {
-        "4": {"logical_size": 92, "logical_depth": 38, "decomposed_size": 139, "decomposed_depth": 73, "transpiled_size": 567, "transpiled_depth": 343},
-        "6": {"logical_size": 176, "logical_depth": 65, "decomposed_size": 325, "decomposed_depth": 191, "transpiled_size": 1708, "transpiled_depth": 934},
-        "8": {"logical_size": 324, "logical_depth": 113, "decomposed_size": 875, "decomposed_depth": 626, "transpiled_size": 5151, "transpiled_depth": 2549},
-        "10": {"logical_size": 336, "logical_depth": 116, "decomposed_size": 2429, "decomposed_depth": 2160, "transpiled_size": 15239, "transpiled_depth": 7362}
+        "4": {
+          "logical_size": 92,
+          "logical_depth": 38,
+          "decomposed_size": 139,
+          "decomposed_depth": 73,
+          "transpiled_size": 567,
+          "transpiled_depth": 343
+        },
+        "6": {
+          "logical_size": 176,
+          "logical_depth": 65,
+          "decomposed_size": 325,
+          "decomposed_depth": 191,
+          "transpiled_size": 1708,
+          "transpiled_depth": 934
+        },
+        "8": {
+          "logical_size": 324,
+          "logical_depth": 113,
+          "decomposed_size": 875,
+          "decomposed_depth": 626,
+          "transpiled_size": 5151,
+          "transpiled_depth": 2549
+        },
+        "10": {
+          "logical_size": 336,
+          "logical_depth": 116,
+          "decomposed_size": 2429,
+          "decomposed_depth": 2160,
+          "transpiled_size": 15239,
+          "transpiled_depth": 7362
+        }
       },
       "scope": "Local logical/decomposed/transpiled estimates; not hardware execution or a scalability theorem."
     },
@@ -174,8 +326,19 @@
       "path": "Results/evidence/q1_fake_backend_rehearsal.json",
       "status": "pass",
       "sha256": "7523b4d99c661c30b6b7b39306b8e4f7346ebd01a932a104e0a03307449da467",
-      "protocol": {"backend": "FakePeekskill", "n_qubits": 6, "shots": 1024, "seed_transpiler": 42, "canonical_source": "QCNN/circuits.py"},
-      "submission": {"credentials_accessed": false, "network_accessed": false, "authenticated": false, "submitted": false},
+      "protocol": {
+        "backend": "FakePeekskill",
+        "n_qubits": 6,
+        "shots": 1024,
+        "seed_transpiler": 42,
+        "canonical_source": "QCNN/circuits.py"
+      },
+      "submission": {
+        "credentials_accessed": false,
+        "network_accessed": false,
+        "authenticated": false,
+        "submitted": false
+      },
       "scope": "Local payload/transpilation rehearsal only; no queue, backend reservation, job, or physical performance."
     },
     {
@@ -183,7 +346,21 @@
       "path": "Results/evidence/f_e_gradient_variance.json",
       "status": "supported_with_scope",
       "sha256": "1d369a18033991fbb9564bbefd7ee2520f15a932f8c2f7f7d1e2ae4e9f4cce5d",
-      "key_result": {"n_qubits": [4, 6, 8, 10, 12, 14], "n_inits": 200, "designated_slot_preferred_law": "exponential", "designated_slot_r_squared": 0.9228592208183954, "live_slot_median_preferred_law": "power_law", "live_slot_median_r_squared": 0.6632898713867823},
+      "key_result": {
+        "n_qubits": [
+          4,
+          6,
+          8,
+          10,
+          12,
+          14
+        ],
+        "n_inits": 200,
+        "designated_slot_preferred_law": "exponential",
+        "designated_slot_r_squared": 0.9228592208183954,
+        "live_slot_median_preferred_law": "power_law",
+        "live_slot_median_r_squared": 0.6632898713867823
+      },
       "scope": "Finite random-input/random-initialisation diagnostic; not an asymptotic barren-plateau or trainability proof."
     },
     {
@@ -198,7 +375,13 @@
       "path": "Results/evidence/t6_expressibility.json",
       "status": "supported_with_scope",
       "sha256": "e81a71ecd366c784a338d0ae93613efdf25cd1118f12016f9b31245226a264f8",
-      "key_result": {"n_qubits": 10, "n_samples": 3000, "n_pairs": 3000, "expressibility_kl": 1.0873693098232162e-06, "mean_meyer_wallach": 0.9744521378562931},
+      "key_result": {
+        "n_qubits": 10,
+        "n_samples": 3000,
+        "n_pairs": 3000,
+        "expressibility_kl": 1.0873693098232162e-06,
+        "mean_meyer_wallach": 0.9744521378562931
+      },
       "scope": "One fixed amplitude-encoded input and random parameters; not data-distribution coverage or a performance guarantee."
     },
     {
@@ -206,17 +389,84 @@
       "path": "Results/evidence/t6_generalization_bound.json",
       "status": "supported_with_scope",
       "sha256": "e0e84258a33046aee2bba102d35933d3f6cb0d1cf0ee635369d28b0a94425376",
-      "key_result": {"n_train": 7599, "preferred_reading": "trainable_gates", "trainable_gates": 222, "sqrt_T_logT_over_N": 0.39728556191944864, "effective_slot_reading": 0.20472791006546265},
+      "key_result": {
+        "n_train": 7599,
+        "preferred_reading": "trainable_gates",
+        "trainable_gates": 222,
+        "sqrt_T_logT_over_N": 0.39728556191944864,
+        "effective_slot_reading": 0.20472791006546265
+      },
       "scope": "Finite big-O scaling term with an unquantified constant and frozen historical split; not a proved generalisation guarantee."
     },
     {
       "id": "A-013",
       "path": "Results/evidence/q1_pooling_transfer.json",
       "status": "pass",
-      "sha256": "1dd8caf062e9cbbde6778d5b5eb604dc67d396f369073b86f4f1807a39da7db3",
-      "protocol": {"task": "fashion_mnist:0,6", "arms": ["e3_pool_none", "e3_pool_measurement", "e3_pool_unitary", "e3_pool_coherent", "e3_pool_su4"], "seeds": [0, 1, 2], "cells": 15, "n_total": 666, "train": 400, "validation": 100, "test": 166, "epochs": 30, "reference_arm": "e3_pool_unitary", "metrics": ["accuracy", "balanced_accuracy", "f1", "roc_auc", "pr_auc"], "source_stable_test_identity": true},
-      "integrity": {"run_status_files": 15, "complete_run_status_files": 15, "failed_runs": 0, "manifests": 3, "common_manifest_shape": "n_total=666; train=400; validation=100; test=166", "all_arms_per_seed_share_test_identity": true},
-      "key_result": {"accuracy_mean_std": {"e3_pool_none": [0.8152610441767069, 0.00567957253965095], "e3_pool_measurement": [0.8032128514056224, 0.005679572539651002], "e3_pool_unitary": [0.8032128514056224, 0.005679572539651002], "e3_pool_coherent": [0.7911646586345381, 0.023244652415241412], "e3_pool_su4": [0.8012048192771085, 0.013013535538971633]}, "wilcoxon_holm_all_non_significant": true, "mcnemar_holm_significant_for_none_coherent_su4": true},
+      "sha256": "8fbaf0122ce1cf3e38bb5762c5c8fb0872a2046a949024fb9ec57ab6aaec7e9f",
+      "protocol": {
+        "task": "fashion_mnist:0,6",
+        "arms": [
+          "e3_pool_none",
+          "e3_pool_measurement",
+          "e3_pool_unitary",
+          "e3_pool_coherent",
+          "e3_pool_su4"
+        ],
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "cells": 15,
+        "n_total": 666,
+        "train": 400,
+        "validation": 100,
+        "test": 166,
+        "epochs": 30,
+        "reference_arm": "e3_pool_unitary",
+        "metrics": [
+          "accuracy",
+          "balanced_accuracy",
+          "f1",
+          "roc_auc",
+          "pr_auc"
+        ],
+        "source_stable_test_identity": true
+      },
+      "integrity": {
+        "run_status_files": 15,
+        "complete_run_status_files": 15,
+        "failed_runs": 0,
+        "manifests": 3,
+        "common_manifest_shape": "n_total=666; train=400; validation=100; test=166",
+        "all_arms_per_seed_share_test_identity": true
+      },
+      "key_result": {
+        "accuracy_mean_std": {
+          "e3_pool_none": [
+            0.8152610441767069,
+            0.00567957253965095
+          ],
+          "e3_pool_measurement": [
+            0.8032128514056224,
+            0.005679572539651002
+          ],
+          "e3_pool_unitary": [
+            0.8032128514056224,
+            0.005679572539651002
+          ],
+          "e3_pool_coherent": [
+            0.7911646586345381,
+            0.023244652415241412
+          ],
+          "e3_pool_su4": [
+            0.8012048192771085,
+            0.013013535538971633
+          ]
+        },
+        "wilcoxon_holm_all_non_significant": true,
+        "mcnemar_holm_significant_for_none_coherent_su4": true
+      },
       "scope": "Three-seed Fashion-MNIST transfer evidence under the frozen local statevector simulator protocol; it is a finite within-study ablation, not a hardware result, gate-optimality proof, or universal pooling ranking."
     },
     {
@@ -224,8 +474,49 @@
       "path": "figs_final/q1_comparison.png",
       "status": "pass",
       "sha256": "f067f053b237efd42d6fa1af268ab3cdd33ee24584a35f3d43fec3babdd3f30e",
-      "protocol": {"source_artifact": "Results/evidence/q1_comparison.json", "tasks": 4, "arms": ["proposed", "logistic", "mlp", "ttn"], "seeds": [0, 1, 2, 3, 4], "metric": "test accuracy mean +/- standard deviation"},
+      "protocol": {
+        "source_artifact": "Results/evidence/q1_comparison.json",
+        "tasks": 4,
+        "arms": [
+          "proposed",
+          "logistic",
+          "mlp",
+          "ttn"
+        ],
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "metric": "test accuracy mean +/- standard deviation"
+      },
       "scope": "Publication figure generated from the corrected Q1 comparison aggregate; descriptive within-study evidence only, not a quantum-advantage claim."
+    },
+    {
+      "id": "A-015",
+      "path": "Results/evidence/q1_pooling_controls.json",
+      "status": "pass",
+      "sha256": "872bb8a487dfff0154ff264187fd7d43a9aa133cfd3d909874c8b44c33027a68",
+      "protocol": {
+        "device": "default.qubit",
+        "image_size": 28,
+        "input_seed": 20260725,
+        "model_seed": 42,
+        "n_inputs": 8,
+        "n_qubits": 10,
+        "weight_artifact": {
+          "path": "Results/Weights/quantum_model_params.npz",
+          "sha256": "ee6f0243972a90d7a980be2c4d0f61d66896e14366174a1125b081a84952212b"
+        },
+        "weights": "archived headline weights"
+      },
+      "key_result": {
+        "inert_max_abs_difference": 2.220446049250313e-16,
+        "no_pooling_max_abs_difference": 0.08002187961991691
+      },
+      "scope": "fixed-parameter simulator controls for the frozen pooling block; not an accuracy, hardware, or gate-optimality result"
     }
   ],
   "non_substitutable_artifacts": [
@@ -243,349 +534,832 @@
   "claims": [
     {
       "id": "C-001",
-      "manuscript_locations": [46, 62, 68, 102, 114, 451, 524],
-      "category": ["architecture", "unitarity", "hardware_scope"],
+      "manuscript_locations": [
+        46,
+        62,
+        68,
+        102,
+        114,
+        451,
+        524
+      ],
+      "category": [
+        "architecture",
+        "unitarity",
+        "hardware_scope"
+      ],
       "statement": "The frozen main path performs state preparation, register-index convolution, pooling, and classification through unitary operations before one terminal observable, with no intermediate measurement, reset, or classical feed-forward.",
       "status": "supported_with_scope",
       "risk": "medium",
       "evidence": [
-        {"path": "QCNN/circuits.py", "pointer": "canonical build_circuit topology", "sha256": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09"},
-        {"path": "tests/test_freeze_architecture.py", "pointer": "test_main_path_contains_no_non_unitary_operation"},
-        {"path": "tests/fixtures/headline_signature.json", "pointer": "frozen executed topology and terminal signature", "sha256": "773080573f9da762aaae93bfa46128cfc272854ad8cc31f0392c1233f77f6b54"}
+        {
+          "path": "QCNN/circuits.py",
+          "pointer": "canonical build_circuit topology",
+          "sha256": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09"
+        },
+        {
+          "path": "tests/test_freeze_architecture.py",
+          "pointer": "test_main_path_contains_no_non_unitary_operation"
+        },
+        {
+          "path": "tests/fixtures/headline_signature.json",
+          "pointer": "frozen executed topology and terminal signature",
+          "sha256": "773080573f9da762aaae93bfa46128cfc272854ad8cc31f0392c1233f77f6b54"
+        }
       ],
       "caveat": "This is a simulated/frozen implementation property; it is not evidence of real-QPU execution or hardware performance."
     },
     {
       "id": "C-002",
-      "manuscript_locations": [98, 102, 117, 121, 123, 129, 361],
-      "category": ["encoding", "scope"],
+      "manuscript_locations": [
+        98,
+        102,
+        117,
+        121,
+        123,
+        129,
+        361
+      ],
+      "category": [
+        "encoding",
+        "scope"
+      ],
       "statement": "The main path globally amplitude-encodes a flattened 784-value image into a zero-padded 1024-dimensional state on ten qubits and adds no second data-dependent feature map or ring-correlation layer.",
       "status": "supported",
       "risk": "medium",
       "evidence": [
-        {"path": "QCNN/circuits.py", "pointer": "canonical amplitude-encoded circuit", "sha256": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09"},
-        {"path": "docs/paper_code_reconciliation.md", "pointer": "encoding reconciliation: AmplitudeEmbedding-only main path"},
-        {"path": "tests/fixtures/headline_signature.json", "pointer": "state-preparation signature", "sha256": "773080573f9da762aaae93bfa46128cfc272854ad8cc31f0392c1233f77f6b54"}
+        {
+          "path": "QCNN/circuits.py",
+          "pointer": "canonical amplitude-encoded circuit",
+          "sha256": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09"
+        },
+        {
+          "path": "docs/paper_code_reconciliation.md",
+          "pointer": "encoding reconciliation: AmplitudeEmbedding-only main path"
+        },
+        {
+          "path": "tests/fixtures/headline_signature.json",
+          "pointer": "state-preparation signature",
+          "sha256": "773080573f9da762aaae93bfa46128cfc272854ad8cc31f0392c1233f77f6b54"
+        }
       ],
       "caveat": "Register-index gate support must not be relabelled as image-space locality or translational equivariance."
     },
     {
       "id": "C-003",
-      "manuscript_locations": [132, 139, 147, 155, 518, 521],
-      "category": ["parameter_sharing", "locality", "trainability_scope"],
+      "manuscript_locations": [
+        132,
+        139,
+        147,
+        155,
+        518,
+        521
+      ],
+      "category": [
+        "parameter_sharing",
+        "locality",
+        "trainability_scope"
+      ],
       "statement": "The variational kernel uses shared SU(2) rotations and a fixed six-CNOT pattern inside bounded register-index windows.",
       "status": "supported_with_scope",
       "risk": "medium",
       "evidence": [
-        {"path": "QCNN/circuits.py", "pointer": "shared kernel and six-CNOT window topology", "sha256": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09"},
-        {"path": "tests/fixtures/headline_signature.json", "pointer": "frozen topology signature", "sha256": "773080573f9da762aaae93bfa46128cfc272854ad8cc31f0392c1233f77f6b54"}
+        {
+          "path": "QCNN/circuits.py",
+          "pointer": "shared kernel and six-CNOT window topology",
+          "sha256": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09"
+        },
+        {
+          "path": "tests/fixtures/headline_signature.json",
+          "pointer": "frozen topology signature",
+          "sha256": "773080573f9da762aaae93bfa46128cfc272854ad8cc31f0392c1233f77f6b54"
+        }
       ],
       "caveat": "This supports a structural register-index statement only; it does not establish image-space equivariance, asymptotic trainability, or bounded image-space noise propagation."
     },
     {
       "id": "C-004",
-      "manuscript_locations": [167, 169, 172, 183, 195, 204, 206, 210, 224],
-      "category": ["pooling_theory", "coherence"],
+      "manuscript_locations": [
+        167,
+        169,
+        172,
+        183,
+        195,
+        204,
+        206,
+        210,
+        224
+      ],
+      "category": [
+        "pooling_theory",
+        "coherence"
+      ],
       "statement": "For the stated controlled pooling block, tracing out the compressed wire exactly reproduces the corresponding measure-and-condition channel on the retained wire.",
       "status": "supported",
       "risk": "low",
       "evidence": [
-        {"path": "fqcnn.tex", "pointer": "Theorem Exact simulation, lines 200-218", "status": "mathematical_statement"},
-        {"path": "Results/evidence/e1_pooling_equivalence.json", "pointer": "max_abs_difference=2.220446049250313e-16; tolerance=1e-12; passes=true", "sha256": "126eed664de340370af37047eaeebf540732e0c03005ca47eb152114dfe344e0"},
-        {"path": "tests/test_pooling_equivalence.py", "pointer": "finite equivalence and strict-containment tests"}
+        {
+          "path": "fqcnn.tex",
+          "pointer": "Theorem Exact simulation, lines 200-218",
+          "status": "mathematical_statement"
+        },
+        {
+          "path": "Results/evidence/e1_pooling_equivalence.json",
+          "pointer": "max_abs_difference=2.220446049250313e-16; tolerance=1e-12; passes=true",
+          "sha256": "126eed664de340370af37047eaeebf540732e0c03005ca47eb152114dfe344e0"
+        },
+        {
+          "path": "tests/test_pooling_equivalence.py",
+          "pointer": "finite equivalence and strict-containment tests"
+        }
       ],
       "caveat": "The numerical confirmation uses eight archived-weight inputs; exactness is supplied by the theorem for the stated block."
     },
     {
       "id": "C-005",
-      "manuscript_locations": [172, 218, 231],
-      "category": ["pooling_theory", "discarded_wire"],
+      "manuscript_locations": [
+        172,
+        218,
+        231
+      ],
+      "category": [
+        "pooling_theory",
+        "discarded_wire"
+      ],
       "statement": "The fixed RY(0.02) on a wire excluded from subsequent operations is analytically inert under the retained-register partial trace, with the manuscript reporting a 8.3e-16 removal check.",
       "status": "supported_with_scope",
       "risk": "medium",
       "evidence": [
-        {"path": "fqcnn.tex", "pointer": "partial-trace argument and reported removal check, lines 214-227"},
-        {"path": "tests/test_freeze_architecture.py", "pointer": "inert discarded-wire angle guard"},
-        {"path": "docs/paper_code_reconciliation.md", "pointer": "archived 8.33e-16 check"}
+        {
+          "path": "fqcnn.tex",
+          "pointer": "partial-trace argument and reported removal check, lines 214-227"
+        },
+        {
+          "path": "tests/test_freeze_architecture.py",
+          "pointer": "inert discarded-wire angle guard"
+        },
+        {
+          "path": "docs/paper_code_reconciliation.md",
+          "pointer": "archived 8.33e-16 check"
+        }
       ],
       "caveat": "The 8.3e-16 number is not currently bound to a standalone machine-readable evidence JSON. Keep the analytic claim, but either publish a reproducible artifact or report only the declared numerical tolerance."
     },
     {
       "id": "C-006",
-      "manuscript_locations": [233, 235, 242],
-      "category": ["pooling_theory", "expressivity"],
+      "manuscript_locations": [
+        233,
+        235,
+        242
+      ],
+      "category": [
+        "pooling_theory",
+        "expressivity"
+      ],
       "statement": "The family of arbitrary two-qubit unitary pooling channels strictly contains the controlled measure-and-condition subclass, while the frozen block realizes the subclass.",
       "status": "supported_with_scope",
       "risk": "medium",
       "evidence": [
-        {"path": "fqcnn.tex", "pointer": "Strict containment proposition and SWAP witness, lines 229-236", "status": "mathematical_statement"},
-        {"path": "tests/test_pooling_equivalence.py", "pointer": "strict-containment witness tests"}
+        {
+          "path": "fqcnn.tex",
+          "pointer": "Strict containment proposition and SWAP witness, lines 229-236",
+          "status": "mathematical_statement"
+        },
+        {
+          "path": "tests/test_pooling_equivalence.py",
+          "pointer": "strict-containment witness tests"
+        }
       ],
       "caveat": "Channel-family strict containment does not imply an accuracy benefit for any frozen pooling arm."
     },
     {
       "id": "C-007",
-      "manuscript_locations": [183, 188, 224, 228, 231],
-      "category": ["pooling", "global_purity"],
+      "manuscript_locations": [
+        183,
+        188,
+        224,
+        228,
+        231
+      ],
+      "category": [
+        "pooling",
+        "global_purity"
+      ],
       "statement": "The implementation excludes compressed wires from later operations and reduces the active schedule 10 -> 5 -> 2 -> 1 while the unmeasured full state remains pure until the terminal observable.",
       "status": "supported_with_scope",
       "risk": "low",
       "evidence": [
-        {"path": "Results/evidence/e4_information_dynamics.json", "pointer": "pooling schedule, active-wire counts, encoded purity and reduced-state diagnostics", "sha256": "a7a42c7ebf50d7da98b135fa6feec29003af4846fac0cc3576c273fd525734ae"},
-        {"path": "tests/fixtures/headline_signature.json", "pointer": "pooling schedule", "sha256": "773080573f9da762aaae93bfa46128cfc272854ad8cc31f0392c1233f77f6b54"}
+        {
+          "path": "Results/evidence/e4_information_dynamics.json",
+          "pointer": "pooling schedule, active-wire counts, encoded purity and reduced-state diagnostics",
+          "sha256": "a7a42c7ebf50d7da98b135fa6feec29003af4846fac0cc3576c273fd525734ae"
+        },
+        {
+          "path": "tests/fixtures/headline_signature.json",
+          "pointer": "pooling schedule",
+          "sha256": "773080573f9da762aaae93bfa46128cfc272854ad8cc31f0392c1233f77f6b54"
+        }
       ],
       "caveat": "Global purity does not mean every reduced retained state is pure; entanglement can make reduced states mixed."
     },
     {
       "id": "C-008",
-      "manuscript_locations": [280, 286, 463],
-      "category": ["parameter_count", "architecture"],
+      "manuscript_locations": [
+        280,
+        286,
+        463
+      ],
+      "category": [
+        "parameter_count",
+        "architecture"
+      ],
       "statement": "The frozen ten-qubit headline has 269 allocated parameter slots, 78 slots reaching the tape, and 74 effective slots at the declared 1e-12 gradient criterion.",
       "status": "supported",
       "risk": "medium",
       "evidence": [
-        {"path": "tests/fixtures/effective_params.json", "pointer": "n_allocated=269; n_syntactically_used=78; n_effective=74", "sha256": "6c5021a78d4fce3ddecc331f08ec88ec4c7b252d8c0d74405b3f94d61622947f"},
-        {"path": "tests/test_effective_params.py", "pointer": "fixture and fresh-audit consistency guards"},
-        {"path": "docs/paper_code_reconciliation.md", "pointer": "measured parameter accounting"}
+        {
+          "path": "tests/fixtures/effective_params.json",
+          "pointer": "n_allocated=269; n_syntactically_used=78; n_effective=74",
+          "sha256": "6c5021a78d4fce3ddecc331f08ec88ec4c7b252d8c0d74405b3f94d61622947f"
+        },
+        {
+          "path": "tests/test_effective_params.py",
+          "pointer": "fixture and fresh-audit consistency guards"
+        },
+        {
+          "path": "docs/paper_code_reconciliation.md",
+          "pointer": "measured parameter accounting"
+        }
       ],
       "caveat": "Do not call all 269 allocated slots trainable or replace the executed counts with a symbolic closed-form formula."
     },
     {
       "id": "C-009",
-      "manuscript_locations": [307, 308, 315, 318],
-      "category": ["optimization", "gradient_method"],
+      "manuscript_locations": [
+        307,
+        308,
+        315,
+        318
+      ],
+      "category": [
+        "optimization",
+        "gradient_method"
+      ],
       "statement": "Reported statevector training uses adjoint/backpropagation; parameter-shift is presented only as an alternative hardware estimator and cost model.",
       "status": "supported_with_scope",
       "risk": "medium",
       "evidence": [
-        {"path": "QCNN/training/Qtrainer.py", "pointer": "simulator differentiation path", "sha256": "c8d468556b5376e7c4396cd2f07666cdf5a473d7a138eb48d8ad2e8d6ad609eb"},
-        {"path": "experiments/run_experiments.py", "pointer": "reported simulator execution path", "sha256": "9c5ffc4c4932484f526e3dd4800d6795bb6e0d8eae96a9e1415fd7330b8f9917"}
+        {
+          "path": "QCNN/training/Qtrainer.py",
+          "pointer": "simulator differentiation path",
+          "sha256": "c8d468556b5376e7c4396cd2f07666cdf5a473d7a138eb48d8ad2e8d6ad609eb"
+        },
+        {
+          "path": "experiments/run_experiments.py",
+          "pointer": "reported simulator execution path",
+          "sha256": "9c5ffc4c4932484f526e3dd4800d6795bb6e0d8eae96a9e1415fd7330b8f9917"
+        }
       ],
       "caveat": "The displayed two-shift formula must not be described as the method used to obtain the simulator results."
     },
     {
       "id": "C-010",
-      "manuscript_locations": [335, 345, 348, 349, 350, 351, 361, 364, 374, 381],
-      "category": ["protocol", "dataset", "reproducibility"],
+      "manuscript_locations": [
+        335,
+        345,
+        348,
+        349,
+        350,
+        351,
+        361,
+        364,
+        374,
+        381
+      ],
+      "category": [
+        "protocol",
+        "dataset",
+        "reproducibility"
+      ],
       "statement": "The historical headline uses the 12,665-sample MNIST protocol, while the corrected Q1 campaigns use 666 source examples per task (400/100/166 split), four tasks, five comparison seeds, and a 30-epoch configuration.",
       "status": "supported_with_scope",
       "risk": "medium",
       "evidence": [
-        {"path": "Results/headline_manifest.json", "pointer": "historical seed-42, 50-epoch, 0.005 learning-rate configuration", "sha256": "0ffb1edfa109cb76cdd88e27981d7b05296985d7585a198615d9e830283eea47"},
-        {"path": "Results/evidence/q1_comparison.json", "pointer": "80 complete scientific runs across four tasks, five seeds, matched arms and metrics", "sha256": "73f3dbb8665a36e8c21b4dbc995d63e8001ff6e742bca562b9db4e2e63ae1ee6"},
-        {"path": "Results/q1_comparison/manifests", "pointer": "20 manifests, each n_total=666 with train/validation/test=400/100/166"},
-        {"path": "experiments/run_experiments.py", "pointer": "corrected --samples 400 training budget and 0.60/0.15/0.25 construction", "sha256": "9c5ffc4c4932484f526e3dd4800d6795bb6e0d8eae96a9e1415fd7330b8f9917"}
+        {
+          "path": "Results/headline_manifest.json",
+          "pointer": "historical seed-42, 50-epoch, 0.005 learning-rate configuration",
+          "sha256": "0ffb1edfa109cb76cdd88e27981d7b05296985d7585a198615d9e830283eea47"
+        },
+        {
+          "path": "Results/evidence/q1_comparison.json",
+          "pointer": "80 complete scientific runs across four tasks, five seeds, matched arms and metrics",
+          "sha256": "4911e90ce71b63b5e8f326e1f57738cb071e47c79e3ca5327939ee446bd862f3"
+        },
+        {
+          "path": "Results/q1_comparison/manifests",
+          "pointer": "20 manifests, each n_total=666 with train/validation/test=400/100/166"
+        },
+        {
+          "path": "experiments/run_experiments.py",
+          "pointer": "corrected --samples 400 training budget and 0.60/0.15/0.25 construction",
+          "sha256": "9c5ffc4c4932484f526e3dd4800d6795bb6e0d8eae96a9e1415fd7330b8f9917"
+        }
       ],
       "resolution": "fqcnn.tex:364 now explicitly identifies the corrected 666-example Q1 protocol (400/100/166) and states that 12,665 belongs only to the historical single-seed provenance."
     },
     {
       "id": "C-011",
-      "manuscript_locations": [472, 473, 480, 481, 482, 483, 488],
-      "category": ["comparison", "numerical_result"],
-      "statement": "The Q1 aggregate reports mean +/- standard deviation over five seeds for FQCNN and matched logistic, MLP, and TTN arms on four frozen tasks.",
+      "manuscript_locations": [
+        472,
+        473,
+        480,
+        481,
+        482,
+        483,
+        488
+      ],
+      "category": [
+        "comparison",
+        "numerical_result"
+      ],
+      "statement": "The Q1 aggregate reports mean +/- standard deviation over five seeds for FQCNN and same-split logistic, two-unit MLP, and TTN arms on four frozen tasks.",
       "status": "supported_with_scope",
       "risk": "low",
       "reported_accuracy_mean_std": {
-        "fashion_mnist_0v6": {"proposed": [0.789156626506024, 0.018664979981722507], "logistic": [0.8421686746987952, 0.01394679144914485], "mlp": [0.8240963855421688, 0.014951414031314274], "ttn": [0.7867469879518072, 0.07314751439354476]},
-        "kmnist_2v3": {"proposed": [0.8843373493975903, 0.02330009591061892], "logistic": [0.946987951807229, 0.023609539689476416], "mlp": [0.9325301204819277, 0.016342963814759682], "ttn": [0.8674698795180722, 0.061787380264858215]},
-        "mnist_0v1": {"proposed": [0.9746987951807229, 0.012863949701242548], "logistic": [0.9951807228915662, 0.00450802094792042], "mlp": [0.9879518072289157, 0.008519358809476473], "ttn": [0.9614457831325302, 0.015983733929423625]},
-        "mnist_3v5": {"proposed": [0.8, 0.02961013428299883], "logistic": [0.9481927710843372, 0.01240437366383975], "mlp": [0.8771084337349399, 0.04420225621167263], "ttn": [0.7301204819277108, 0.046569031542379985]}
+        "fashion_mnist_0v6": {
+          "proposed": [
+            0.789156626506024,
+            0.018664979981722507
+          ],
+          "logistic": [
+            0.8421686746987952,
+            0.01394679144914485
+          ],
+          "mlp": [
+            0.8240963855421688,
+            0.014951414031314274
+          ],
+          "ttn": [
+            0.7867469879518072,
+            0.07314751439354476
+          ]
+        },
+        "kmnist_2v3": {
+          "proposed": [
+            0.8843373493975903,
+            0.02330009591061892
+          ],
+          "logistic": [
+            0.946987951807229,
+            0.023609539689476416
+          ],
+          "mlp": [
+            0.9325301204819277,
+            0.016342963814759682
+          ],
+          "ttn": [
+            0.8674698795180722,
+            0.061787380264858215
+          ]
+        },
+        "mnist_0v1": {
+          "proposed": [
+            0.9746987951807229,
+            0.012863949701242548
+          ],
+          "logistic": [
+            0.9951807228915662,
+            0.00450802094792042
+          ],
+          "mlp": [
+            0.9879518072289157,
+            0.008519358809476473
+          ],
+          "ttn": [
+            0.9614457831325302,
+            0.015983733929423625
+          ]
+        },
+        "mnist_3v5": {
+          "proposed": [
+            0.8,
+            0.02961013428299883
+          ],
+          "logistic": [
+            0.9481927710843372,
+            0.01240437366383975
+          ],
+          "mlp": [
+            0.8771084337349399,
+            0.04420225621167263
+          ],
+          "ttn": [
+            0.7301204819277108,
+            0.046569031542379985
+          ]
+        }
       },
-      "evidence": [{"path": "Results/evidence/q1_comparison.json", "pointer": "all arms.metrics.accuracy plus per-seed hashes and split IDs from the corrected 80-cell aggregate", "sha256": "73f3dbb8665a36e8c21b4dbc995d63e8001ff6e742bca562b9db4e2e63ae1ee6"}],
+      "evidence": [
+        {
+          "path": "Results/evidence/q1_comparison.json",
+          "pointer": "all arms.metrics.accuracy plus per-seed hashes and split IDs from the corrected 80-cell aggregate",
+          "sha256": "4911e90ce71b63b5e8f326e1f57738cb071e47c79e3ca5327939ee446bd862f3"
+        }
+      ],
       "caveat": "The aggregate is descriptive finite-seed evidence from the corrected 666/400/100/166 protocol; it does not establish equivalence, superiority, or quantum advantage."
     },
     {
       "id": "C-012",
-      "manuscript_locations": [488],
-      "category": ["comparison", "statistics"],
+      "manuscript_locations": [
+        488
+      ],
+      "category": [
+        "comparison",
+        "statistics"
+      ],
       "statement": "The primary FQCNN-versus-comparator paired accuracy tests are not significant after the declared Holm-Bonferroni correction; the observed ordering is below logistic regression and the MLP on all four tasks, while exceeding TTN on all four in mean accuracy.",
       "status": "supported_with_scope",
       "risk": "low",
       "evidence": [
-        {"path": "Results/evidence/q1_comparison.json", "pointer": "proposed_vs fields; corrected 80-cell aggregate has Wilcoxon p_holm values 0.75 or 1.0 and significant=false", "sha256": "73f3dbb8665a36e8c21b4dbc995d63e8001ff6e742bca562b9db4e2e63ae1ee6"}
+        {
+          "path": "Results/evidence/q1_comparison.json",
+          "pointer": "proposed_vs fields; corrected 80-cell aggregate has Wilcoxon p_holm values 0.75 or 1.0 and significant=false",
+          "sha256": "4911e90ce71b63b5e8f326e1f57738cb071e47c79e3ca5327939ee446bd862f3"
+        }
       ],
       "caveat": "Five paired seeds provide limited power; report the effect sizes and adjusted p-values without claiming equivalence or superiority."
     },
     {
       "id": "C-013",
-      "manuscript_locations": [46, 451, 524],
-      "category": ["pooling_ablation", "numerical_result"],
+      "manuscript_locations": [
+        46,
+        451,
+        524
+      ],
+      "category": [
+        "pooling_ablation",
+        "numerical_result"
+      ],
       "statement": "A completed pooling-transfer ablation quantifies the empirical behavior of the five pooling arms.",
       "status": "supported_with_scope",
       "risk": "medium",
       "evidence": [
-        {"path": "experiments/q1_pooling_transfer.py", "pointer": "frozen 15-cell Fashion-MNIST transfer runner", "sha256": "5a50687cd8c2c43afe06c044dcab605fad3fecd5755d99a4233006d91ba13ae8"},
-        {"path": "Results/q1_pooling_transfer", "pointer": "15 scientific status files, all complete; 3 canonical manifests with shared source-stable test identities", "status": "complete"},
-        {"path": "Results/evidence/q1_pooling_transfer.json", "pointer": "complete 3-seed aggregate with accuracy metrics and paired Wilcoxon/McNemar tests", "sha256": "1dd8caf062e9cbbde6778d5b5eb604dc67d396f369073b86f4f1807a39da7db3"}
+        {
+          "path": "experiments/q1_pooling_transfer.py",
+          "pointer": "frozen 15-cell Fashion-MNIST transfer runner",
+          "sha256": "d5e27c3740bab7bea136f3a109156617a7e7abb5868998211cfc4e2124804ad4"
+        },
+        {
+          "path": "Results/q1_pooling_transfer",
+          "pointer": "15 scientific status files, all complete; 3 canonical manifests with shared source-stable test identities",
+          "status": "complete"
+        },
+        {
+          "path": "Results/evidence/q1_pooling_transfer.json",
+          "pointer": "complete 3-seed aggregate with accuracy metrics and paired Wilcoxon/McNemar tests",
+          "sha256": "8fbaf0122ce1cf3e38bb5762c5c8fb0872a2046a949024fb9ec57ab6aaec7e9f"
+        }
       ],
       "caveat": "This is a three-seed, one-task, finite local statevector ablation; it does not establish a universal pooling ranking, hardware performance, or cost optimality."
     },
     {
       "id": "C-014",
-      "manuscript_locations": [490, 491, 500, 504],
-      "category": ["noise_scope", "hardware_scope"],
+      "manuscript_locations": [
+        490,
+        491,
+        500,
+        504
+      ],
+      "category": [
+        "noise_scope",
+        "hardware_scope"
+      ],
       "statement": "The Q1 package contains a bounded local validation experiment using clean checkpoints, depolarizing/dephasing channels, fixed validation subsets, and an isolated Qiskit/Aer environment.",
       "status": "supported_with_scope",
       "risk": "medium",
       "evidence": [
-        {"path": "Results/evidence/q1_noise_validation.json", "pointer": "six loaded checkpoints, two tasks, three seeds, 25 validation samples, four levels, 128 shots, test_data_used=false", "sha256": "401ff57a545b987982a9e15ee95475f145ed11d8365a09fb63f7454703be3e1e"},
-        {"path": "requirements-qiskit-lock.txt", "pointer": "isolated Qiskit/Aer environment lock", "sha256": "97ea5292428d071769f500866f06f32d408f1720731b6a2e5751f14bbe9bd6a8"}
+        {
+          "path": "Results/evidence/q1_noise_validation.json",
+          "pointer": "six loaded checkpoints, two tasks, three seeds, 25 validation samples, four levels, 128 shots, test_data_used=false",
+          "sha256": "401ff57a545b987982a9e15ee95475f145ed11d8365a09fb63f7454703be3e1e"
+        },
+        {
+          "path": "requirements-qiskit-lock.txt",
+          "pointer": "isolated Qiskit/Aer environment lock",
+          "sha256": "97ea5292428d071769f500866f06f32d408f1720731b6a2e5751f14bbe9bd6a8"
+        }
       ],
       "caveat": "The artifact supports local simulator evidence only. It does not support a general noise-robustness, accuracy-retention, calibration, or device claim."
     },
     {
       "id": "C-015",
-      "manuscript_locations": [258, 260],
-      "category": ["numerical_result", "pooling_control"],
+      "manuscript_locations": [
+        258,
+        260
+      ],
+      "category": [
+        "numerical_result",
+        "pooling_control"
+      ],
       "statement": "Compressed-wire dephasing changes the readout by at most 5.86e-14, while retained-wire dephasing changes it by 0.4094; the compressed-wire control leaves decisions unchanged.",
       "status": "supported_with_scope",
       "risk": "medium",
       "evidence": [
-        {"path": "Results/evidence/e2_dephasing.json", "pointer": "canonical values are 5.8619775700208265e-14 and 0.40942027318285645", "sha256": "2dea23e372ffc9ed9301616c3ff5aa1ea45cd6e8e657656576e8d195fcfa1a6a"}
+        {
+          "path": "Results/evidence/e2_dephasing.json",
+          "pointer": "canonical values are 5.8619775700208265e-14 and 0.40942027318285645",
+          "sha256": "2dea23e372ffc9ed9301616c3ff5aa1ea45cd6e8e657656576e8d195fcfa1a6a"
+        }
       ],
       "caveat": "This is a finite archived-weight circuit-level control, not end-to-end device-noise robustness. The manuscript now uses rounded values consistent with the artifact."
     },
     {
       "id": "C-016",
-      "manuscript_locations": [226, 242, 515],
-      "category": ["gate_cost", "pooling_practicality"],
+      "manuscript_locations": [
+        226,
+        242,
+        515
+      ],
+      "category": [
+        "gate_cost",
+        "pooling_practicality"
+      ],
       "statement": "The frozen coherent pooling block reproduces the measure-and-condition class at no gate-count overhead and sits at minimal gate cost.",
       "status": "retired",
       "risk": "low",
       "evidence": [
-        {"path": "Results/evidence/q1_pooling_practicality.json", "pointer": "pool_measurement=87 logical/87 decomposed/401 transpiled; pool_unitary=90/108/457; pool_none=78/78/381", "sha256": "91c70bd35918f8e7cdac2de67fd60f3aa2c8e620d788f842f3c23195153e5eca"},
-        {"path": "Results/evidence/e1_pooling_equivalence.json", "pointer": "exact channel equivalence, but no gate-cost theorem", "sha256": "126eed664de340370af37047eaeebf540732e0c03005ca47eb152114dfe344e0"}
+        {
+          "path": "Results/evidence/q1_pooling_practicality.json",
+          "pointer": "pool_measurement=87 logical/87 decomposed/401 transpiled; pool_unitary=90/108/457; pool_none=78/78/381",
+          "sha256": "91c70bd35918f8e7cdac2de67fd60f3aa2c8e620d788f842f3c23195153e5eca"
+        },
+        {
+          "path": "Results/evidence/e1_pooling_equivalence.json",
+          "pointer": "exact channel equivalence, but no gate-cost theorem",
+          "sha256": "126eed664de340370af37047eaeebf540732e0c03005ca47eb152114dfe344e0"
+        }
       ],
       "resolution": "The current manuscript withdraws the cost-optimality wording and reports the measured target-specific resource caveat. The local records show pool_unitary=457 transpiled instructions versus pool_measurement=401 under FakePeekskill; exact channel equivalence does not imply gate-count minimality."
     },
     {
       "id": "C-017",
-      "manuscript_locations": [500, 501],
-      "category": ["resources", "hardware_scope"],
+      "manuscript_locations": [
+        500,
+        501
+      ],
+      "category": [
+        "resources",
+        "hardware_scope"
+      ],
       "statement": "The study reports logical, decomposed, and transpiled resource counts for n=4,6,8,10 and a controlled fake-backend pooling comparison.",
       "status": "supported_with_scope",
       "risk": "medium",
       "evidence": [
-        {"path": "Results/evidence/q1_resources.json", "pointer": "four n-qubit resource records; all target validation arrays empty and transpilation pass", "sha256": "a5b4e23fc2168766bbecca1bb5d88d33931d6102d13967aacace19fa4652ab0c"},
-        {"path": "Results/evidence/q1_pooling_practicality.json", "pointer": "five pooling arms against FakePeekskill", "sha256": "91c70bd35918f8e7cdac2de67fd60f3aa2c8e620d788f842f3c23195153e5eca"}
+        {
+          "path": "Results/evidence/q1_resources.json",
+          "pointer": "four n-qubit resource records; all target validation arrays empty and transpilation pass",
+          "sha256": "a5b4e23fc2168766bbecca1bb5d88d33931d6102d13967aacace19fa4652ab0c"
+        },
+        {
+          "path": "Results/evidence/q1_pooling_practicality.json",
+          "pointer": "five pooling arms against FakePeekskill",
+          "sha256": "91c70bd35918f8e7cdac2de67fd60f3aa2c8e620d788f842f3c23195153e5eca"
+        }
       ],
       "caveat": "These are local structural estimates, not hardware runs, scalability proofs, or deployment readiness."
     },
     {
       "id": "C-018",
-      "manuscript_locations": [318, 501, 504, 524],
-      "category": ["hardware_scope", "reproducibility"],
+      "manuscript_locations": [
+        318,
+        501,
+        504,
+        524
+      ],
+      "category": [
+        "hardware_scope",
+        "reproducibility"
+      ],
       "statement": "The fake-backend rehearsal contacted no provider and submitted no job.",
       "status": "supported",
       "risk": "low",
       "evidence": [
-        {"path": "Results/evidence/q1_fake_backend_rehearsal.json", "pointer": "credentials_accessed=false; network_accessed=false; authenticated=false; submitted=false", "sha256": "7523b4d99c661c30b6b7b39306b8e4f7346ebd01a932a104e0a03307449da467"}
+        {
+          "path": "Results/evidence/q1_fake_backend_rehearsal.json",
+          "pointer": "credentials_accessed=false; network_accessed=false; authenticated=false; submitted=false",
+          "sha256": "7523b4d99c661c30b6b7b39306b8e4f7346ebd01a932a104e0a03307449da467"
+        }
       ],
       "caveat": "This explicitly limits the result to local rehearsal and cannot be used as physical-device evidence."
     },
     {
       "id": "C-019",
-      "manuscript_locations": [280, 315, 451, 504, 518],
-      "category": ["trainability", "finite_diagnostics"],
+      "manuscript_locations": [
+        280,
+        315,
+        451,
+        504,
+        518
+      ],
+      "category": [
+        "trainability",
+        "finite_diagnostics"
+      ],
       "statement": "Finite gradient-variance, expressibility, DLA, and bound diagnostics characterize the frozen ansatz under declared simulator protocols.",
       "status": "supported_with_scope",
       "risk": "medium",
       "evidence": [
-        {"path": "Results/evidence/f_e_gradient_variance.json", "pointer": "n=4..14 finite gradient-variance sweep", "sha256": "1d369a18033991fbb9564bbefd7ee2520f15a932f8c2f7f7d1e2ae4e9f4cce5d"},
-        {"path": "Results/evidence/t6_dynamical_lie_algebra.json", "pointer": "frozen generator/DLA audit", "sha256": "3aa219b01f71bfe480fde10c5a269d3d83251784beebe264020812fa1c029438"},
-        {"path": "Results/evidence/t6_expressibility.json", "pointer": "3000-sample expressibility and Meyer-Wallach diagnostic", "sha256": "e81a71ecd366c784a338d0ae93613efdf25cd1118f12016f9b31245226a264f8"},
-        {"path": "Results/evidence/t6_generalization_bound.json", "pointer": "finite gate-count reading and explicit big-O caveats", "sha256": "e0e84258a33046aee2bba102d35933d3f6cb0d1cf0ee635369d28b0a94425376"}
+        {
+          "path": "Results/evidence/f_e_gradient_variance.json",
+          "pointer": "n=4..14 finite gradient-variance sweep",
+          "sha256": "1d369a18033991fbb9564bbefd7ee2520f15a932f8c2f7f7d1e2ae4e9f4cce5d"
+        },
+        {
+          "path": "Results/evidence/t6_dynamical_lie_algebra.json",
+          "pointer": "frozen generator/DLA audit",
+          "sha256": "3aa219b01f71bfe480fde10c5a269d3d83251784beebe264020812fa1c029438"
+        },
+        {
+          "path": "Results/evidence/t6_expressibility.json",
+          "pointer": "3000-sample expressibility and Meyer-Wallach diagnostic",
+          "sha256": "e81a71ecd366c784a338d0ae93613efdf25cd1118f12016f9b31245226a264f8"
+        },
+        {
+          "path": "Results/evidence/t6_generalization_bound.json",
+          "pointer": "finite gate-count reading and explicit big-O caveats",
+          "sha256": "e0e84258a33046aee2bba102d35933d3f6cb0d1cf0ee635369d28b0a94425376"
+        }
       ],
       "caveat": "These diagnostics do not establish absence of barren plateaus, universal trainability, asymptotic generalisation, or a favorable scaling law."
     },
     {
       "id": "C-020",
-      "manuscript_locations": [335, 361, 504],
-      "category": ["dataset_provenance", "scope"],
+      "manuscript_locations": [
+        335,
+        361,
+        504
+      ],
+      "category": [
+        "dataset_provenance",
+        "scope"
+      ],
       "statement": "The Q1 matrix covers four binary tasks from MNIST, Fashion-MNIST, and KMNIST with persisted source identities, checksums, ordered sample IDs, and split manifests.",
       "status": "supported_with_scope",
       "risk": "medium",
       "evidence": [
-        {"path": "Results/evidence/q1_dataset_provenance.json", "pointer": "three dataset records and four frozen tasks", "sha256": "32f32731c202cdca7cbf38efd7c073ef48d5a1f53efcd08183b904fb062ffbed"},
-        {"path": "Results/evidence/q1_comparison.json", "pointer": "per-task split IDs and per-run artifact hashes from 80 complete corrected cells", "sha256": "73f3dbb8665a36e8c21b4dbc995d63e8001ff6e742bca562b9db4e2e63ae1ee6"}
+        {
+          "path": "Results/evidence/q1_dataset_provenance.json",
+          "pointer": "three dataset records and four frozen tasks",
+          "sha256": "4c44bdf3c1211d7d26d3815a13e29bf20724d776b5b4cf6cb78fea81e947bb8d"
+        },
+        {
+          "path": "Results/evidence/q1_comparison.json",
+          "pointer": "per-task split IDs and per-run artifact hashes from 80 complete corrected cells",
+          "sha256": "4911e90ce71b63b5e8f326e1f57738cb071e47c79e3ca5327939ee446bd862f3"
+        }
       ],
       "caveat": "The registry and provenance artifact now use matching HTTPS source URLs. The corrected Q1 manifests report n_total=666 with train/validation/test=400/100/166; local MNIST entries still lack expected remote SHA-256 values."
     },
     {
       "id": "C-021",
-      "manuscript_locations": [54, 56, 58, 85, 88, 94, 510, 515, 518],
-      "category": ["citation_scope", "novelty"],
+      "manuscript_locations": [
+        54,
+        56,
+        58,
+        85,
+        88,
+        94,
+        510,
+        515,
+        518
+      ],
+      "category": [
+        "citation_scope",
+        "novelty"
+      ],
       "statement": "The cited prior work supports the manuscript's claims about QCNN locality, hardware constraints, trainability, noise, and comparative context.",
       "status": "supported_with_scope",
       "risk": "low",
       "evidence": [
-        {"path": "docs/paper_code_reconciliation.md", "pointer": "final citation-scope pass: 34 cited keys and entries, zero missing keys, zero uncited entries; ref44 dependency removed", "sha256": "97f56bd925f357643206e9f0eae89d413b62825d786b006175c36a1f5b4c1a04"},
-        {"path": "Results/evidence/q1_fast_track_inventory.json", "pointer": "latest inventory findings for image locality, hardware scope, trainability, and manuscript scope", "sha256": "b2d82ed83eec6b097d098c56340290a53e18df7ccabfafe54a740f7b3070ef4b"}
+        {
+          "path": "docs/paper_code_reconciliation.md",
+          "pointer": "final citation-scope pass: 34 cited keys and entries, zero missing keys, zero uncited entries; ref44 dependency removed",
+          "sha256": "d0f9fbdc727df0edc6426c5f1498d40c40d792db58f03732dc644b89cbb2d3bc"
+        },
+        {
+          "path": "Results/evidence/q1_fast_track_inventory.json",
+          "pointer": "latest inventory findings for image locality, hardware scope, trainability, and manuscript scope",
+          "sha256": "b2d82ed83eec6b097d098c56340290a53e18df7ccabfafe54a740f7b3070ef4b"
+        }
       ],
       "resolution": "The final repository citation pass confirms one matching bibliography entry for each of 34 cited keys, zero undefined or uncited entries, removal of ref44, and bounded wording for register-index locality, finite trainability, and within-study comparison. Independent venue/editorial and novelty assessment remains external."
     },
     {
       "id": "C-022",
-      "manuscript_locations": [443, 445, 446],
-      "category": ["figures", "historical_scope"],
+      "manuscript_locations": [
+        443,
+        445,
+        446
+      ],
+      "category": [
+        "figures",
+        "historical_scope"
+      ],
       "statement": "The current manuscript uses a Q1 comparison figure generated from the corrected aggregate; legacy single-seed figures are excluded from the manuscript and retained only as repository provenance.",
       "status": "supported_with_scope",
       "risk": "low",
       "evidence": [
-        {"path": "fqcnn.tex", "pointer": "current q1_comparison figure include and caption at lines 443-447", "status": "manuscript_scope"},
-        {"path": "figs_final/q1_comparison.png", "pointer": "Q1 comparison figure generated from corrected aggregate", "sha256": "f067f053b237efd42d6fa1af268ab3cdd33ee24584a35f3d43fec3babdd3f30e"},
-        {"path": "Results/evidence/q1_comparison.json", "pointer": "source aggregate", "sha256": "73f3dbb8665a36e8c21b4dbc995d63e8001ff6e742bca562b9db4e2e63ae1ee6"}
+        {
+          "path": "fqcnn.tex",
+          "pointer": "current q1_comparison figure include and caption at lines 443-447",
+          "status": "manuscript_scope"
+        },
+        {
+          "path": "figs_final/q1_comparison.png",
+          "pointer": "Q1 comparison figure generated from corrected aggregate",
+          "sha256": "f067f053b237efd42d6fa1af268ab3cdd33ee24584a35f3d43fec3babdd3f30e"
+        },
+        {
+          "path": "Results/evidence/q1_comparison.json",
+          "pointer": "source aggregate",
+          "sha256": "4911e90ce71b63b5e8f326e1f57738cb071e47c79e3ca5327939ee446bd862f3"
+        }
       ],
       "resolution": "The legacy figure includes (fig5--fig11) were removed from the current manuscript; figs_final/q1_comparison.png is now the publication figure and is bound to the corrected Q1 aggregate."
     },
     {
       "id": "C-023",
-      "manuscript_locations": [46, 62, 64, 68, 71, 451, 488, 504, 524],
-      "category": ["negative_result", "hardware_scope"],
+      "manuscript_locations": [
+        46,
+        62,
+        64,
+        68,
+        71,
+        451,
+        488,
+        504,
+        524
+      ],
+      "category": [
+        "negative_result",
+        "hardware_scope"
+      ],
       "statement": "The current evidence supports an architectural contribution and a bounded negative within-study accuracy result, not quantum advantage, universal trainability, device noise robustness, or real-QPU performance.",
       "status": "supported_with_scope",
       "risk": "low",
       "evidence": [
-        {"path": "Results/evidence/q1_comparison.json", "pointer": "corrected 80-cell matched-arm aggregate and multiplicity-adjusted paired tests", "sha256": "73f3dbb8665a36e8c21b4dbc995d63e8001ff6e742bca562b9db4e2e63ae1ee6"},
-        {"path": "Results/evidence/q1_noise_validation.json", "pointer": "local Aer-only scope", "sha256": "401ff57a545b987982a9e15ee95475f145ed11d8365a09fb63f7454703be3e1e"},
-        {"path": "Results/evidence/q1_fake_backend_rehearsal.json", "pointer": "no provider contact or submission", "sha256": "7523b4d99c661c30b6b7b39306b8e4f7346ebd01a932a104e0a03307449da467"}
+        {
+          "path": "Results/evidence/q1_comparison.json",
+          "pointer": "corrected 80-cell same-split aggregate and multiplicity-adjusted paired tests",
+          "sha256": "4911e90ce71b63b5e8f326e1f57738cb071e47c79e3ca5327939ee446bd862f3"
+        },
+        {
+          "path": "Results/evidence/q1_noise_validation.json",
+          "pointer": "local Aer-only scope",
+          "sha256": "401ff57a545b987982a9e15ee95475f145ed11d8365a09fb63f7454703be3e1e"
+        },
+        {
+          "path": "Results/evidence/q1_fake_backend_rehearsal.json",
+          "pointer": "no provider contact or submission",
+          "sha256": "7523b4d99c661c30b6b7b39306b8e4f7346ebd01a932a104e0a03307449da467"
+        }
       ],
       "caveat": "This claim remains bounded by the corrected finite protocol and is conditional on resolving the provenance/citation release item."
     }
   ],
   "retired_or_withdrawn_claims": [
-    {"id": "R-RET-001", "statement": "Dual-stage local feature-map/ring-correlation encoding is the main executed path.", "status": "retired", "reason": "The frozen main path uses one global AmplitudeEmbedding operation."},
-    {"id": "R-RET-002", "statement": "Register-index windows guarantee image-space translational equivariance or spatially bounded noise propagation.", "status": "retired", "reason": "Global amplitude encoding breaks the required pixel/register locality implication."},
-    {"id": "R-RET-003", "statement": "The architecture is intrinsically error-resilient, retains accuracy for p<=0.05, or has universal trainability/generalisation guarantees.", "status": "retired", "reason": "Only finite local diagnostics and bounded simulator noise records are available."},
-    {"id": "R-RET-004", "statement": "FQCNN superiority or competitive accuracy is established against heterogeneous prior literature.", "status": "retired", "reason": "The current Q1 aggregate is a matched within-study comparison and does not show dominance."},
-    {"id": "R-RET-005", "statement": "The historical 98% MNIST single-seed result is the final multi-domain headline.", "status": "retired", "reason": "The Q1 aggregate supplies the current performance evidence; the historical result is provenance only."}
-  ],
-  "unresolved_items": [
     {
-      "id": "U-005",
-      "severity": "medium",
-      "issue": "The local MNIST provenance records observed SHA-256 values but no expected remote SHA-256 values; the source snapshot identity needs an explicit release note.",
-      "manuscript_locations": [331, 357],
-      "evidence": ["Results/evidence/q1_dataset_provenance.json", "QCNN/utils/dataset_registry.py"],
-      "required_action": "Document the official IDX snapshot provenance and decide whether expected SHA-256 values can be pinned for the local MNIST files."
+      "id": "R-RET-001",
+      "statement": "Dual-stage local feature-map/ring-correlation encoding is the main executed path.",
+      "status": "retired",
+      "reason": "The frozen main path uses one global AmplitudeEmbedding operation."
     },
     {
-      "id": "U-008",
-      "severity": "medium",
-      "issue": "The aggregate artifact carries per-run artifact hashes but does not directly bind the aggregate to a source-code hash or immutable environment lock.",
-      "manuscript_locations": [469, 484],
-      "evidence": "Results/evidence/q1_comparison.json",
-      "required_action": "For release packaging, retain the source hashes in this ledger alongside the exact runner, circuit, dataset-registry, split, metric, and lock files; ideally regenerate the aggregate with explicit provenance fields."
+      "id": "R-RET-002",
+      "statement": "Register-index windows guarantee image-space translational equivariance or spatially bounded noise propagation.",
+      "status": "retired",
+      "reason": "Global amplitude encoding breaks the required pixel/register locality implication."
     },
     {
-      "id": "U-009",
-      "severity": "medium",
-      "issue": "The 8.3e-16 discarded-wire removal number and the no-pooling >1e-6 control are not both represented in a canonical standalone JSON artifact.",
-      "manuscript_locations": [227, 256],
-      "evidence": ["docs/paper_code_reconciliation.md", "tests/test_pooling_equivalence.py"],
-      "required_action": "Archive reproducible control outputs or limit the manuscript to the analytic invariant and values present in E1/E2."
+      "id": "R-RET-003",
+      "statement": "The architecture is intrinsically error-resilient, retains accuracy for p<=0.05, or has universal trainability/generalisation guarantees.",
+      "status": "retired",
+      "reason": "Only finite local diagnostics and bounded simulator noise records are available."
+    },
+    {
+      "id": "R-RET-004",
+      "statement": "FQCNN superiority or competitive accuracy is established against heterogeneous prior literature.",
+      "status": "retired",
+      "reason": "The current Q1 aggregate is a same-split within-study comparison and does not show dominance."
+    },
+    {
+      "id": "R-RET-005",
+      "statement": "The historical 98% MNIST single-seed result is the final multi-domain headline.",
+      "status": "retired",
+      "reason": "The Q1 aggregate supplies the current performance evidence; the historical result is provenance only."
     }
   ],
+  "unresolved_items": [],
   "resolved_items": [
     {
       "id": "U-003",
@@ -616,6 +1390,21 @@
       "id": "U-007",
       "status": "resolved",
       "resolution": "The final repository citation pass confirms one matching bibliography entry for each of 34 cited keys, zero undefined or uncited entries, removal of the ref44 dependency, and bounded wording for register-index locality, finite trainability, and within-study comparison. Independent venue/editorial and novelty assessment remains external."
+    },
+    {
+      "id": "U-005",
+      "status": "resolved",
+      "resolution": "The MNIST registry now pins expected MD5 and SHA-256 values for all four local IDX files, records the uncompressed official snapshot identity, and fails closed without a registry download path."
+    },
+    {
+      "id": "U-008",
+      "status": "resolved",
+      "resolution": "The comparison and pooling-transfer aggregates now carry source-file, lock, runtime-package, and per-run artifact SHA-256 provenance bindings."
+    },
+    {
+      "id": "U-009",
+      "status": "resolved",
+      "resolution": "q1_pooling_controls.json archives the fixed-input inert-gate removal and no-pooling positive-control readouts with thresholds and source hashes."
     }
   ],
   "release_blockers": [],
@@ -627,5 +1416,5 @@
     "Noise and fake-backend evidence are local only; no physical-device inference is admissible.",
     "The current Q1 figure is artifact-bound, and the repository citation-scope pass is closed; medium provenance and packaging notes remain for release hygiene."
   ],
-  "next_audit_command": "Before release, address medium U-005/U-008/U-009 notes, recompute every source/artifact SHA-256, refresh the inventory snapshot, parse this JSON, verify that no active claim has pending/numeric_mismatch/unsupported_scope status, and render the final PDF for final visual inspection."
+  "next_audit_command": "Run scripts/run_q1_reproduction.py from a clean tracked checkout, validate its JSON report, rebuild the three-pass PDF, refresh this ledger's hashes, then run scripts/build_q1_submission_package.py and verify the archive SHA-256."
 }

@@ -145,6 +145,14 @@ def test_comparison_aggregation_validates_and_pairs_the_frozen_matrix(tmp_path):
     assert result["arms"]["proposed"]["metrics"]["accuracy"]["mean"] == 1.0
     assert set(result["proposed_vs"]) == {"logistic", "mlp", "ttn"}
     assert payload["protocol"]["multiplicity"]["n_tests"] == 3
+    source_paths = {
+        item["path"] for item in payload["provenance"]["source_files"]
+    }
+    assert "experiments/q1_fast_track_analysis.py" in source_paths
+    assert "QCNN/circuits.py" in source_paths
+    assert payload["provenance"]["environment"]["lock_files"][0]["path"] == (
+        "requirements-lock.txt"
+    )
 
 
 def test_comparison_aggregation_rejects_a_split_mismatch(tmp_path):

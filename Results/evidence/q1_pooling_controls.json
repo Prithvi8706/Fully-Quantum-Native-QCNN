@@ -1,0 +1,157 @@
+{
+  "claim_scope": "fixed-parameter simulator controls for the frozen pooling block; not an accuracy, hardware, or gate-optimality result",
+  "inert_discard_rotation": {
+    "abs_differences": [
+      5.551115123125783e-17,
+      1.1102230246251565e-16,
+      2.220446049250313e-16,
+      1.6653345369377348e-16,
+      0.0,
+      0.0,
+      1.6653345369377348e-16,
+      1.1102230246251565e-16
+    ],
+    "baseline_readouts": [
+      -0.3536847418769636,
+      -0.33638818015595734,
+      -0.3209078873687442,
+      -0.31254304685802725,
+      -0.3073866045474496,
+      -0.3297876910795754,
+      -0.36849411228793394,
+      -0.33788699445711556
+    ],
+    "evaluation_method": "remove matching operations from an evaluation tape; do not modify the frozen source circuit",
+    "max_abs_difference": 2.220446049250313e-16,
+    "operation": "RY(0.02) on each compressed wire",
+    "passes": true,
+    "removed_operations_per_circuit": 8,
+    "removed_readouts": [
+      -0.35368474187696364,
+      -0.33638818015595723,
+      -0.3209078873687444,
+      -0.3125430468580274,
+      -0.3073866045474496,
+      -0.3297876910795754,
+      -0.3684941122879341,
+      -0.3378869944571157
+    ],
+    "tolerance": 1e-12
+  },
+  "no_pooling_positive_control": {
+    "abs_differences": [
+      0.04201615528609148,
+      0.045797782078871474,
+      0.047731098187696386,
+      0.07705506825165331,
+      0.08002187961991691,
+      0.07614859805496171,
+      0.03525254761867558,
+      0.047033192633270327
+    ],
+    "comparator": "pooling disabled",
+    "comparator_readouts": [
+      -0.39570089716305507,
+      -0.3821859622348288,
+      -0.3686389855564406,
+      -0.38959811510968057,
+      -0.3874084841673665,
+      -0.4059362891345371,
+      -0.4037466599066095,
+      -0.3849201870903859
+    ],
+    "max_abs_difference": 0.08002187961991691,
+    "passes": true,
+    "reference": "unitary pooling",
+    "reference_readouts": [
+      -0.3536847418769636,
+      -0.33638818015595734,
+      -0.3209078873687442,
+      -0.31254304685802725,
+      -0.3073866045474496,
+      -0.3297876910795754,
+      -0.36849411228793394,
+      -0.33788699445711556
+    ],
+    "threshold": 1e-06
+  },
+  "protocol": {
+    "device": "default.qubit",
+    "image_size": 28,
+    "input_seed": 20260725,
+    "model_seed": 42,
+    "n_inputs": 8,
+    "n_qubits": 10,
+    "weight_artifact": {
+      "path": "Results/Weights/quantum_model_params.npz",
+      "sha256": "ee6f0243972a90d7a980be2c4d0f61d66896e14366174a1125b081a84952212b"
+    },
+    "weights": "archived headline weights"
+  },
+  "provenance": {
+    "environment": {
+      "lock_files": [
+        {
+          "bytes": 888,
+          "path": "requirements-lock.txt",
+          "sha256": "d731ba28b02eb9c7cd39ecdacc193f8eae6f34dfddf528fea5c0b9af63827efe"
+        }
+      ],
+      "packages": {
+        "numpy": "1.26.4",
+        "pennylane": "0.38.0",
+        "pennylane-lightning": "0.38.0",
+        "scikit-learn": "1.6.1",
+        "scipy": "1.13.1"
+      },
+      "python": "3.9.13"
+    },
+    "hash_algorithm": "sha256",
+    "schema": {
+      "name": "fqcnn_evidence_provenance",
+      "version": 1
+    },
+    "source_files": [
+      {
+        "bytes": 2810,
+        "path": "experiments/evidence_provenance.py",
+        "sha256": "646d57c5bee428dd63c1b881307b0c44d1f4f347faa07e82113c4beace721e5f"
+      },
+      {
+        "bytes": 32308,
+        "path": "experiments/pooling_analysis.py",
+        "sha256": "b605e583db271285416ac7064ddedebb1868ab0062bec7595edef44baf41b030"
+      },
+      {
+        "bytes": 5878,
+        "path": "QCNN/circuits.py",
+        "sha256": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09"
+      },
+      {
+        "bytes": 9076,
+        "path": "QCNN/freeze.py",
+        "sha256": "1e8ec3480459f1fc1bc4af50b6fbe01c388a2d1ab6a7013ca0c05163012f7e0f"
+      },
+      {
+        "bytes": 7524,
+        "path": "QCNN/config/Qconfig.py",
+        "sha256": "6deeb6c445a5116a2e67d6b08262bdf59ff0633ac000cfa900204c714592447e"
+      },
+      {
+        "bytes": 14484,
+        "path": "QCNN/layers/QPool.py",
+        "sha256": "f10169f5cbd06646159276ce62011171e6bcee911a8ff7fe3ba163fd58ff9601"
+      },
+      {
+        "bytes": 9571,
+        "path": "QCNN/models/QCNNModel.py",
+        "sha256": "d63083b6120503e0616db37e65d879d88ba1863a6f7b24352512ab70fb5f03ce"
+      }
+    ]
+  },
+  "schema": {
+    "name": "fqcnn_q1_pooling_controls",
+    "version": 1
+  },
+  "status": "pass"
+}

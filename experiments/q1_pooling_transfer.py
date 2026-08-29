@@ -39,6 +39,7 @@ import numpy as np
 from QCNN.utils import dataset_registry, run_artifacts
 from QCNN.utils import splits as split_service
 from QCNN.utils.metrics import compute_classification_metrics
+from experiments import evidence_provenance
 from experiments import statistics as qstats
 
 
@@ -68,6 +69,21 @@ DEFAULT_EVIDENCE = Path("Results") / "evidence" / "q1_pooling_transfer.json"
 FROZEN_TRAIN_SAMPLES = 400
 FROZEN_TOTAL_SAMPLES = 666
 FROZEN_EPOCHS = 30
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+TRANSFER_PROVENANCE_SOURCES = (
+    "experiments/evidence_provenance.py",
+    "experiments/q1_pooling_transfer.py",
+    "experiments/run_experiments.py",
+    "experiments/statistics.py",
+    "QCNN/circuits.py",
+    "QCNN/config/Qconfig.py",
+    "QCNN/layers/QPool.py",
+    "QCNN/models/QCNNModel.py",
+    "QCNN/utils/dataset_registry.py",
+    "QCNN/utils/metrics.py",
+    "QCNN/utils/run_artifacts.py",
+    "QCNN/utils/splits.py",
+)
 
 
 def _sha256_bytes(payload: bytes) -> str:
@@ -381,6 +397,7 @@ def build_transfer(
     manifests_root: Optional[Path] = None,
     source_provenance: Optional[dict] = None,
     expected_role: str = "scientific",
+    provenance_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Validate and aggregate the frozen Fashion-MNIST transfer matrix."""
     seeds, arms = _validate_design(seeds, arms)
@@ -516,6 +533,10 @@ def build_transfer(
     return {
         "schema": SCHEMA,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "provenance": evidence_provenance.build_binding(
+            _REPOSITORY_ROOT if provenance_root is None else Path(provenance_root),
+            source_paths=TRANSFER_PROVENANCE_SOURCES,
+        ),
         "protocol": {
             "dataset": DATASET,
             "classes": list(CLASSES),

@@ -1,6 +1,7 @@
 #Venv 
 .venv
 venv/
+.venv-q1-training/
 
 #pycache
 QCNN/__pycache__
@@ -47,3 +48,8 @@ Results/q1_pooling_transfer/runs/
 # Q1 transfer transcripts are reproducible and are not evidence.
 Results/q1_pooling_transfer/experiments/**/*.log
 Results/smoke/
+
+# Final submission archives are deterministic release outputs built from a
+# clean commit. Keep them local (or attach them to a release) rather than
+# storing generated ZIP files in Git.
+submission_dist/
