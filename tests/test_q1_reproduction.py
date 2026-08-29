@@ -30,5 +30,6 @@ def test_report_redaction_removes_absolute_workstation_paths(tmp_path: Path):
     escaped_raw = raw.replace("\\", "\\\\")
     redacted = reproduction._redact(raw + " " + escaped_raw, tmp_path)
     assert "C:\\" not in redacted
+    assert "prith" not in redacted
     assert "<temporary>" not in redacted  # arbitrary paths are redacted generically
     assert "<absolute-path>" in redacted

@@ -162,7 +162,14 @@ def _redact(value: str, root: Path) -> str:
     }
     for source, target in replacements.items():
         text = text.replace(source, target)
-    return _ABSOLUTE_WINDOWS_PATH.sub("<absolute-path>", text)
+    text = _ABSOLUTE_WINDOWS_PATH.sub("<absolute-path>", text)
+    # MiKTeX may wrap an absolute path at the terminal width, splitting the
+    # drive prefix from the remainder.  Remove the residual identity markers
+    # as a final defense for persisted logs.
+    if Path.home().name:
+        text = text.replace(Path.home().name, "<user>")
+    text = text.replace("C:", "<drive>").replace("c:", "<drive>")
+    return text
 
 
 def run_command(
