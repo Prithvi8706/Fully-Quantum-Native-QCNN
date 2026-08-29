@@ -3,7 +3,7 @@
     "name": "fqcnn_q1_claim_ledger",
     "version": 2
   },
-  "generated_at_utc": "2026-08-29T17:20:13.515798Z",
+  "generated_at_utc": "2026-08-29T17:53:11.518799Z",
   "status": "ready_for_release",
   "purpose": "Machine-readable audit of numerical and scope-sensitive claims against the current manuscript and the evidence available at ledger generation time. A claim is not publication-ready unless its status is supported or supported_with_scope and every required action is closed.",
   "scope": {
@@ -44,9 +44,9 @@
     "tests/fixtures/effective_params.json": "6c5021a78d4fce3ddecc331f08ec88ec4c7b252d8c0d74405b3f94d61622947f",
     "tests/fixtures/headline_signature.json": "773080573f9da762aaae93bfa46128cfc272854ad8cc31f0392c1233f77f6b54",
     "tests/fixtures/headline_expectations.npz": "46072f1eb8763b0233e42382253c3b602176f07feeb591ee0e173c840d93ab0e",
-    "scripts/build_q1_submission_package.py": "21909f6e815155bf692b502b77de4a03c2fe6430b2b38ae209770525a21ae489",
+    "scripts/build_q1_submission_package.py": "d018ae603665b4f46022b3a1c92e276f323d234792414ae0e7fcddba979cbb56",
     "scripts/refresh_q1_claim_ledger.py": "7f4e2aa93205086a8cc0aee2802e6bf54ad322579490544860833bf86e7a74cf",
-    "scripts/run_q1_reproduction.py": "2303c30693e39b170bc1a8c773c18c09a35dca773bc85cb6449718a3e1edf560"
+    "scripts/run_q1_reproduction.py": "b912401ed772acb6177fa7ac8004a03a1307344ea419c77db0afb5b827d0f679"
   },
   "artifact_inventory": [
     {
@@ -517,6 +517,34 @@
         "no_pooling_max_abs_difference": 0.08002187961991691
       },
       "scope": "fixed-parameter simulator controls for the frozen pooling block; not an accuracy, hardware, or gate-optimality result"
+    },
+    {
+      "id": "A-016",
+      "path": "Results/evidence/q1_reproduction.json",
+      "status": "pass",
+      "sha256": "ae3235746bf5eb7dbf037ecc0dd38dd1fd52c76eb20f52d8a55bf010b1f6f512",
+      "protocol": {
+        "pytest": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 4,
+          "status": "pass",
+          "tests": 631,
+          "time_seconds": 425.361
+        },
+        "checks": [
+          "full pytest suite",
+          "ruff release-source check",
+          "Python bytecode compilation",
+          "LaTeX build pass 1",
+          "LaTeX build pass 2",
+          "LaTeX build pass 3",
+          "training environment dependency check",
+          "isolated Qiskit dependency check",
+          "isolated Qiskit schedule contract"
+        ]
+      },
+      "scope": "clean tracked-checkout release validation; no journal or QPU submission"
     }
   ],
   "non_substitutable_artifacts": [

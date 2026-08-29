@@ -20,7 +20,7 @@ paper; it is not permission to broaden the claim.
 | 11 | Are simulator, fake backend, local transpilation, and real hardware distinct? | `README.md`; `fqcnn.tex` limitations; `Results/evidence/q1_fake_backend_rehearsal.json` | High | Pass: no real-QPU job is claimed or submitted |
 | 12 | Are advantage, locality, scalability, and robustness claims no stronger than evidence? | `fqcnn.tex` introduction, results, limitations; reconciliation table | High | Pass |
 | 13 | Does every numerical manuscript claim trace to committed evidence? | `Results/evidence/q1_claim_ledger.json`; source/artifact SHA-256 records | High | Pass after final ledger refresh |
-| 14 | Can a clean checkout validate evidence, run tests, and build the manuscript? | `Results/evidence/q1_reproduction.json`; `scripts/build_q1_submission_package.py` | High | Pass after final clean-worktree run |
+| 14 | Can a clean checkout validate evidence, run tests, and build the manuscript? | `Results/evidence/q1_reproduction.json`; `scripts/build_q1_submission_package.py` | High | Pass: 631 tests (627 passed, 4 documented skips), clean training/Qiskit checks, three-pass LaTeX build |
 | 15 | Are limitations, negative results, and conditional hardware status explicit? | `fqcnn.tex` Sec. V/VI; `docs/submission/data-code-availability.md` | Medium | Pass |
 
 ## One correction pass
