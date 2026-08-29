@@ -1,0 +1,191 @@
+{
+  "checks": [
+    {
+      "command": [
+        "<repository>\\.venv-q1-training\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "tests",
+        "-q",
+        "--junitxml=<temporary>\\fqcnn-q1-wpafb3hs\\pytest.xml"
+      ],
+      "elapsed_seconds": 618.563,
+      "label": "full pytest suite",
+      "returncode": 0,
+      "status": "pass",
+      "stderr_tail": "",
+      "stdout_tail": "........................................................................ [ 11%]\n........................................................................ [ 22%]\n........................................s............................... [ 34%]\n...........s............................................................ [ 45%]\n........................................................................ [ 56%]\n........................................................................ [ 68%]\n................................................ss...................... [ 79%]\n........................................................................ [ 91%]\n........................................................                 [100%]\n============================== warnings summary ===============================\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:64\n  <repository>\\.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:64: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'\n    prop = Group((name + Suppress(\"=\") + comma_separated(value)) | oneOf(_CONSTANTS))\n\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85\n  <repository>\\.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'\n    parse = parser.parseString(pattern)\n\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89\n  <repository>\\.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'\n    parser.resetCache()\n\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_mathtext.py:45\n  <repository>\\.venv-q1-training\\lib\\site-packages\\matplotlib\\_mathtext.py:45: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'\n    ParserElement.enablePackrat()\n\n-- Docs: http<absolute-path>\n- generated xml file: <temporary>\\fqcnn-q1-wpafb3hs\\pytest.xml -\n=========================== short test summary info ===========================\nSKIPPED [1] tests\\test_campaign_manifest.py:1259: directory symlinks are not supported: [WinError 1314] A required privilege is not held by the client: '<absolute-path>' -> '<absolute-path>'\nSKIPPED [1] tests\\test_campaign_manifest.py:1499: file symlinks are not supported: [WinError 1314] A required privilege is not held by the client: '<absolute-path>' -> '<absolute-path>'\nSKIPPED [1] tests\\test_q1_local_evidence.py:78: Qiskit schedule contracts run in the isolated .venv-qiskit environment\nSKIPPED [1] tests\\test_q1_local_evidence.py:92: Qiskit schedule contracts run in the isolated .venv-qiskit environment\n628 passed, 4 skipped, 14 warnings in 612.75s (0:10:12)\n"
+    },
+    {
+      "command": [
+        "<user-home>\\AppData\\Local\\Programs\\Python\\Python311\\Scripts\\ruff.EXE",
+        "check",
+        "QCNN/utils/dataset_registry.py",
+        "experiments/evidence_provenance.py",
+        "experiments/pooling_analysis.py",
+        "experiments/q1_fast_track_analysis.py",
+        "experiments/q1_pooling_transfer.py",
+        "experiments/run_experiments.py",
+        "experiments/statistics.py",
+        "scripts/build_q1_submission_package.py",
+        "scripts/refresh_q1_claim_ledger.py",
+        "scripts/run_q1_reproduction.py",
+        "tests/test_dataset_registry.py",
+        "tests/test_evidence_provenance.py",
+        "tests/test_pooling_equivalence.py",
+        "tests/test_q1_local_evidence.py",
+        "tests/test_q1_fast_track.py",
+        "tests/test_q1_pooling_transfer.py",
+        "tests/test_q1_reproduction.py",
+        "tests/test_q1_submission_package.py"
+      ],
+      "elapsed_seconds": 1.688,
+      "label": "ruff release-source check",
+      "returncode": 0,
+      "status": "pass",
+      "stderr_tail": "",
+      "stdout_tail": "All checks passed!\n"
+    },
+    {
+      "command": [
+        "<repository>\\.venv-q1-training\\Scripts\\python.exe",
+        "-m",
+        "compileall",
+        "-q",
+        "QCNN",
+        "baselines",
+        "experiments",
+        "scripts",
+        "tests"
+      ],
+      "elapsed_seconds": 0.343,
+      "label": "Python bytecode compilation",
+      "returncode": 0,
+      "status": "pass",
+      "stderr_tail": "",
+      "stdout_tail": ""
+    },
+    {
+      "command": [
+        "<user-home>\\AppData\\Local\\Programs\\MiKTeX\\miktex\\bin\\x64\\pdflatex.EXE",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "-file-line-error",
+        "fqcnn.tex"
+      ],
+      "elapsed_seconds": 1.953,
+      "label": "LaTeX build pass 1",
+      "returncode": 0,
+      "status": "pass",
+      "stderr_tail": "pdflatex: major issue: So far, you have not checked for MiKTeX updates.\n",
+      "stdout_tail": "context/base/mkii\\supp-pdf.mk\nii\n[Loading MPS to PDF converter (version 2006.09.02).]\n)\n(<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/epstopdf-pkg\\epstopdf-b\nase.sty\n(<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/00miktex\\epstopdf-sys.c\nfg)) (<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/amsfonts\\umsa.fd)\n(<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/amsfonts\\umsb.fd)\n[1{<user-home>/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{<absolute-path>\nith/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2] [3 <./figs_\nfinal/fig1.png (PNG copy)> <./figs_final/fig3.png>]\nUnderfull \\hbox (badness 5908) in paragraph at lines 220--221\n[]\\OT1/ptm/m/n/10 Containment is The-o-rem 1[] ap-plied to $\\OML/cmm/m/it/10 V \n\\OT1/cmr/m/n/10 =\n\nUnderfull \\hbox (badness 2027) in paragraph at lines 220--221\n\\OML/cmm/m/it/10 SU\\OT1/cmr/m/n/10 (4)$\\OT1/ptm/m/n/10 . Its global phase can-c\nels from the chan-nel, so\n[4 <./figs_final/fig4.png (PNG copy)>]\nUnderfull \\hbox (badness 10000) in paragraph at lines 231--233\n\\OT1/ptm/m/it/10 Then $\\OT1/cmr/m/n/10 ^^A[](\\OML/cmm/m/it/10 W[]\\OT1/cmr/m/n/1\n0 ) = 0$ \\OT1/ptm/m/it/10 for ev-ery $\\OML/cmm/m/it/10 ^^Z$\\OT1/ptm/m/it/10 , w\nhereas\n[5] (<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/psnfss\\ot1pcr.fd)\nUnderfull \\hbox (badness 6094) in paragraph at lines 298--299\n \\OT1/ptm/m/it/10 1) Sta-tis-ti-cal mea-sure-ment noise: [][] \\OT1/ptm/m/n/10 W\nith $\\OML/cmm/m/it/10 ^^Z\\OT1/cmr/m/n/10 (^^B; \\OML/cmm/m/it/10 x\\OT1/cmr/m/n/1\n0 ) =\n\nUnderfull \\hbox (badness 5359) in paragraph at lines 311--312\n[]\\OT1/ptm/m/n/10 The orig-i-nal head-line ex-per-i-ment used the MNIST\n[6] [7 <./figs_final/q1_comparison.png>]\nUnderfull \\hbox (badness 2790) in paragraph at lines 429--430\n\\OT1/ptm/m/n/10 ex-per-i-ment us-ing clean check-points, de-clared de-po-lar-is\n-\n[8]\nUnderfull \\hbox (badness 3312) in paragraph at lines 458--459\n[]\\OT1/ptm/m/n/8 P. R[]oseler et al., ``Ef-fi-cient quan-tum con-vo-lu-tional n\neu-ral net-\n\nUnderfull \\hbox (badness 1360) in paragraph at lines 458--459\n\\OT1/ptm/m/n/8 works for im-age clas-si-fi-ca-tion: over-com-ing hard-ware con-\nstraints,''\n[9] (fqcnn.aux) )\n(see the transcript file for additional information)<<user-home>/AppData/Loc\nal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><<user-home>/Ap\npData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><<absolute-path>\n/<user>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><\n<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmm\ni6.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfont\ns/cm/cmmi7.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/public\n/amsfonts/cm/cmmi8.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type\n1/public/amsfonts/cm/cmr10.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fo\nnts/type1/public/amsfonts/cm/cmr5.pfb><<user-home>/AppData/Local/Programs/Mi\nKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><<user-home>/AppData/Local/Prog\nrams/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><<user-home>/AppData/Loc\nal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><<user-home>/AppD\nata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><<absolute-path>\nrith/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><<drive>\n/Users/<user>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8\n.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/\nsymbols/msbm10.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/ur\nw/courier/ucrr8a.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/\nurw/times/utmb8a.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/\nurw/times/utmbi8a.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1\n/urw/times/utmr8a.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1\n/urw/times/utmri8a.pfb>\nOutput written on fqcnn.pdf (9 pages, 591389 bytes).\nTranscript written on fqcnn.log.\n"
+    },
+    {
+      "command": [
+        "<user-home>\\AppData\\Local\\Programs\\MiKTeX\\miktex\\bin\\x64\\pdflatex.EXE",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "-file-line-error",
+        "fqcnn.tex"
+      ],
+      "elapsed_seconds": 1.718,
+      "label": "LaTeX build pass 2",
+      "returncode": 0,
+      "status": "pass",
+      "stderr_tail": "pdflatex: major issue: So far, you have not checked for MiKTeX updates.\n",
+      "stdout_tail": "context/base/mkii\\supp-pdf.mk\nii\n[Loading MPS to PDF converter (version 2006.09.02).]\n)\n(<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/epstopdf-pkg\\epstopdf-b\nase.sty\n(<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/00miktex\\epstopdf-sys.c\nfg)) (<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/amsfonts\\umsa.fd)\n(<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/amsfonts\\umsb.fd)\n[1{<user-home>/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{<absolute-path>\nith/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2] [3 <./figs_\nfinal/fig1.png (PNG copy)> <./figs_final/fig3.png>]\nUnderfull \\hbox (badness 5908) in paragraph at lines 220--221\n[]\\OT1/ptm/m/n/10 Containment is The-o-rem 1[] ap-plied to $\\OML/cmm/m/it/10 V \n\\OT1/cmr/m/n/10 =\n\nUnderfull \\hbox (badness 2027) in paragraph at lines 220--221\n\\OML/cmm/m/it/10 SU\\OT1/cmr/m/n/10 (4)$\\OT1/ptm/m/n/10 . Its global phase can-c\nels from the chan-nel, so\n[4 <./figs_final/fig4.png (PNG copy)>]\nUnderfull \\hbox (badness 10000) in paragraph at lines 231--233\n\\OT1/ptm/m/it/10 Then $\\OT1/cmr/m/n/10 ^^A[](\\OML/cmm/m/it/10 W[]\\OT1/cmr/m/n/1\n0 ) = 0$ \\OT1/ptm/m/it/10 for ev-ery $\\OML/cmm/m/it/10 ^^Z$\\OT1/ptm/m/it/10 , w\nhereas\n[5] (<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/psnfss\\ot1pcr.fd)\nUnderfull \\hbox (badness 6094) in paragraph at lines 298--299\n \\OT1/ptm/m/it/10 1) Sta-tis-ti-cal mea-sure-ment noise: [][] \\OT1/ptm/m/n/10 W\nith $\\OML/cmm/m/it/10 ^^Z\\OT1/cmr/m/n/10 (^^B; \\OML/cmm/m/it/10 x\\OT1/cmr/m/n/1\n0 ) =\n\nUnderfull \\hbox (badness 5359) in paragraph at lines 311--312\n[]\\OT1/ptm/m/n/10 The orig-i-nal head-line ex-per-i-ment used the MNIST\n[6] [7 <./figs_final/q1_comparison.png>]\nUnderfull \\hbox (badness 2790) in paragraph at lines 429--430\n\\OT1/ptm/m/n/10 ex-per-i-ment us-ing clean check-points, de-clared de-po-lar-is\n-\n[8]\nUnderfull \\hbox (badness 3312) in paragraph at lines 458--459\n[]\\OT1/ptm/m/n/8 P. R[]oseler et al., ``Ef-fi-cient quan-tum con-vo-lu-tional n\neu-ral net-\n\nUnderfull \\hbox (badness 1360) in paragraph at lines 458--459\n\\OT1/ptm/m/n/8 works for im-age clas-si-fi-ca-tion: over-com-ing hard-ware con-\nstraints,''\n[9] (fqcnn.aux) )\n(see the transcript file for additional information)<<user-home>/AppData/Loc\nal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><<user-home>/Ap\npData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><<absolute-path>\n/<user>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><\n<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmm\ni6.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfont\ns/cm/cmmi7.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/public\n/amsfonts/cm/cmmi8.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type\n1/public/amsfonts/cm/cmr10.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fo\nnts/type1/public/amsfonts/cm/cmr5.pfb><<user-home>/AppData/Local/Programs/Mi\nKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><<user-home>/AppData/Local/Prog\nrams/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><<user-home>/AppData/Loc\nal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><<user-home>/AppD\nata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><<absolute-path>\nrith/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><<drive>\n/Users/<user>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8\n.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/\nsymbols/msbm10.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/ur\nw/courier/ucrr8a.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/\nurw/times/utmb8a.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/\nurw/times/utmbi8a.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1\n/urw/times/utmr8a.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1\n/urw/times/utmri8a.pfb>\nOutput written on fqcnn.pdf (9 pages, 591389 bytes).\nTranscript written on fqcnn.log.\n"
+    },
+    {
+      "command": [
+        "<user-home>\\AppData\\Local\\Programs\\MiKTeX\\miktex\\bin\\x64\\pdflatex.EXE",
+        "-interaction=nonstopmode",
+        "-halt-on-error",
+        "-file-line-error",
+        "fqcnn.tex"
+      ],
+      "elapsed_seconds": 1.704,
+      "label": "LaTeX build pass 3",
+      "returncode": 0,
+      "status": "pass",
+      "stderr_tail": "pdflatex: major issue: So far, you have not checked for MiKTeX updates.\n",
+      "stdout_tail": "context/base/mkii\\supp-pdf.mk\nii\n[Loading MPS to PDF converter (version 2006.09.02).]\n)\n(<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/epstopdf-pkg\\epstopdf-b\nase.sty\n(<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/00miktex\\epstopdf-sys.c\nfg)) (<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/amsfonts\\umsa.fd)\n(<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/amsfonts\\umsb.fd)\n[1{<user-home>/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{<absolute-path>\nith/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}] [2] [3 <./figs_\nfinal/fig1.png (PNG copy)> <./figs_final/fig3.png>]\nUnderfull \\hbox (badness 5908) in paragraph at lines 220--221\n[]\\OT1/ptm/m/n/10 Containment is The-o-rem 1[] ap-plied to $\\OML/cmm/m/it/10 V \n\\OT1/cmr/m/n/10 =\n\nUnderfull \\hbox (badness 2027) in paragraph at lines 220--221\n\\OML/cmm/m/it/10 SU\\OT1/cmr/m/n/10 (4)$\\OT1/ptm/m/n/10 . Its global phase can-c\nels from the chan-nel, so\n[4 <./figs_final/fig4.png (PNG copy)>]\nUnderfull \\hbox (badness 10000) in paragraph at lines 231--233\n\\OT1/ptm/m/it/10 Then $\\OT1/cmr/m/n/10 ^^A[](\\OML/cmm/m/it/10 W[]\\OT1/cmr/m/n/1\n0 ) = 0$ \\OT1/ptm/m/it/10 for ev-ery $\\OML/cmm/m/it/10 ^^Z$\\OT1/ptm/m/it/10 , w\nhereas\n[5] (<user-home>\\AppData\\Local\\Programs\\MiKTeX\\tex/latex/psnfss\\ot1pcr.fd)\nUnderfull \\hbox (badness 6094) in paragraph at lines 298--299\n \\OT1/ptm/m/it/10 1) Sta-tis-ti-cal mea-sure-ment noise: [][] \\OT1/ptm/m/n/10 W\nith $\\OML/cmm/m/it/10 ^^Z\\OT1/cmr/m/n/10 (^^B; \\OML/cmm/m/it/10 x\\OT1/cmr/m/n/1\n0 ) =\n\nUnderfull \\hbox (badness 5359) in paragraph at lines 311--312\n[]\\OT1/ptm/m/n/10 The orig-i-nal head-line ex-per-i-ment used the MNIST\n[6] [7 <./figs_final/q1_comparison.png>]\nUnderfull \\hbox (badness 2790) in paragraph at lines 429--430\n\\OT1/ptm/m/n/10 ex-per-i-ment us-ing clean check-points, de-clared de-po-lar-is\n-\n[8]\nUnderfull \\hbox (badness 3312) in paragraph at lines 458--459\n[]\\OT1/ptm/m/n/8 P. R[]oseler et al., ``Ef-fi-cient quan-tum con-vo-lu-tional n\neu-ral net-\n\nUnderfull \\hbox (badness 1360) in paragraph at lines 458--459\n\\OT1/ptm/m/n/8 works for im-age clas-si-fi-ca-tion: over-com-ing hard-ware con-\nstraints,''\n[9] (fqcnn.aux) )\n(see the transcript file for additional information)<<user-home>/AppData/Loc\nal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><<user-home>/Ap\npData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><<absolute-path>\n/<user>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><\n<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmm\ni6.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfont\ns/cm/cmmi7.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/public\n/amsfonts/cm/cmmi8.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type\n1/public/amsfonts/cm/cmr10.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fo\nnts/type1/public/amsfonts/cm/cmr5.pfb><<user-home>/AppData/Local/Programs/Mi\nKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><<user-home>/AppData/Local/Prog\nrams/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><<user-home>/AppData/Loc\nal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><<user-home>/AppD\nata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><<absolute-path>\nrith/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><<drive>\n/Users/<user>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8\n.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/\nsymbols/msbm10.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/ur\nw/courier/ucrr8a.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/\nurw/times/utmb8a.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1/\nurw/times/utmbi8a.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1\n/urw/times/utmr8a.pfb><<user-home>/AppData/Local/Programs/MiKTeX/fonts/type1\n/urw/times/utmri8a.pfb>\nOutput written on fqcnn.pdf (9 pages, 591389 bytes).\nTranscript written on fqcnn.log.\n"
+    },
+    {
+      "command": [
+        "<repository>\\.venv-q1-training\\Scripts\\python.exe",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "elapsed_seconds": 1.25,
+      "label": "training environment dependency check",
+      "returncode": 0,
+      "status": "pass",
+      "stderr_tail": "",
+      "stdout_tail": "No broken requirements found.\n"
+    },
+    {
+      "command": [
+        "<repository>\\.venv-qiskit\\Scripts\\python.exe",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "elapsed_seconds": 1.109,
+      "label": "isolated Qiskit dependency check",
+      "returncode": 0,
+      "status": "pass",
+      "stderr_tail": "",
+      "stdout_tail": "No broken requirements found.\n"
+    },
+    {
+      "command": [
+        "<repository>\\.venv-qiskit\\Scripts\\python.exe",
+        "-c",
+        "from experiments import q1_local_evidence as e\nstate = e._build_state_preparation(4)\nbody = e._build_model_body(4, 'unitary', seed=0)\nassert state.count_ops().get('initialize') == 1\nassert body.count_ops().get('initialize', 0) == 0\nassert body.count_ops().get('cry') == 3\nassert body.count_ops().get('crz') == 3\nassert body.count_ops().get('cx', 0) > 0\ndynamic = e._build_model_body(4, 'measurement', seed=0)\ncounts = {str(k): int(v) for k, v in dynamic.count_ops().items()}\nassert counts.get('measure') == 3\nassert counts.get('if_else') == 3\n"
+      ],
+      "elapsed_seconds": 2.141,
+      "label": "isolated Qiskit schedule contract",
+      "returncode": 0,
+      "status": "pass",
+      "stderr_tail": "",
+      "stdout_tail": ""
+    }
+  ],
+  "evidence_validation": {
+    "errors": [],
+    "required_files": 9,
+    "status": "pass"
+  },
+  "generated_at_utc": "2026-08-29T18:30:57.861880+00:00",
+  "next_step": "Build the verified ZIP with scripts/build_q1_submission_package.py after committing this report.",
+  "pytest": {
+    "errors": 0,
+    "failures": 0,
+    "skipped": 4,
+    "status": "pass",
+    "tests": 632,
+    "time_seconds": 612.734
+  },
+  "schema": {
+    "name": "fqcnn_q1_reproduction",
+    "version": 1
+  },
+  "scope": {
+    "dataset_downloads": "external upstream sources, checksummed in q1_dataset_provenance.json",
+    "journal_submission": false,
+    "real_qpu_job": false,
+    "simulation_only": true
+  },
+  "secret_scan": {
+    "findings": [],
+    "status": "pass"
+  },
+  "source": {
+    "branch": "dev",
+    "commit": "7f6144f49bc5c160539f9b99a88ed50b6bdd611d",
+    "tracked_tree_clean_before_run": true,
+    "tree": "df132c09a53f529824f9b533de27da08a69055f0"
+  },
+  "status": "pass"
+}

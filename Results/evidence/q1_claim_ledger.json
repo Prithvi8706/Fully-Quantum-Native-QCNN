@@ -3,7 +3,7 @@
     "name": "fqcnn_q1_claim_ledger",
     "version": 2
   },
-  "generated_at_utc": "2026-08-29T17:53:11.518799Z",
+  "generated_at_utc": "2026-08-29T18:31:15.796716Z",
   "status": "ready_for_release",
   "purpose": "Machine-readable audit of numerical and scope-sensitive claims against the current manuscript and the evidence available at ledger generation time. A claim is not publication-ready unless its status is supported or supported_with_scope and every required action is closed.",
   "scope": {
@@ -46,7 +46,7 @@
     "tests/fixtures/headline_expectations.npz": "46072f1eb8763b0233e42382253c3b602176f07feeb591ee0e173c840d93ab0e",
     "scripts/build_q1_submission_package.py": "d018ae603665b4f46022b3a1c92e276f323d234792414ae0e7fcddba979cbb56",
     "scripts/refresh_q1_claim_ledger.py": "7f4e2aa93205086a8cc0aee2802e6bf54ad322579490544860833bf86e7a74cf",
-    "scripts/run_q1_reproduction.py": "b912401ed772acb6177fa7ac8004a03a1307344ea419c77db0afb5b827d0f679"
+    "scripts/run_q1_reproduction.py": "d0155e6a7cba068ee610d6da99b802f42d17676bfd061a931647dd000c3dbc93"
   },
   "artifact_inventory": [
     {
@@ -522,7 +522,7 @@
       "id": "A-016",
       "path": "Results/evidence/q1_reproduction.json",
       "status": "pass",
-      "sha256": "ae3235746bf5eb7dbf037ecc0dd38dd1fd52c76eb20f52d8a55bf010b1f6f512",
+      "sha256": "7b86f837d44389fba66da4c97db92795004ee92caf1c9fe4ac1e4e2e17e838f9",
       "protocol": {
         "pytest": {
           "errors": 0,
