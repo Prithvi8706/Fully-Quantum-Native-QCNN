@@ -11,6 +11,7 @@ import argparse
 import json
 import math
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -26,6 +27,11 @@ try:
 except ImportError:  # direct ``python scripts/run_q1_reproduction.py`` invocation
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from scripts import build_q1_submission_package as package
+
+
+_ABSOLUTE_WINDOWS_PATH = re.compile(
+    r"(?i)[A-Z]:[\\/](?:[^\\/\r\n\"']+[\\/])*[^\\/\r\n\"']+"
+)
 
 
 EVIDENCE_REQUIRED = (
@@ -142,13 +148,30 @@ def _tail(value: str, limit: int = 4000) -> str:
     return value if len(value) <= limit else value[-limit:]
 
 
+def _redact(value: str, root: Path) -> str:
+    """Remove workstation-specific paths from the persisted release report."""
+
+    text = str(value or "")
+    replacements = {
+        str(root.resolve()): "<repository>",
+        str(root.resolve()).replace("\\", "/"): "<repository>",
+        str(Path(tempfile.gettempdir())): "<temporary>",
+        str(Path(tempfile.gettempdir())).replace("\\", "/"): "<temporary>",
+        str(Path.home()): "<user-home>",
+        str(Path.home()).replace("\\", "/"): "<user-home>",
+    }
+    for source, target in replacements.items():
+        text = text.replace(source, target)
+    return _ABSOLUTE_WINDOWS_PATH.sub("<absolute-path>", text)
+
+
 def run_command(
     root: Path, label: str, command: Sequence[str], *, timeout: int = 3600
 ) -> dict[str, Any]:
     started = time.monotonic()
     record: dict[str, Any] = {
         "label": label,
-        "command": [str(item) for item in command],
+        "command": [_redact(str(item), root) for item in command],
     }
     try:
         completed = subprocess.run(
@@ -162,12 +185,12 @@ def run_command(
         record.update(
             {
                 "returncode": completed.returncode,
-                "stdout_tail": _tail(completed.stdout),
-                "stderr_tail": _tail(completed.stderr),
+                "stdout_tail": _tail(_redact(completed.stdout, root)),
+                "stderr_tail": _tail(_redact(completed.stderr, root)),
             }
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        record.update({"returncode": None, "error": str(exc)})
+        record.update({"returncode": None, "error": _redact(str(exc), root)})
     record["elapsed_seconds"] = round(time.monotonic() - started, 3)
     record["status"] = "pass" if record.get("returncode") == 0 else "fail"
     return record

@@ -23,3 +23,11 @@ def test_pytest_counts_reads_junit_summary(tmp_path: Path):
         "time_seconds": 1.25,
         "status": "pass",
     }
+
+
+def test_report_redaction_removes_absolute_workstation_paths(tmp_path: Path):
+    raw = r'C:\Users\author\AppData\Local\Temp\run\pytest.xml C:\Program Files\MiKTeX\bin'
+    redacted = reproduction._redact(raw, tmp_path)
+    assert "C:\\" not in redacted
+    assert "<temporary>" not in redacted  # arbitrary paths are redacted generically
+    assert "<absolute-path>" in redacted
