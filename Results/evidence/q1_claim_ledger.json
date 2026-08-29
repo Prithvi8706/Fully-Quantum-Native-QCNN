@@ -12,7 +12,7 @@
     "reconciliation": "docs/paper_code_reconciliation.md",
     "comparison_artifact": "Results/evidence/q1_comparison.json",
     "evidence_rule": "Bind every numerical claim to a hashed artifact and preserve the exact simulator, split, seed, and scope. Do not upgrade a mathematical identity, a finite diagnostic, a local simulation, or a historical single-seed result into an accuracy, hardware, or asymptotic claim.",
-    "observation": "The corrected Q1 comparison and pooling-transfer campaigns are complete and parseable: 80/80 comparison cells and 15/15 transfer cells have complete status, with no failed runs. All manifests use n_total=666 with train/validation/test=400/100/166. Dataset checksums, aggregate provenance, and fixed-input pooling controls are now archived; the remaining release gate is clean reproduction and package verification."
+    "observation": "The corrected Q1 comparison and pooling-transfer campaigns are complete and parseable: 80/80 comparison cells and 15/15 transfer cells have complete status, with no failed runs. All manifests use n_total=666 with train/validation/test=400/100/166. Dataset checksums, aggregate provenance, fixed-input pooling controls, and the clean 632-test reproduction report are archived; package assembly is the final local handoff action."
   },
   "status_legend": {
     "supported": "The cited evidence directly supports the bounded statement.",

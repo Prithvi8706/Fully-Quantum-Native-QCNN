@@ -13,7 +13,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 
 **Planning amendment (2026-08-27):** The maximal Tasks 8–19 program has been compressed into a seven-focused-day Q1-journal fast track with two bounded unattended compute windows. Task 7 was integrated from `origin/dev` on 2026-08-27. The Q1 target is retained; evidence breadth is reduced only through explicit minimum bars and honest claim limits.
 
-**Last updated:** 2026-08-30 · **Branch:** `dev` · **Verification:** Q1 comparison and transfer gates closed; clean reproduction passed; final archive build pending
+**Last updated:** 2026-08-30 · **Branch:** `dev` · **Verification:** Q1 comparison, transfer, clean reproduction, and package-integrity gates passed; archive is ready for upload after author approval
 
 **State labels:** `pending` · `running` · `failed` · `complete`
 
@@ -29,7 +29,7 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 | **4 — local practicality evidence** | `complete` | Freeze statistics/tables; complete n=4,6,8,10 resources, pooling practicality, clean two-task noise ladder, and fake-backend rehearsal | `q1_resources.json`, `q1_pooling_practicality.json`, `q1_noise_validation.json` (6 records, zero-noise agreement pass), and `q1_fake_backend_rehearsal.json` all validate |
 | **5 — core manuscript rewrite** | `complete` | Rewrite positioning, methods, theory, experiments, results, and limitations from canonical evidence | `fqcnn.tex` now uses the corrected protocol, cautious scope, exact Q1 table, and generated `figs_final/q1_comparison.png` |
 | **6 — citations + final manuscript** | `complete` | Finish introduction/discussion/conclusion, sentence-level citation audit, complete claim ledger, and final PDF inspection | `q1_claim_ledger.json` (`ready_for_release`, no blockers); zero missing/uncited citation keys; three-pass IEEE journal LaTeX build: 9-page PDF, zero LaTeX errors/undefined references |
-| **7 — reproduce + package** | `running` | Run bounded clean-environment reproduction/health checks, reviewer-risk correction pass, and scoped release package | `q1_reproduction.json`: 632 tests, 628 passed, 4 documented skips, 0 failures; clean training and isolated Qiskit checks pass; final archive build/checksum remains pending |
+| **7 — reproduce + package** | `complete` | Run bounded clean-environment reproduction/health checks, reviewer-risk correction pass, and scoped release package | `q1_reproduction.json`: 632 tests, 628 passed, 4 documented skips, 0 failures; clean training and isolated Qiskit checks pass; verified 279-file archive is built from the clean release commit with SHA-256 recorded at handoff |
 
 ---
 
