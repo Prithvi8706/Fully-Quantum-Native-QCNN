@@ -74,6 +74,7 @@ REQUIRED_FILES = {
     "Results/evidence/q1_dataset_provenance.json",
     "Results/evidence/q1_fake_backend_rehearsal.json",
     "Results/evidence/q1_noise_validation.json",
+    "Results/evidence/q1_pooling_controls.json",
     "Results/evidence/q1_pooling_practicality.json",
     "Results/evidence/q1_pooling_transfer.json",
     "Results/evidence/q1_reproduction.json",
@@ -263,6 +264,30 @@ def scan_for_secrets(root: Path, paths: Iterable[str]) -> list[dict]:
     return findings
 
 
+def assert_release_evidence(root: Path) -> dict:
+    """Run the semantic evidence gate before packaging any release bytes.
+
+    File hashes in the ZIP manifest prove only that the archive was assembled
+    consistently.  The reproduction gate additionally verifies the claim
+    ledger bindings, tested source fingerprint, and both Q1 aggregates against
+    their canonical run artifacts.  Import lazily to keep the two command-line
+    modules usable independently and to avoid an import cycle.
+    """
+
+    from scripts import run_q1_reproduction
+
+    result = run_q1_reproduction.validate_evidence(
+        root, verify_bindings=True, require_current_report=True
+    )
+    if result.get("status") != "pass":
+        errors = result.get("errors", [])
+        detail = "; ".join(str(error) for error in errors[:8])
+        if len(errors) > 8:
+            detail += f"; ... ({len(errors)} total errors)"
+        raise RuntimeError(f"release evidence gate failed: {detail}")
+    return result
+
+
 def build_manifest(root: Path, records: list[dict]) -> dict:
     commit = _git(root, "rev-parse", "HEAD")
     commit_time = _git(root, "show", "-s", "--format=%cI", "HEAD")
@@ -365,6 +390,7 @@ def verify_archive(output: Path, package_root: str, manifest: dict) -> None:
 def build(root: Path, output_dir: Path) -> dict:
     root = root.resolve()
     assert_clean_tracked_tree(root)
+    evidence_validation = assert_release_evidence(root)
     assert_fresh_pdf(root)
     paths = selected_files(root)
     secret_findings = scan_for_secrets(root, paths)
@@ -387,6 +413,7 @@ def build(root: Path, output_dir: Path) -> dict:
         "source_commit": manifest["source"]["commit"],
         "source_tree": manifest["source"]["tree"],
         "file_count": manifest["integrity"]["file_count"],
+        "evidence_validation": evidence_validation,
         "verified": True,
     }
 

@@ -625,35 +625,40 @@
     "e3_pool_coherent": {
       "mcnemar_by_seed": {
         "0": {
-          "b01": 8,
-          "b10": 14,
+          "b01": 15,
+          "b10": 7,
           "exact": true,
           "n_discordant": 22,
-          "p_value": 0.28627872467041016
+          "p_value": 0.13380050659179688
         },
         "1": {
-          "b01": 17,
-          "b10": 0,
+          "b01": 8,
+          "b10": 9,
           "exact": true,
           "n_discordant": 17,
-          "p_value": 1.52587890625e-05
+          "p_value": 1.0
         },
         "2": {
-          "b01": 11,
-          "b10": 0,
+          "b01": 5,
+          "b10": 6,
           "exact": true,
           "n_discordant": 11,
-          "p_value": 0.0009765625
+          "p_value": 1.0
         }
       },
       "mcnemar_pooled": {
-        "b01": 36,
-        "b10": 14,
-        "exact": true,
+        "b01": 28,
+        "b10": 22,
+        "descriptive_only": true,
+        "exact": false,
+        "method": "summed per-seed discordance counts; no pooled test",
         "n_discordant": 50,
-        "p_holm": 0.005204342913444293,
-        "p_value": 0.0026021714567221466,
-        "significant": true
+        "n_observations": 498,
+        "n_seed_splits": 3,
+        "n_unique_sample_ids": 495,
+        "p_holm": null,
+        "p_value": null,
+        "significant": false
       },
       "paired_accuracy_effect": {
         "cohens_dz": 0.3849001794597517,
@@ -701,10 +706,15 @@
       "mcnemar_pooled": {
         "b01": 0,
         "b10": 0,
-        "exact": true,
+        "descriptive_only": true,
+        "exact": false,
+        "method": "summed per-seed discordance counts; no pooled test",
         "n_discordant": 0,
-        "p_holm": 1.0,
-        "p_value": 1.0,
+        "n_observations": 498,
+        "n_seed_splits": 3,
+        "n_unique_sample_ids": 495,
+        "p_holm": null,
+        "p_value": null,
         "significant": false
       },
       "paired_accuracy_effect": {
@@ -729,35 +739,40 @@
     "e3_pool_none": {
       "mcnemar_by_seed": {
         "0": {
-          "b01": 2,
-          "b10": 10,
+          "b01": 6,
+          "b10": 6,
           "exact": true,
           "n_discordant": 12,
-          "p_value": 0.03857421875
+          "p_value": 1.0
         },
         "1": {
-          "b01": 22,
-          "b10": 0,
+          "b01": 9,
+          "b10": 13,
           "exact": true,
           "n_discordant": 22,
-          "p_value": 4.76837158203125e-07
+          "p_value": 0.5234670639038086
         },
         "2": {
-          "b01": 14,
-          "b10": 0,
+          "b01": 6,
+          "b10": 8,
           "exact": true,
           "n_discordant": 14,
-          "p_value": 0.0001220703125
+          "p_value": 0.79052734375
         }
       },
       "mcnemar_pooled": {
-        "b01": 38,
-        "b10": 10,
-        "exact": true,
+        "b01": 21,
+        "b10": 27,
+        "descriptive_only": true,
+        "exact": false,
+        "method": "summed per-seed discordance counts; no pooled test",
         "n_discordant": 48,
-        "p_holm": 0.0002467856311056949,
-        "p_value": 6.169640777642373e-05,
-        "significant": true
+        "n_observations": 498,
+        "n_seed_splits": 3,
+        "n_unique_sample_ids": 495,
+        "p_holm": null,
+        "p_value": null,
+        "significant": false
       },
       "paired_accuracy_effect": {
         "cohens_dz": -0.9999999999999984,
@@ -781,35 +796,40 @@
     "e3_pool_su4": {
       "mcnemar_by_seed": {
         "0": {
-          "b01": 3,
-          "b10": 11,
+          "b01": 9,
+          "b10": 5,
           "exact": true,
           "n_discordant": 14,
-          "p_value": 0.057373046875
+          "p_value": 0.4239501953125
         },
         "1": {
-          "b01": 17,
-          "b10": 1,
+          "b01": 8,
+          "b10": 10,
           "exact": true,
           "n_discordant": 18,
-          "p_value": 0.00014495849609375
+          "p_value": 0.8145294189453125
         },
         "2": {
-          "b01": 17,
-          "b10": 0,
+          "b01": 8,
+          "b10": 9,
           "exact": true,
           "n_discordant": 17,
-          "p_value": 1.52587890625e-05
+          "p_value": 1.0
         }
       },
       "mcnemar_pooled": {
-        "b01": 37,
-        "b10": 12,
-        "exact": true,
+        "b01": 25,
+        "b10": 24,
+        "descriptive_only": true,
+        "exact": false,
+        "method": "summed per-seed discordance counts; no pooled test",
         "n_discordant": 49,
-        "p_holm": 0.0014092719540244047,
-        "p_value": 0.0004697573180081349,
-        "significant": true
+        "n_observations": 498,
+        "n_seed_splits": 3,
+        "n_unique_sample_ids": 495,
+        "p_holm": null,
+        "p_value": null,
+        "significant": false
       },
       "paired_accuracy_effect": {
         "cohens_dz": 0.10369516947304355,
@@ -831,7 +851,7 @@
       }
     }
   },
-  "generated_at_utc": "2026-08-29T17:11:31.125964+00:00",
+  "generated_at_utc": "2026-08-30T11:09:30.568218+00:00",
   "manifests": {
     "0": {
       "dataset_id": "fashion_mnist_0v6_n666",
@@ -889,13 +909,16 @@
     "multiplicity": {
       "mcnemar": {
         "alpha": 0.05,
-        "method": "Holm-Bonferroni",
-        "n_tests": 4
+        "method": "exact per-seed McNemar; descriptive only",
+        "n_tests": 0,
+        "pooled_inference": false,
+        "role": "descriptive within-split diagnostics"
       },
       "wilcoxon": {
         "alpha": 0.05,
         "method": "Holm-Bonferroni",
-        "n_tests": 4
+        "n_tests": 4,
+        "role": "confirmatory inference at the seed level"
       }
     },
     "n_total": 666,
@@ -939,14 +962,14 @@
         "sha256": "646d57c5bee428dd63c1b881307b0c44d1f4f347faa07e82113c4beace721e5f"
       },
       {
-        "bytes": 27970,
+        "bytes": 29160,
         "path": "experiments/q1_pooling_transfer.py",
-        "sha256": "d5e27c3740bab7bea136f3a109156617a7e7abb5868998211cfc4e2124804ad4"
+        "sha256": "6ed3f0473fda41199f056ccdf1340d3072a4d66d9e2d95e84c45e1097fdb5cff"
       },
       {
-        "bytes": 32061,
+        "bytes": 40177,
         "path": "experiments/run_experiments.py",
-        "sha256": "9c5ffc4c4932484f526e3dd4800d6795bb6e0d8eae96a9e1415fd7330b8f9917"
+        "sha256": "9e9eb4577919174b7d5155b469268d472205b58f0c8e3fdc3dafb5607e332929"
       },
       {
         "bytes": 7125,
@@ -984,14 +1007,14 @@
         "sha256": "4c0859738a30376f286ccf320eaf7c1701c4f088c6bee24a78384b820dc0a664"
       },
       {
-        "bytes": 8888,
+        "bytes": 8978,
         "path": "QCNN/utils/run_artifacts.py",
-        "sha256": "e4aba5e47ace04c120c6e591f27112aef1829b870dc3c0b892e832de3e1d2bfe"
+        "sha256": "826827abf8dac508e86c8d458263fa3823b2ac91ce8b7c5da8a927ed1fe05c68"
       },
       {
-        "bytes": 6139,
+        "bytes": 8339,
         "path": "QCNN/utils/splits.py",
-        "sha256": "3520c7b18db43090b10b586a6d24310ba73d2a7e817cbb96e7cef7d77f7a9cf1"
+        "sha256": "ab02af206f26229fca8e1a8d88f70bf0b2b19a7eec03d57b9d5f4976a7cd0434"
       }
     ]
   },

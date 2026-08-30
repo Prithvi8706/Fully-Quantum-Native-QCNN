@@ -76,10 +76,62 @@ def test_proposed_cell_waits_for_every_required_baseline(tmp_path, monkeypatch):
     for name in ("logistic", "mlp", "ttn"):
         _complete_run(
             run_artifacts.run_dir(task, f"baseline_{name}", seed),
-            config={"artifact_schema_version": 1}, seed=seed)
+            config=runner._expected_baseline_config(name, "scientific"), seed=seed)
     assert runner._is_reusable_cell(
         pair, "proposed", seed, 30, "fashion_mnist",
         required_baselines=("logistic", "mlp", "ttn"))
+
+
+@pytest.mark.parametrize("baseline", ["logistic", "mlp", "cong", "hur", "ttn"])
+def test_all_declared_baselines_have_resumable_identity(baseline):
+    from experiments import run_experiments as runner
+
+    config = runner._expected_baseline_config(baseline, "scientific")
+    assert config["baseline"] == baseline
+    assert config["evidence_role"] == "scientific"
+
+
+def test_unknown_baseline_identity_is_rejected():
+    from experiments import run_experiments as runner
+
+    with pytest.raises(ValueError, match="baseline_name"):
+        runner._expected_baseline_config("unknown", "scientific")
+
+
+def test_failed_rerun_cannot_contribute_stale_metrics_sidecar(tmp_path, monkeypatch):
+    """A failed forced rerun must not leave its previous summary row eligible."""
+    from experiments import run_experiments as runner
+
+    exp_root = tmp_path / "experiments"
+    run_root = tmp_path / "runs"
+    monkeypatch.setattr(runner, "EXP_ROOT", str(exp_root))
+    monkeypatch.setattr(run_artifacts, "RUN_ROOT", str(run_root))
+    pair, seed = (0, 1), 0
+    expected = runner._expected_config("proposed", seed, epochs=30)
+    directory = run_artifacts.run_dir("0v1", "proposed", seed)
+    run_artifacts.start_run(
+        directory, config=expected, split_id="split-abc", seed=seed,
+        environment={"python": "3.9.13"})
+    run_artifacts.save_predictions(directory, [0, 1], [1, -1], [0.5, -0.5])
+    np.savez(run_artifacts.weights_path(directory), parameters=np.zeros(2))
+    run_artifacts.complete_run(directory, {"accuracy": 1.0})
+
+    sidecar = exp_root / "0v1" / "proposed" / "seed_0.json"
+    sidecar.parent.mkdir(parents=True)
+    sidecar.write_text(json.dumps({"accuracy": 1.0}))
+
+    # A forced rerun transitions the authoritative artifact to failed but the
+    # old sidecar is intentionally left in place here to prove the summary
+    # reader does not trust it.
+    run_artifacts.start_run(
+        directory, config=expected, split_id="split-abc", seed=seed,
+        environment={"python": "3.9.13"})
+    run_artifacts.fail_run(directory, "simulator crashed")
+    assert runner._metrics_from_current_run(
+        pair, "proposed", seed, 30) is None
+
+    runner._invalidate_metrics_sidecar(pair, "proposed", seed)
+    assert not sidecar.exists()
 
 
 def test_an_unfinished_run_is_not_reusable(tmp_path):

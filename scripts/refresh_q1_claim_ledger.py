@@ -18,6 +18,22 @@ from typing import Any, Iterable
 
 LEDGER = Path("Results/evidence/q1_claim_ledger.json")
 RELEASE_SOURCES = (
+    "experiments/evidence_provenance.py",
+    "experiments/q1_fast_track_analysis.py",
+    "experiments/q1_local_evidence.py",
+    "experiments/q1_pooling_transfer.py",
+    "experiments/run_experiments.py",
+    "experiments/statistics.py",
+    "baselines/classical_cnn.py",
+    "baselines/quantum_baselines.py",
+    "QCNN/circuits.py",
+    "QCNN/config/Qconfig.py",
+    "QCNN/layers/QPool.py",
+    "QCNN/models/QCNNModel.py",
+    "QCNN/utils/dataset_registry.py",
+    "QCNN/utils/metrics.py",
+    "QCNN/utils/run_artifacts.py",
+    "QCNN/utils/splits.py",
     "scripts/build_q1_submission_package.py",
     "scripts/refresh_q1_claim_ledger.py",
     "scripts/run_q1_reproduction.py",

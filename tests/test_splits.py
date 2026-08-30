@@ -4,6 +4,9 @@ Model selection must never see the test set, so the split has to be
 deterministic, stratified, disjoint, and recorded.
 """
 import os
+from concurrent.futures import ThreadPoolExecutor
+import json
+import threading
 
 import numpy as np
 import pytest
@@ -83,6 +86,40 @@ def test_manifest_round_trips_through_disk(labels, tmp_path):
     path = os.path.join(str(tmp_path), "split.json")
     splits.save_manifest(manifest, path)
     assert splits.load_manifest(path) == manifest
+
+
+def test_concurrent_manifest_writers_never_expose_partial_json(labels, tmp_path):
+    """Parallel experiment workers must leave an all-or-nothing manifest."""
+    path = str(tmp_path / "split.json")
+    manifests = [
+        splits.make_split_manifest(
+            labels, seed=seed, dataset_id="unit", class_mapping={})
+        for seed in (0, 1)
+    ]
+    errors = []
+    stop = threading.Event()
+
+    def writer(manifest):
+        for _ in range(40):
+            splits.save_manifest(manifest, path)
+
+    def reader():
+        while not stop.is_set():
+            try:
+                loaded = splits.load_manifest(path)
+                assert loaded in manifests
+            except (AssertionError, OSError, ValueError, json.JSONDecodeError) as exc:
+                errors.append(exc)
+
+    splits.save_manifest(manifests[0], path)
+    reader_thread = threading.Thread(target=reader)
+    reader_thread.start()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        list(pool.map(writer, manifests))
+    stop.set()
+    reader_thread.join()
+    assert not errors
+    assert splits.load_manifest(path) in manifests
 
 
 def test_apply_manifest_returns_matching_features_and_labels(labels):

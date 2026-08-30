@@ -321,6 +321,65 @@ def _weights_from_path(path: Optional[Path]) -> Tuple[Optional[Dict[str, np.ndar
     }
 
 
+def _validate_checkpoint_identity(
+    path: Optional[Path],
+    dataset: str,
+    classes: Sequence[int],
+    seed: int,
+    split_id: str,
+) -> Path:
+    """Require a completed proposed run bound to the validation manifest.
+
+    Noise validation is a scientific release artifact, not a circuit-only probe.
+    A missing checkpoint must therefore fail closed instead of silently switching
+    to deterministic fixture weights, and a checkpoint from a different split or
+    model geometry must not be evaluated against this manifest.
+    """
+    if path is None or not Path(path).is_file():
+        raise ValueError(
+            f"noise validation requires a complete proposed checkpoint for "
+            f"{dataset} {tuple(classes)} seed {int(seed)}"
+        )
+    checkpoint = Path(path)
+    status_path = checkpoint.parent / "status.json"
+    try:
+        status = json.loads(status_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError(
+            f"checkpoint provenance is missing or malformed: {status_path}"
+        ) from exc
+    if not isinstance(status, dict) or status.get("state") != "complete":
+        raise ValueError(f"checkpoint run is not complete: {status_path}")
+    if type(status.get("seed")) is not int or status["seed"] != int(seed):
+        raise ValueError(f"checkpoint seed does not match requested seed: {status_path}")
+    if status.get("split_id") != split_id:
+        raise ValueError(f"checkpoint split does not match validation manifest: {status_path}")
+    config = status.get("config")
+    if not isinstance(config, dict):
+        raise ValueError(f"checkpoint has no run configuration: {status_path}")
+    expected = {
+        "evidence_role": "scientific",
+        "image_size": 28,
+        "n_qubits": 10,
+        "encoding_type": "amplitude",
+        "pooling_mode": "unitary",
+    }
+    mismatches = {
+        key: (config.get(key), value)
+        for key, value in expected.items()
+        if config.get(key) != value
+    }
+    ablation = config.get("ablation")
+    if not isinstance(ablation, dict) or ablation.get("name") != "proposed":
+        mismatches["ablation.name"] = (
+            ablation.get("name") if isinstance(ablation, dict) else None,
+            "proposed",
+        )
+    if mismatches:
+        raise ValueError(f"checkpoint configuration does not match proposed Q1 model: {status_path}")
+    return checkpoint
+
+
 def _find_checkpoint(dataset: str, classes: Sequence[int], seed: int, weights_root: Path) -> Optional[Path]:
     task = f"{dataset}_{int(classes[0])}v{int(classes[1])}"
     candidates = (
@@ -823,10 +882,17 @@ def _validation_subset(
     seed: int,
     samples: int,
     data_root: Path,
+    *,
+    require_persisted: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray, List[str], str, Dict[str, Any]]:
     images, labels, sample_ids = _load_idx_train(dataset, data_root)
     classes = tuple(sorted(int(value) for value in classes))
     persisted = _canonical_validation_manifest(dataset, classes, seed)
+    if persisted is None and require_persisted:
+        raise ValueError(
+            f"noise validation requires a canonical Q1 manifest for "
+            f"{dataset} {classes} seed {int(seed)}"
+        )
     if persisted is not None:
         manifest_path, manifest = persisted
         val_positions = [int(value) for value in manifest["val_idx"]]
@@ -1043,9 +1109,13 @@ def build_noise_validation(
     for dataset, classes in parsed_tasks:
         for seed in seeds:
             images, labels, sample_ids, split_id, split_metadata = _validation_subset(
-                dataset, classes, seed, int(samples), Path(data_root)
+                dataset, classes, seed, int(samples), Path(data_root),
+                require_persisted=True,
             )
             checkpoint_path = _find_checkpoint(dataset, classes, seed, Path(weights_root))
+            checkpoint_path = _validate_checkpoint_identity(
+                checkpoint_path, dataset, classes, seed, split_id
+            )
             weights, checkpoint = _weights_from_path(checkpoint_path)
             amplitudes = _amplitudes_from_pixels(images, 10)
             exact_values: List[float] = []

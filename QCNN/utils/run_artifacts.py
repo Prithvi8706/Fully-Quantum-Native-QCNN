@@ -189,9 +189,12 @@ def save_predictions(directory: str, sample_ids, y_true, raw_outputs) -> str:
 
 
 def save_baseline_result(*, directory: str, result: dict, split_id: str,
-                         sample_ids, y_test, seed: int, environment: dict) -> None:
+                         sample_ids, y_test, seed: int, environment: dict,
+                         config: dict = None) -> None:
     """Atomically complete the provenance contract for one baseline model."""
-    start_run(directory, config={"artifact_schema_version": 1}, split_id=split_id,
+    start_run(directory, config=(
+        {"artifact_schema_version": 1} if config is None else config),
+        split_id=split_id,
               seed=seed, environment=environment)
     selection = dict(result["selection"])
     selection["test_evaluations"] = int(result["test_evaluations"])

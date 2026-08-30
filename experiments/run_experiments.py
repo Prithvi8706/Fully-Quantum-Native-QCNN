@@ -61,6 +61,11 @@ DEFAULT_MNIST_DIR = os.path.join("datasets", "MNIST")
 EXP_ROOT = os.path.join("Results", "experiments")
 FAILURE_MANIFEST = os.path.join(EXP_ROOT, "failures.json")
 MANIFEST_ROOT = os.path.join("Results", "manifests")
+# Keep this in sync with both baseline selectors below.  The quantum comparators
+# ``cong`` and ``hur`` are valid scientific arms even though the default run only
+# enables ``ttn``; excluding them here would make explicitly requested runs
+# impossible to resume or aggregate.
+_BASELINE_NAMES = frozenset(("logistic", "mlp", "cong", "hur", "ttn"))
 
 # Each worker gets one CPU thread. Set in the parent before the pool is created
 # so spawned children inherit it at interpreter start -- BLAS reads these at
@@ -342,7 +347,8 @@ def run_single(config_name: str, classes, seed: int, dataset_dir: str,
                 directory=artifact_dir, result=result, split_id=manifest["id"],
                 sample_ids=test_ids, y_test=y_test, seed=seed,
                 environment={"python": platform.python_version(),
-                             "pennylane": qml.version()})
+                             "pennylane": qml.version()},
+                config=_expected_baseline_config(name, evidence_role))
     return metrics
 
 
@@ -415,6 +421,52 @@ def _expected_config(config_name: str, seed: int, epochs,
     return _config_metadata(cfg, config_name)
 
 
+def _expected_baseline_config(baseline_name: str, evidence_role="scientific") -> dict:
+    """Return the identity recorded for a baseline run artifact.
+
+    Baselines used to record only their generic artifact schema.  That made a
+    logistic artifact indistinguishable from an MLP/TTN artifact and allowed a
+    smoke result to be mistaken for scientific evidence.  Keep the schema
+    marker for compatibility, while adding the role and concrete baseline
+    identity needed by resume and aggregation gates.
+    """
+    if baseline_name not in _BASELINE_NAMES:
+        raise ValueError(
+            "baseline_name must be one of {}".format(
+                ", ".join(sorted(_BASELINE_NAMES))))
+    if evidence_role not in ("scientific", "smoke"):
+        raise ValueError("evidence_role must be scientific or smoke")
+    return {
+        "artifact_schema_version": 1,
+        "baseline": baseline_name,
+        "evidence_role": evidence_role,
+    }
+
+
+def _baseline_run_is_reusable(directory: str, baseline_name: str, seed: int,
+                              evidence_role="scientific") -> bool:
+    """Validate a baseline artifact, accepting the pre-metadata schema safely.
+
+    Existing Q1 baselines were written before baseline identity/role metadata
+    was added.  Their directory name, paired split checks, and canonical
+    manifest still provide the identity boundary, so preserve those complete
+    artifacts instead of forcing an expensive retraining campaign.  New runs
+    use the stronger metadata contract; unknown configurations remain
+    ineligible.
+    """
+    if not run_artifacts.is_reusable(directory, seed=seed):
+        return False
+    try:
+        with open(os.path.join(directory, "status.json"), encoding="utf-8") as fh:
+            config = json.load(fh).get("config")
+    except (OSError, UnicodeError, json.JSONDecodeError, AttributeError):
+        return False
+    return config in (
+        _expected_baseline_config(baseline_name, evidence_role),
+        {"artifact_schema_version": 1},
+    )
+
+
 def _is_reusable_cell(pair, config_name: str, seed: int, epochs,
                       dataset_key=None, evidence_role="scientific",
                       required_baselines=()) -> bool:
@@ -428,11 +480,74 @@ def _is_reusable_cell(pair, config_name: str, seed: int, epochs,
             config_name, seed, epochs, evidence_role), seed=seed):
         return False
     task_name = _fmt_task(dataset_key, pair, evidence_role)
-    return all(run_artifacts.is_reusable(
+    return all(_baseline_run_is_reusable(
         run_artifacts.run_dir(
             task_name, f"baseline_{name}", seed, create=False),
-        config={"artifact_schema_version": 1}, seed=seed)
+        name, seed, evidence_role)
         for name in required_baselines)
+
+
+def _invalidate_metrics_sidecar(pair, config_name: str, seed: int,
+                                dataset_key=None, evidence_role="scientific") -> None:
+    """Remove the summary sidecar before a cell is attempted.
+
+    The authoritative run status is transitioned to ``running`` by the worker,
+    but a process can fail before that transition (for example while loading a
+    dataset).  Removing the old sidecar at scheduling time ensures a failed or
+    interrupted rerun cannot be included in a later summary as if it were the
+    new result.
+    """
+    path = _metrics_path(pair, config_name, seed, dataset_key, evidence_role)
+    try:
+        os.remove(path)
+    except FileNotFoundError:
+        pass
+
+
+def _metrics_from_current_run(pair, config_name: str, seed: int, epochs,
+                              dataset_key=None, evidence_role="scientific"):
+    """Read a sidecar only when its complete run artifact is current.
+
+    The JSON sidecar is a convenience output, not an authority.  Require both
+    the sidecar and a complete, identity-matching run artifact, then compare
+    every status metric that is present in the sidecar.  This rejects stale or
+    manually edited sidecars while preserving the stable summary format.
+    """
+    sidecar = _metrics_path(pair, config_name, seed, dataset_key, evidence_role)
+    if not os.path.isfile(sidecar):
+        return None
+
+    task_name = _fmt_task(dataset_key, pair, evidence_role)
+    directory = run_artifacts.run_dir(task_name, config_name, seed, create=False)
+    if config_name.startswith("baseline_"):
+        baseline_name = config_name[len("baseline_"):]
+        if not _baseline_run_is_reusable(
+                directory, baseline_name, seed, evidence_role):
+            return None
+        expected = None
+    else:
+        expected = _expected_config(config_name, seed, epochs, evidence_role)
+    if expected is not None and not run_artifacts.is_reusable(
+            directory, config=expected, seed=seed):
+        return None
+
+    try:
+        with open(sidecar, encoding="utf-8") as fh:
+            sidecar_metrics = json.load(fh)
+        with open(os.path.join(directory, "status.json"), encoding="utf-8") as fh:
+            status_metrics = json.load(fh).get("metrics")
+    except (OSError, UnicodeError, json.JSONDecodeError, AttributeError):
+        return None
+    if not isinstance(sidecar_metrics, dict) or not isinstance(status_metrics, dict):
+        return None
+
+    # Status is written only after predictions are complete.  Every status
+    # metric must be represented identically in the sidecar; extra sidecar
+    # metadata is allowed for backwards-compatible reporting.
+    for key, value in status_metrics.items():
+        if key not in sidecar_metrics or sidecar_metrics[key] != value:
+            return None
+    return sidecar_metrics
 
 
 def _execute_cell(payload):
@@ -606,6 +721,18 @@ def main(output_roots: dict = None):
                     print(f"  [{task_name}] {config_name} seed={seed} "
                           f"-> reusing complete run", flush=True)
                     continue
+                _invalidate_metrics_sidecar(
+                    pair, config_name, seed, dataset_key, role)
+                # Baseline sidecars are produced as part of the proposed cell.
+                # If that cell is being retried, old baseline summaries must not
+                # survive a failed/partial rerun either.
+                if config_name == "proposed" and not args.no_baselines:
+                    for baseline_name in (
+                            tuple(args.classical_baselines) +
+                            tuple(args.quantum_baselines)):
+                        _invalidate_metrics_sidecar(
+                            pair, f"baseline_{baseline_name}", seed,
+                            dataset_key, role)
                 pending.append((pair, config_name, seed, task["dataset_dir"], args.samples,
                                 args.epochs, not args.use_mse, not args.no_baselines,
                                 roots, dataset_key, role, args.classical_baselines,
@@ -647,11 +774,11 @@ def main(output_roots: dict = None):
         for config_name in args.configs:
             per_seed = []
             for seed in args.seeds:
-                path = _metrics_path(pair, config_name, seed, dataset_key, role)
-                if os.path.exists(path):
-                    with open(path) as fh:
-                        per_seed.append(json.load(fh))
-            if per_seed:
+                metrics = _metrics_from_current_run(
+                    pair, config_name, seed, args.epochs, dataset_key, role)
+                if metrics is not None:
+                    per_seed.append(metrics)
+            if len(per_seed) == len(args.seeds):
                 agg = aggregate_metrics(per_seed)
                 cfg_dir = os.path.join(EXP_ROOT, ds_name, config_name)
                 os.makedirs(cfg_dir, exist_ok=True)
@@ -660,9 +787,10 @@ def main(output_roots: dict = None):
                 summary_rows.append((ds_name, config_name, agg))
 
     # Aggregate baselines (collected under baseline_* dirs) into the summary too.
-    _append_baseline_rows([_fmt_task(
-        task["dataset_key"], task["pair"], task["evidence_role"])
-        for task in tasks], args.seeds, summary_rows)
+    if not args.no_baselines:
+        _append_baseline_rows(
+            [_fmt_task(task["dataset_key"], task["pair"], task["evidence_role"])
+             for task in tasks], args.seeds, args.epochs, summary_rows)
 
     _write_summary_csv(summary_rows, os.path.join(EXP_ROOT, "summary.csv"))
     print(f"\nWrote summary to {os.path.join(EXP_ROOT, 'summary.csv')}")
@@ -673,7 +801,7 @@ def main(output_roots: dict = None):
         sys.exit(1)
 
 
-def _append_baseline_rows(tasks, seeds, summary_rows):
+def _append_baseline_rows(tasks, seeds, epochs, summary_rows):
     """Aggregate the per-seed baseline JSONs that run_single saved."""
     for task in tasks:
         ds_name = task if isinstance(task, str) else _fmt_pair(task)
@@ -681,16 +809,49 @@ def _append_baseline_rows(tasks, seeds, summary_rows):
         if not os.path.isdir(ds_dir):
             continue
         for entry in sorted(os.listdir(ds_dir)):
-            if not entry.startswith("baseline_"):
+            if entry not in {f"baseline_{name}" for name in _BASELINE_NAMES}:
                 continue
-            bdir = os.path.join(ds_dir, entry)
             dicts = []
             for seed in seeds:
-                p = os.path.join(bdir, f"seed_{seed}.json")
-                if os.path.exists(p):
-                    with open(p) as f:
-                        dicts.append(json.load(f))
-            if dicts:
+                # The baseline sidecar is accepted only when its own run
+                # artifact is complete and the sidecar still agrees with the
+                # status metrics.  This prevents a failed proposed rerun from
+                # leaking its previous baseline values into the new summary.
+                config_name = entry
+                # Baseline directory names are already encoded in ``ds_name``;
+                # recover the task pair only for the helper's path contract.
+                # Dataset keys are not needed because ``ds_name`` is the exact
+                # persisted task name, including the smoke namespace.
+                if not ds_name.startswith("smoke__"):
+                    dataset_key = None
+                    pair_text = ds_name
+                    # Registered-task names contain a dataset prefix.  Resolve
+                    # these directly to avoid guessing from filesystem paths.
+                    for candidate in ("mnist", "fashion_mnist", "kmnist"):
+                        prefix = f"{candidate}_"
+                        if pair_text.startswith(prefix):
+                            dataset_key = candidate
+                            pair_text = pair_text[len(prefix):]
+                            break
+                    # ``dataset_key`` legitimately remains ``None`` for the
+                    # legacy MNIST-only ``--datasets`` interface, whose task
+                    # names are simply ``0v1``/``3v5``.  Only the pair syntax
+                    # is required for resolving its run directory.
+                    if "v" not in pair_text:
+                        continue
+                else:
+                    dataset_key = None
+                    pair_text = ds_name[len("smoke__"):]
+                try:
+                    low, high = (int(value) for value in pair_text.split("v", 1))
+                except (TypeError, ValueError):
+                    continue
+                evidence_role = "smoke" if ds_name.startswith("smoke__") else "scientific"
+                metrics = _metrics_from_current_run(
+                    (low, high), config_name, seed, epochs, dataset_key, evidence_role)
+                if metrics is not None:
+                    dicts.append(metrics)
+            if len(dicts) == len(seeds):
                 summary_rows.append((ds_name, entry, aggregate_metrics(dicts)))
 
 

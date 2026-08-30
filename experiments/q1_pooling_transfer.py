@@ -11,8 +11,10 @@ The scientific aggregate is intentionally fail-closed.  A cell is accepted
 only when it is a complete run with the scientific evidence role, a canonical
 manifest, and source-stable test identities.  All five arms for a seed must
 then have the same split, ordered test IDs, and labels before any paired
-statistics are calculated.  Smoke artifacts live in a different namespace and
-are never eligible for this evidence file.
+statistics are calculated.  McNemar results remain descriptive within each
+seed split; confirmatory p-values come from the paired seed-level Wilcoxon
+test because test rows may recur across seed splits.  Smoke artifacts live
+in a different namespace and are never eligible for this evidence file.
 
 Typical use::
 
@@ -197,10 +199,8 @@ def plan_cells(
     }
 
 
-def _manifest_for_seed(manifests_root: Optional[Path], seed: int) -> Optional[dict]:
-    """Load the one canonical manifest for a transfer seed, if requested."""
-    if manifests_root is None:
-        return None
+def _manifest_for_seed(manifests_root: Path, seed: int) -> dict:
+    """Load the one canonical manifest for a transfer seed."""
     manifests_root = Path(manifests_root)
     candidates = sorted(manifests_root.glob(f"{TASK_NAME}_n*_seed{seed}.json"))
     if not candidates:
@@ -346,6 +346,7 @@ def _load_cell(
         "sample_ids_sha256": _json_sha256(sample_ids.tolist()),
         "y_true": y_true,
         "raw_outputs": raw_outputs,
+        "correct": np.where(raw_outputs > 0.0, 1, -1) == y_true,
         "metrics": metrics,
         "files": files,
     }
@@ -406,6 +407,11 @@ def build_transfer(
         raise ValueError("only scientific transfer artifacts can be aggregated")
     if _contains_smoke_namespace(runs_root):
         raise ValueError(f"smoke namespace is ineligible for scientific evidence: {runs_root}")
+    if manifests_root is None:
+        raise ValueError(
+            "manifests_root is required for scientific transfer aggregation; "
+            "non-canonical fixtures are not eligible for evidence"
+        )
 
     manifests = {
         seed: _manifest_for_seed(manifests_root, seed)
@@ -465,8 +471,12 @@ def build_transfer(
         arm_results[REFERENCE_ARM]["metrics"]["accuracy"]["values"][index]
         for index in range(len(seeds))
     ]
+    # Seed is the experimental unit for confirmatory transfer inference.  The
+    # test sets are not guaranteed to be disjoint across seeds, so correctness
+    # rows from different seeds must not be concatenated into one McNemar test.
+    # Keep the exact per-seed McNemar results as descriptive diagnostics and use
+    # the paired seed-level Wilcoxon test for confirmatory inference.
     wilcoxon_raw: List[Optional[float]] = []
-    mcnemar_raw: List[Optional[float]] = []
     for arm in arms:
         if arm == REFERENCE_ARM:
             continue
@@ -474,8 +484,8 @@ def build_transfer(
         wilcoxon = qstats.wilcoxon_across_seeds(reference_accuracy, comparator_accuracy)
         mcnemar_by_seed = {
             str(seed): qstats.mcnemar(
-                cells[seed][REFERENCE_ARM]["raw_outputs"] > 0.0,
-                cells[seed][arm]["raw_outputs"] > 0.0,
+                cells[seed][REFERENCE_ARM]["correct"],
+                cells[seed][arm]["correct"],
             )
             for seed in seeds
         }
@@ -487,19 +497,8 @@ def build_transfer(
             "mcnemar_by_seed": mcnemar_by_seed,
         }
         wilcoxon_raw.append(wilcoxon.get("p_value"))
-        mcnemar_raw.append(
-            qstats.mcnemar(
-                np.concatenate([
-                    cells[seed][REFERENCE_ARM]["raw_outputs"] > 0.0 for seed in seeds
-                ]),
-                np.concatenate([
-                    cells[seed][arm]["raw_outputs"] > 0.0 for seed in seeds
-                ]),
-            ).get("p_value")
-        )
 
     wilcoxon_correction = qstats.holm_bonferroni(wilcoxon_raw)
-    mcnemar_correction = qstats.holm_bonferroni(mcnemar_raw)
     comparator_index = 0
     for arm in arms:
         if arm == REFERENCE_ARM:
@@ -507,16 +506,29 @@ def build_transfer(
         comparison = comparisons[arm]
         comparison["wilcoxon"]["p_holm"] = wilcoxon_correction["adjusted"][comparator_index]
         comparison["wilcoxon"]["significant"] = wilcoxon_correction["rejected"][comparator_index]
-        comparison["mcnemar_pooled"] = qstats.mcnemar(
-            np.concatenate([
-                cells[seed][REFERENCE_ARM]["raw_outputs"] > 0.0 for seed in seeds
-            ]),
-            np.concatenate([
-                cells[seed][arm]["raw_outputs"] > 0.0 for seed in seeds
-            ]),
-        )
-        comparison["mcnemar_pooled"]["p_holm"] = mcnemar_correction["adjusted"][comparator_index]
-        comparison["mcnemar_pooled"]["significant"] = mcnemar_correction["rejected"][comparator_index]
+        per_seed_results = [comparison["mcnemar_by_seed"][str(seed)] for seed in seeds]
+        all_sample_ids = np.concatenate([
+            cells[seed][REFERENCE_ARM]["sample_ids"] for seed in seeds
+        ])
+        # Retain the historical key for consumers of schema version 1, but make
+        # its non-inferential status explicit.  Summed discordance counts are
+        # useful for describing how often the arms disagree; their p-value is
+        # intentionally absent because repeated/overlapping seed rows are not
+        # independent Bernoulli trials.
+        comparison["mcnemar_pooled"] = {
+            "b01": int(sum(result["b01"] for result in per_seed_results)),
+            "b10": int(sum(result["b10"] for result in per_seed_results)),
+            "n_discordant": int(sum(result["n_discordant"] for result in per_seed_results)),
+            "p_value": None,
+            "exact": False,
+            "p_holm": None,
+            "significant": False,
+            "descriptive_only": True,
+            "method": "summed per-seed discordance counts; no pooled test",
+            "n_seed_splits": int(len(seeds)),
+            "n_observations": int(all_sample_ids.size),
+            "n_unique_sample_ids": int(len(set(all_sample_ids.tolist()))),
+        }
         comparator_index += 1
 
     manifests_summary = {
@@ -561,11 +573,14 @@ def build_transfer(
                     "method": "Holm-Bonferroni",
                     "alpha": wilcoxon_correction["alpha"],
                     "n_tests": wilcoxon_correction["n_tests"],
+                    "role": "confirmatory inference at the seed level",
                 },
                 "mcnemar": {
-                    "method": "Holm-Bonferroni",
-                    "alpha": mcnemar_correction["alpha"],
-                    "n_tests": mcnemar_correction["n_tests"],
+                    "method": "exact per-seed McNemar; descriptive only",
+                    "alpha": 0.05,
+                    "n_tests": 0,
+                    "role": "descriptive within-split diagnostics",
+                    "pooled_inference": False,
                 },
             },
         },

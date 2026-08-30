@@ -140,6 +140,7 @@ def test_comparison_aggregation_validates_and_pairs_the_frozen_matrix(tmp_path):
     payload = analysis.build_comparison(
         runs, seeds=(0, 1),
         tasks=(("mnist", (0, 1), "unit task"),),
+        allow_noncanonical=True,
     )
     result = payload["tasks"][task]
     assert result["arms"]["proposed"]["metrics"]["accuracy"]["mean"] == 1.0
@@ -164,4 +165,23 @@ def test_comparison_aggregation_rejects_a_split_mismatch(tmp_path):
             runs, task, arm, 0, [-0.8, 0.8, -0.6, 0.7], split_id=split_id)
     with pytest.raises(ValueError, match="split mismatch"):
         analysis.build_comparison(
-            runs, seeds=(0,), tasks=(("mnist", (0, 1), "unit task"),))
+            runs, seeds=(0,), tasks=(("mnist", (0, 1), "unit task"),),
+            allow_noncanonical=True,
+        )
+
+
+def test_scientific_comparison_rejects_custom_task_matrix(tmp_path):
+    with pytest.raises(ValueError, match="frozen Q1 task registry"):
+        analysis.build_comparison(
+            tmp_path / "runs",
+            seeds=tuple(range(5)),
+            tasks=(("mnist", (0, 1), "post-hoc task"),),
+        )
+
+
+def test_scientific_comparison_requires_canonical_manifests(tmp_path):
+    with pytest.raises(ValueError, match="canonical comparison manifest"):
+        analysis.build_comparison(
+            tmp_path / "runs",
+            manifests_root=tmp_path / "manifests",
+        )

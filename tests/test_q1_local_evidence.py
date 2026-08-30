@@ -6,6 +6,7 @@ cover the invariants that must hold before that bounded command is launched.
 """
 
 import hashlib
+import json
 
 import numpy as np
 import pytest
@@ -105,4 +106,50 @@ def test_noise_ladder_requires_zero_noise_anchor():
     with pytest.raises(ValueError, match="begin"):
         evidence.build_noise_validation(
             ["mnist:3,5"], [0], samples=1, levels=(0.01,), data_root="missing"
+        )
+
+
+def _checkpoint_status(split_id="split-1", seed=0, **config_overrides):
+    config = {
+        "evidence_role": "scientific",
+        "image_size": 28,
+        "n_qubits": 10,
+        "encoding_type": "amplitude",
+        "pooling_mode": "unitary",
+        "ablation": {"name": "proposed"},
+    }
+    config.update(config_overrides)
+    return {"state": "complete", "seed": seed, "split_id": split_id, "config": config}
+
+
+def test_noise_checkpoint_validation_rejects_missing_or_fixture_checkpoint(tmp_path):
+    with pytest.raises(ValueError, match="requires a complete proposed checkpoint"):
+        evidence._validate_checkpoint_identity(
+            None, "mnist", (3, 5), 0, "split-1"
+        )
+
+    checkpoint = tmp_path / "weights.npz"
+    np.savez(checkpoint, weights=np.zeros(1))
+    with pytest.raises(ValueError, match="provenance is missing"):
+        evidence._validate_checkpoint_identity(
+            checkpoint, "mnist", (3, 5), 0, "split-1"
+        )
+
+
+@pytest.mark.parametrize(
+    "status_kwargs,match",
+    [
+        ({"split_id": "other"}, "split does not match"),
+        ({"pooling_mode": "none"}, "configuration does not match"),
+    ],
+)
+def test_noise_checkpoint_validation_rejects_identity_mismatch(
+        tmp_path, status_kwargs, match):
+    checkpoint = tmp_path / "weights.npz"
+    np.savez(checkpoint, weights=np.zeros(1))
+    status = _checkpoint_status(**status_kwargs)
+    (tmp_path / "status.json").write_text(json.dumps(status), encoding="utf-8")
+    with pytest.raises(ValueError, match=match):
+        evidence._validate_checkpoint_identity(
+            checkpoint, "mnist", (3, 5), 0, "split-1"
         )

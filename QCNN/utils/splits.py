@@ -10,6 +10,8 @@ the recorded indices.
 import hashlib
 import json
 import os
+import tempfile
+import time
 
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -131,14 +133,63 @@ def verify_manifest(manifest: dict) -> None:
 
 
 def save_manifest(manifest: dict, path: str) -> None:
+    """Persist a manifest with an atomic replace.
+
+    The experiment runner prepares the same dataset/seed manifest in several
+    worker processes when ``--jobs`` is greater than one.  Writing directly to
+    the destination lets one worker observe another worker's truncated JSON.
+    A per-directory temporary file followed by ``os.replace`` means readers
+    see either the old complete manifest or the new complete manifest, never a
+    partially written file.  The temporary file is deliberately created beside
+    the destination so the replace remains on one filesystem.
+    """
     os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
-    with open(path, 'w') as fh:
-        json.dump(manifest, fh, indent=2, sort_keys=True)
+    directory = os.path.dirname(os.path.abspath(path)) or '.'
+    basename = os.path.basename(path)
+    temporary_path = None
+    try:
+        fd, temporary_path = tempfile.mkstemp(
+            prefix=f'.{basename}.', suffix='.tmp', dir=directory)
+        with os.fdopen(fd, 'w', encoding='utf-8', newline='') as fh:
+            json.dump(manifest, fh, indent=2, sort_keys=True)
+            fh.write('\n')
+            fh.flush()
+            os.fsync(fh.fileno())
+        # Windows refuses to replace a file while a concurrent reader still
+        # holds it open.  Readers never observe a partial file because the
+        # replacement remains atomic; retry the short sharing window rather
+        # than turning harmless read/write contention into a failed worker.
+        for attempt in range(20):
+            try:
+                os.replace(temporary_path, path)
+                break
+            except PermissionError:
+                if attempt == 19:
+                    raise
+                time.sleep(0.005)
+        temporary_path = None
+    finally:
+        if temporary_path is not None:
+            try:
+                os.unlink(temporary_path)
+            except FileNotFoundError:
+                pass
 
 
 def load_manifest(path: str) -> dict:
-    with open(path) as fh:
-        manifest = json.load(fh)
+    # A concurrent atomic replacement can briefly make the destination
+    # unavailable on Windows while another process still has the old file open.
+    # Bound the retry so a genuinely missing/locked manifest remains an
+    # actionable error.
+    for attempt in range(20):
+        try:
+            with open(path, encoding='utf-8') as fh:
+                manifest = json.load(fh)
+            break
+        except PermissionError:
+            if attempt == 19:
+                raise
+            time.sleep(0.005)
     verify_manifest(manifest)
     return manifest
 
