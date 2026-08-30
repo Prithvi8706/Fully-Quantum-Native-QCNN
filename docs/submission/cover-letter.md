@@ -1,4 +1,4 @@
-# Cover letter draft - IEEE journal (venue-neutral)
+# Cover letter draft - venue-neutral journal
 
 **Target journal:** [Insert selected journal]
 

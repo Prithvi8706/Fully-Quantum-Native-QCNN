@@ -1,4 +1,4 @@
-# FQCNN IEEE journal draft and submission preparation
+# FQCNN venue-neutral journal draft and submission preparation
 
 The venue is intentionally undecided. The canonical manuscript is the root-level
 `fqcnn.tex`, a complete venue-neutral `IEEEtran` journal draft, and `fqcnn.pdf` is
@@ -10,9 +10,12 @@ The reproducible release archive is generated from a clean Git commit by
 `scripts/build_q1_submission_package.py`; the generated ZIP is deliberately not
 committed because it is a release attachment rather than source code.
 
+The current candidate comparison is [`docs/q1-journal-shortlist.md`](../q1-journal-shortlist.md).
+No journal has been selected, so no journal template conversion has been made.
+
 Included preparation documents:
 
-- `cover-letter.md` - venue-neutral IEEE editor letter draft;
+- `cover-letter.md` - venue-neutral editor letter draft;
 - `author-declarations.md` - plain-language all-author confirmation checklist;
 - `data-code-availability.md` - precise data and software availability statement;
 - `conference-extension.md` - disclosure of what the journal version adds;
@@ -38,3 +41,47 @@ venue's current template and graphics rules, deposit the code/evidence archive i
 a persistent public repository, complete the declarations, and decide any APC or
 licence. No journal submission or real-QPU execution is performed by this
 repository.
+
+## Venue-neutral readiness audit (checked 2026-08-30)
+
+The audit below records what is ready now and what deliberately remains a
+post-selection action. It does not change the validated numerical results or
+rerun the completed experiments.
+
+| Area | Current status | Evidence or remaining action |
+|---|---|---|
+| Title | Ready as a neutral baseline | `fqcnn.tex` uses a specific title without a journal name or an unsupported novelty/advantage claim. Recheck only the selected venue's title-length/style preference. |
+| Abstract | Ready as a neutral baseline | One paragraph, 174 words, self-contained, with defined `QCNN`/`FQCNN` terms and no citations, equations, figure/table references, or hardware-performance claim. Recheck the selected venue's word and acronym rules. |
+| Keywords | Ready as a neutral baseline | Four terms are present and alphabetized for the current IEEE draft. Convert count, separators, and index-term style after selection. |
+| References | Ready under the project policy | 15 cited entries match the bibliography; every retained entry has a DOI and passes the documented 2024 SJR Q1 journal-only filter. Convert only the citation style required by the selected venue. |
+| Figures and tables | Build-ready; final graphics gate open | Four manuscript figures are referenced and present, with 12 total figure/table captions. `fig1.png` and `fig3.png` report about 600 dpi, `q1_comparison.png` about 300 dpi, while `fig4.png` reports about 96 dpi metadata; regenerate or verify `fig4.png` at the selected venue's line-art threshold before upload. |
+| Page/word limit | Venue-dependent | The current IEEEtran PDF is 10 US-letter pages. TQE lists no page limit; QMI lists research articles at arbitrary length; MLST normally limits research papers to 8,500 words; QST's article-type gate must be checked after selection. |
+| Author metadata | Confirmation required | The manuscript has three named authors, affiliations, and email addresses. Confirm author order, corresponding author, all-author approval, ORCIDs, affiliations, and the final contact address; no ORCID has been invented. |
+| Declarations | Confirmation required | [`author-declarations.md`](author-declarations.md) contains the checklist, but funding, conflicts, contributions, ethics/rights, AI disclosure, prior-version wording, correspondence, and APC/licence facts remain blank until the authors confirm them. |
+| Data and code | Statement ready; archive action open | [`data-code-availability.md`](data-code-availability.md) states the simulation-only scope and upstream-data provenance. Deposit the release archive in a persistent public repository after selection and replace the placeholder with its DOI/immutable URL. |
+| Cover letter | Draft ready; target fields open | [`cover-letter.md`](cover-letter.md) contains the bounded contribution, exact result framing, negative findings, and prior-version disclosure. Insert the selected journal, article type, editor-facing fit, and final archive/declaration facts only after selection. |
+
+The present figure-resolution note is a submission-quality action, not a request
+to repeat an experiment: it concerns only the bitmap encoding of an already
+validated diagram. The current manuscript source remains unchanged until a venue
+is selected.
+
+## Post-selection checklist
+
+After the authors select a journal, complete these source-level actions in order:
+
+1. Recheck the journal's current quartile category, article type, template,
+   abstract/keyword rules, reference style, page or word limit, graphics rules,
+   APC/licence, and declarations against its official author pages.
+2. Adapt `fqcnn.tex` and the bibliography to that template without changing
+   validated data, statistical results, or claim boundaries.
+3. Regenerate or validate figures at the selected journal's resolution, naming,
+   color, and embedded-font requirements; inspect the complete PDF and page/word
+   count.
+4. Complete all-author metadata, CRediT/contribution text, funding and competing
+   interests, ethics/rights, AI/tool disclosure, conference-version disclosure,
+   data/code DOI, and licence/APC choices.
+5. Run the final build, evidence, test, secret, and package gates from a clean
+   commit; obtain all-author approval of the exact upload files.
+6. Stop for explicit user approval before any external upload, authentication,
+   journal submission, or real-QPU execution.

@@ -1,9 +1,41 @@
-# Q1 journal shortlist (candidate venues, verified 2026-08-29)
+# Q1 journal shortlist (candidate venues, checked 2026-08-30)
 
 This is a candidate list, not a final venue decision or a guarantee of acceptance.
 Quartile labels are category- and database-dependent and must be checked again
 immediately before submission. The manuscript's scientific scope remains
 simulation-only; no venue choice authorises a QPU job or a submission.
+
+## Recommendation at a glance
+
+**IEEE Transactions on Quantum Engineering (TQE)** is the strongest default for
+the current paper: its engineering scope matches the fully unitary architecture,
+pooling theorem, resource accounting, and reproducible simulator benchmark; its
+current IEEE title-list entry is Q1; and the existing `IEEEtran` journal draft is
+the closest format starting point.
+
+**Quantum Machine Intelligence (QMI)** is the best specialist alternative if the
+authors want the paper read primarily as a quantum-machine-learning/QNN paper.
+**Machine Learning: Science and Technology (MLST)** is attractive if the
+benchmark protocol and reproducibility package are the main editorial story.
+**Quantum Science and Technology (QST)** is an aspirational option for a broader
+quantum-science claim, but its stated selectivity and broad-impact bar make it the
+highest editorial-risk choice for this deliberately bounded, simulation-only
+result.
+
+## Comparison matrix
+
+| Candidate | Fit for this manuscript | Q1 and venue evidence | Format, access, and length gate | Main adaptation or editorial risk |
+|---|---|---|---|---|
+| **TQE** | Fully unitary quantum architecture, circuit theorem, quantum-engineering implications, resource analysis, and a reproducible benchmark. | The official IEEE January 2026 title list reports TQE as full OA, JIF 4.6, and Q1. Recheck the authors' institutional JCR category/year record before upload. | Gold OA; TQE currently lists a US$1,995 APC effective 1 January 2024, with possible IEEE/member/country discounts or waivers; no page limit. The current IEEEtran draft is the nearest format baseline. | Confirm corresponding author, ORCIDs, financial support, prior-version disclosure, rights, and final graphics requirements. Keep the contribution framed as an engineering distinction, not a hardware-performance or quantum-advantage claim. |
+| **QMI** | Closest specialist scope: quantum AI, QML/QNNs, quantum data preprocessing, image/signal processing, and quantum software. | Publisher reports a 2025 JIF of 4.6 and a 27-day median first decision. Q1 status is conditional on the current indexing category/database/year and must be checked in institutional JCR/SJR records. | Hybrid; subscription publication has no APC, while the current Springer page lists OA at £2,590 / US$3,490 / €2,890. Research articles have no stated fixed length. Convert to Springer guidance: 150–250-word abstract, 4–6 keywords, author-year references, declarations, and data-availability statement. | Springer conversion and reference-style change. The paper must make clear why the coherent construction is useful even though the measured channel is reproduced exactly. |
+| **MLST** | Strong fit for quantum computing, neural architectures, codes/datasets, and benchmark studies; the open evidence package is an editorial asset. | Q1 classifications for MLST vary by database and category; treat them as conditional and verify the current target record immediately before submission rather than as a package fact. | Fully OA; current IOP guidance lists a US$3,125 APC and no submission charge, subject to agreements/discounts. Research papers are normally no more than 8,500 words; IOP uses a PDF-first submission workflow and optional templates. | Count words after conversion and retain enough technical detail for the benchmark/reproducibility bar. Keep all negative and inconclusive findings visible rather than optimizing the narrative for a benchmark win. |
+| **QST** | Covers quantum computation, QML, software, algorithms, and engineering, but is aimed at work with significant and lasting broad impact. | Q1 appears in relevant current SJR/JCR records, but the exact category/year must be verified at selection. This is not treated as an unconditional release fact. | Hybrid; subscription publication is free, while the current IOP page lists OA at £2,930 / US$4,090 / €3,335. Generic IOP guidance uses a concise title, an abstract up to 300 words, embedded figures, and data/supplement options. | Highest selectivity risk. The current bounded simulator evidence and absence of a hardware result may be a weaker match for the journal's stated lasting-impact bar; do not add unsupported claims to compensate. |
+
+Only TQE's Q1 label is tied here to a current official IEEE title-list source. The
+other candidates remain suitable conditional Q1 options whose classification must
+be verified in the target indexing system and category at the time of selection.
+Costs, discounts, and review-time metrics are also time-sensitive and are not
+promises about editorial outcome.
 
 ## Primary candidate: IEEE Transactions on Quantum Engineering (TQE)
 
@@ -56,7 +88,7 @@ checked in the target indexing system at submission (the Q1 label is not assumed
 this package). The paper would need an IOP manuscript conversion and a tighter
 benchmark-oriented framing.
 
-Source: [MLST scope, article types, and charges](https://publishingsupport.iopscience.org/journals/machine-learning-science-and-technology/about-machine-learning-science-and-technology/).
+Source: [MLST scope, article types, and charges](https://publishingsupport.iopscience.iop.org/journals/machine-learning-science-and-technology/about-machine-learning-science-and-technology/).
 
 ## Fallback 3: Quantum Science and Technology (IOP)
 
@@ -79,3 +111,13 @@ Source: [QST scope, selectivity, and charges](https://publishingsupport.iopscien
 4. Keep the claims bounded: no quantum advantage, hardware validation, universal
    trainability, image-space locality, or broad-domain generalisation claim is
    supported by this package.
+
+Useful official cross-checks are the [IEEE article structure guidance](https://journals.ieeeauthorcenter.ieee.org/create-your-ieee-journal-article/create-the-text-of-your-article/structure-your-article/),
+[IEEE graphics guidance](https://journals.ieeeauthorcenter.ieee.org/create-your-ieee-journal-article/create-graphics-for-your-article/file-formatting/),
+[QMI aims and scope](https://link.springer.com/journal/42484/aims-and-scope),
+[QMI submission guidelines](https://link.springer.com/journal/42484/submission-guidelines),
+[MLST author guidance](https://publishingsupport.iopscience.iop.org/journals/machine-learning-science-and-technology/),
+and [QST author guidance](https://publishingsupport.iopscience.iop.org/journals/quantum-science-and-technology/).
+
+No journal submission, upload, authentication, or real-QPU execution has been
+performed.

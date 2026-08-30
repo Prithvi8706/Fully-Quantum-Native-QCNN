@@ -2,10 +2,10 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "FQCNN: A Fully Quantum-Native Convolutional Neural Network with Coherent Unitary Pooling"
 abstract: >-
-  A fully quantum-native convolutional neural network that performs data
-  encoding, local convolution, coherence-preserving unitary pooling, and
-  classification using only unitary operations, with no intermediate
-  measurements. Implemented in PennyLane.
+  A fully quantum-native convolutional neural network that uses global amplitude
+  encoding, shared register-index convolution, coherence-preserving unitary
+  pooling, and classification with unitary operations before a terminal
+  observable. Implemented in PennyLane.
 type: software
 authors:
   - family-names: "Singh Bhui"
@@ -14,6 +14,9 @@ authors:
   - family-names: "Raghu"
     given-names: "Prithvi"
     affiliation: "Vellore Institute of Technology"
+  - family-names: "Jain"
+    given-names: "Rohan"
+    affiliation: "AstraZeneca"
 keywords:
   - quantum machine learning
   - quantum convolutional neural network

@@ -17,6 +17,10 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 
 **State labels:** `pending` · `running` · `failed` · `complete`
 
+**Current gate:** venue selection and venue-specific submission adaptation. Until
+the authors select a journal, `fqcnn.tex` remains the venue-neutral IEEEtran
+draft; no submission, upload, authentication, or real-QPU execution is authorized.
+
 ---
 
 ## 0. Q1 fast-track daily execution
