@@ -31,6 +31,7 @@ RELEASE_SOURCES = (
     "QCNN/layers/QPool.py",
     "QCNN/models/QCNNModel.py",
     "QCNN/utils/dataset_registry.py",
+    "QCNN/utils/exclusive_queue.py",
     "QCNN/utils/metrics.py",
     "QCNN/utils/run_artifacts.py",
     "QCNN/utils/splits.py",

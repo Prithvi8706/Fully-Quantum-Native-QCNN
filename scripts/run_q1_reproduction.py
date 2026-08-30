@@ -72,6 +72,7 @@ LEDGER_REQUIRED_SOURCE_PATHS = (
     "QCNN/models/QCNNModel.py",
     "QCNN/training/Qtrainer.py",
     "QCNN/utils/dataset_registry.py",
+    "QCNN/utils/exclusive_queue.py",
     "QCNN/utils/metrics.py",
     "QCNN/utils/run_artifacts.py",
     "QCNN/utils/splits.py",
@@ -87,6 +88,7 @@ LEDGER_REQUIRED_SOURCE_PATHS = (
 
 RELEASE_LINT_PATHS = (
     "QCNN/utils/dataset_registry.py",
+    "QCNN/utils/exclusive_queue.py",
     "experiments/evidence_provenance.py",
     "experiments/pooling_analysis.py",
     "experiments/q1_fast_track_analysis.py",

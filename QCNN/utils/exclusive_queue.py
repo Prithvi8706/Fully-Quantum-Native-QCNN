@@ -22,6 +22,18 @@ def _operation_guard(path, wait=False):
             if not wait:
                 raise
             time.sleep(0.01)
+        except PermissionError as exc:
+            # Windows may report a sharing violation rather than
+            # ``FileExistsError`` while another worker owns the guard.  Treat
+            # an existing guard as contention; a missing guard still indicates
+            # a genuine permission problem and must not be hidden.
+            if not wait:
+                if guard_path.exists():
+                    raise FileExistsError(str(guard_path)) from exc
+                raise
+            if not guard_path.exists():
+                raise
+            time.sleep(0.01)
     try:
         yield
     finally:
@@ -41,7 +53,14 @@ def acquire(path, metadata: dict) -> dict:
         acquired_at_utc=datetime.now(timezone.utc).isoformat(),
     )
     with _operation_guard(path):
-        fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+        try:
+            fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+        except PermissionError as exc:
+            # The lease already exists but is open by another Windows worker;
+            # expose the same fail-fast contention contract as O_EXCL on POSIX.
+            if path.exists():
+                raise FileExistsError(str(path)) from exc
+            raise
         try:
             with os.fdopen(fd, "w") as handle:
                 json.dump(owner, handle, indent=2, sort_keys=True, allow_nan=False)
