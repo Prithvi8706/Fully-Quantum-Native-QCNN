@@ -28,11 +28,29 @@
 \maketitle
 
 \begin{abstract}
-Building a quantum convolutional neural network that stays coherent throughout the circuit remains difficult. We study a model that performs state preparation, register-index convolution, pooling, and classification using only unitary quantum operations before one terminal observable. It uses global amplitude encoding, a parameter-shared SU(2) kernel, and a measurement-free pooling block. We prove that this coherent block reproduces the corresponding measurement-based pooling channel on the retained register, without mid-circuit measurement, qubit reset, or classical feed-forward; the archived finite check agrees to numerical precision. The empirical package combines a predeclared multi-domain comparison, pooling-transfer ablation, finite trainability diagnostics, and local resource/noise simulations. Claims are restricted to these declared tasks and simulator protocols; no quantum advantage or hardware performance is inferred.
+Quantum convolutional neural networks (QCNNs) commonly reduce registers through
+mid-circuit measurement or classical feed-forward, while fully coherent
+alternatives are difficult to compare fairly. We study a fully quantum-native
+convolutional neural network (FQCNN) that performs state preparation, shared
+register-index convolution, pooling, and classification with unitary operations
+before one terminal observable. The ten-qubit model uses global amplitude
+encoding, shared three-axis single-qubit rotations, and a measurement-free
+pooling block. We prove that the stated block induces exactly the corresponding
+measure-and-condition channel on the retained register, without mid-circuit
+measurement, reset, or classical feed-forward. The validated evaluation covers
+four binary tasks from three dataset families, five random seeds, identical split
+manifests, logistic and dense-neural baselines, and a tree-tensor baseline. The
+FQCNN is below the logistic and dense-neural baselines in mean accuracy on all
+four tasks and above the tree-tensor baseline on all four; no primary paired
+difference is significant after Holm correction. Pooling-transfer, finite
+trainability, resource, and local-noise checks provide bounded supplementary
+evidence. All results are classical simulation or local fake-backend checks; no
+quantum advantage or hardware-performance claim is made.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Quantum convolutional neural networks, variational quantum circuits, quantum machine learning, amplitude encoding, unitary pooling, NISQ computing, coherent quantum architectures.
+Amplitude encoding, quantum convolutional neural networks, quantum machine
+learning, unitary pooling.
 \end{IEEEkeywords}
 
 \section{Introduction}
@@ -124,7 +142,7 @@ The preprocessed vector is padded with zeros to length $2^{10}$ and prepared as
 No per-qubit rotations or data-dependent ring-correlation gates are applied on top of this operation in the main amplitude-encoded path. Consequently, the locality statements below refer to the support and parameter sharing of variational gates in the register-index space, not to spatially adjacent pixels in the original image.
 
 \subsection{Quantum Convolutional Layer}
-The convolutional layer applies a parameter-shared variational kernel over all 2$\times$2 sliding windows.
+The convolutional layer applies a parameter-shared variational kernel over all 2$\times$2 sliding windows. The complete pipeline is summarised in Fig.~\ref{fig:arch}; the circuit-level kernel used in each window is shown in Fig.~\ref{fig:kernel}.
 
 \subsubsection{Kernel parameterisation}
 Let each window contain four qubits. For a kernel depth $d$ and depth slice $k$, the single-qubit rotation block is
@@ -153,7 +171,7 @@ U_{\text{conv}}(\Theta_k) = \prod_{\omega} U_{\text{ent}}(\omega)\, V_\omega(\Th
 
 \subsection{Coherence-Preserving Pooling}
 \subsubsection{Pooling pair set}
-After convolution, the qubits are grouped into disjoint ordered pairs
+After convolution, the qubits are grouped into disjoint ordered pairs as illustrated in Fig.~\ref{fig:pooling}.
 \begin{equation}
 P \subseteq \big\{(a, b) \mid a, b \in \{1, \ldots, N\},\ a \neq b\big\}.
 \end{equation}
@@ -175,12 +193,12 @@ U_{\text{pool}}(\Theta_p) = \prod_{(a,b) \in P} W_{ab}(\Theta_p).
 The control assignment in~\eqref{eq:poolblock} is not incidental: both two-qubit gates are diagonal in the computational basis of the compressed qubit $b$, which is the structural property Section~\ref{sec:pooling-theory} rests on.
 
 \subsubsection{Dimensional reduction}
-After pooling, only the retained qubits $a$ stay active; the compressed qubits $b$ are discarded after the unitary evolution. With $|P| = m$, the number of remaining active qubits is $n_r = N - m$, and the pooling parameter count is $|\Theta_p| = 3|P|$. The pooling thus performs structured dimensionality reduction while preserving coherence.
+After pooling, only the retained qubits $a$ stay active; the compressed qubits $b$ are discarded after the unitary evolution. At a stage with $N$ active wires, the executed pair-and-retire schedule forms $m=|P|=\lfloor N/2\rfloor$ consecutive pairs and retires any unpaired wire. Thus the active output count is $n_r=m$ (rather than $N-m$ when $N$ is odd), and the pooling parameter count is $|\Theta_p|=3|P|$. For the ten-qubit model the active-wire schedule is $10\rightarrow5\rightarrow2\rightarrow1$. The pooling therefore performs structured dimensionality reduction while preserving the pre-discard global state as a pure state.
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{figs_final/fig4.png}
-\caption{Coherent unitary pooling mechanism. For each disjoint pair $(a, b) \in P$, qubit $a$ is retained and $b$ is compressed. The unitary $W_{ab}$ transfers information from $q_b$ into $q_a$ via CRY and CRZ gates \emph{controlled on $q_b$} and targeting $q_a$, followed by a local $R_Y$ on each wire, with no mid-circuit measurement. The compressed qubit is excluded from all later operations, reducing the active register by $|P|$ qubits while the global state remains pure.}
+\caption{Coherent unitary pooling mechanism. For each disjoint pair $(a, b) \in P$, qubit $a$ is retained and $b$ is compressed. The unitary $W_{ab}$ transfers information from $q_b$ into $q_a$ via CRY and CRZ gates \emph{controlled on $q_b$} and targeting $q_a$, followed by a local $R_Y$ on each wire, with no mid-circuit measurement. The compressed qubit is excluded from all later operations; any unpaired wire is also retired by the executed schedule, while the global state remains pure before the active-register reduction.}
 \label{fig:pooling}
 \end{figure}
 
@@ -322,7 +340,7 @@ If the noise channel is independent of $\theta$, differentiation moves inside th
 
 \section{Experimental Results and Analysis}
 \subsection{Dataset Description}
-The original headline experiment used the MNIST handwritten-digit dataset~\cite{ref49} in the standard IDX binary format, selecting digits 0 and 1 for a strict binary task. Its single seeded stratified 60/15/25 split and 12,665-image count are retained as historical provenance only. The Q1 evidence uses the frozen multi-domain registry and records source checksums, ordered sample identifiers, split hashes, validation-only model selection, and exactly one final test evaluation for every seed; the final paper must report those per-task manifests rather than substituting the historical split.
+The original headline experiment used the MNIST handwritten-digit dataset~\cite{ref49} in the standard IDX binary format, selecting digits 0 and 1 for a strict binary task. Its single seeded stratified 60/15/25 split and 12,665-image count are retained as historical provenance only and are summarised in Table~\ref{tab:dataset}. The Q1 evidence uses the frozen multi-domain registry and records source checksums, ordered sample identifiers, split hashes, validation-only model selection, and exactly one final test evaluation for every seed. Table~\ref{tab:q1data} gives the registered task definitions and split sizes; the complete source-file hashes and sample manifests remain in the machine-readable provenance artifact.
 
 \begin{table}[!t]
 \caption{Historical headline dataset configuration}
@@ -348,49 +366,66 @@ Label mapping & Digit 0 $\rightarrow$ $-$1, Digit 1 $\rightarrow$ +1 \\
 \end{tabular}
 \end{table}
 
+\begin{table*}[!t]
+\caption{Registered Q1 evaluation tasks and provenance. Each row uses 666 source examples and the frozen 400/100/166 train/validation/test split for seeds 0--4; source-file checksums and ordered identifiers are recorded in the cited artifact.}
+\label{tab:q1data}
+\centering
+\begin{tabular}{@{}llllll@{}}
+\toprule
+\textbf{Task} & \textbf{Dataset/classes} & \textbf{Role} & \textbf{Split} & \textbf{Seeds} & \textbf{Evidence} \\
+\midrule
+MNIST 0-vs-1 & MNIST (0, 1) & continuity/calibration & 400/100/166 & 0--4 & provenance + aggregate \\
+MNIST 3-vs-5 & MNIST (3, 5) & harder in-domain & 400/100/166 & 0--4 & provenance + aggregate \\
+Fashion 0-vs-6 & Fashion-MNIST (T-shirt/top, Shirt)~\cite{ref52} & cross-domain clothing & 400/100/166 & 0--4 & provenance + aggregate \\
+KMNIST 2-vs-3 & Kuzushiji-MNIST (2, 3)~\cite{ref53} & distinct script domain & 400/100/166 & 0--4 & provenance + aggregate \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
 Each input is min-max normalised to [0, 1], flattened to 784 values, zero-padded to 1024, and embedded directly into one ten-qubit state by global amplitude encoding. This state preparation does not preserve a spatial-neighbour relation between image pixels and register indices; all locality claims in the variational circuit are therefore register-index statements. Labels are mapped to $\{+1, -1\}$ for the Pauli-$Z$ expectation output. The corrected Q1 campaign uses 666 source examples per task and the frozen 60/15/25 split, yielding exactly 400 training, 100 validation, and 166 test examples for each seed; every arm consumes the same ordered identifiers. The historical 0-vs-1 task is a calibration reference, while the Q1 matrix adds a harder MNIST pair and two independently checksummed dataset families.
 
 \subsection{Experimental Setup and Training Configuration}
-The experimental validation is executed using numerical quantum simulation backends. The architecture uses a register of $n = 10$ qubits initialised in the ground state $|0\rangle^{\otimes 10}$. A 2D input image $X \in \mathbb{R}^{28 \times 28}$ is flattened into a 784-dimensional vector $x$, which is zero-padded to 1024 and mapped to the 1024 state amplitudes ($2^{10}$) using a global amplitude-encoding sub-circuit. Simulations are run via the \texttt{lightning.qubit} exact statevector simulator. The corrected Q1 campaign uses 666 source examples per task and the frozen 60/15/25 split, yielding exactly 400 training, 100 validation, and 166 test examples; the historical 12,665-sample count belongs only to the single-seed headline provenance described above. The model comprises convolutional layers with shared SU(2) kernels, coherence-preserving pooling layers, and a final variational classification head. Training uses mini-batch optimisation with Adam, gradient clipping, and EMA of parameters.
+The experimental validation is executed using numerical quantum simulation backends. The architecture uses a register of $n = 10$ qubits initialised in the ground state $|0\rangle^{\otimes 10}$. A 2D input image $X \in \mathbb{R}^{28 \times 28}$ is flattened into a 784-dimensional vector $x$, which is zero-padded to 1024 and mapped to the 1024 state amplitudes ($2^{10}$) using a global amplitude-encoding sub-circuit. Simulations are run via the \texttt{lightning.qubit} exact statevector simulator. The corrected Q1 campaign uses 666 source examples per task and the frozen 60/15/25 split, yielding exactly 400 training, 100 validation, and 166 test examples; the historical 12,665-sample count belongs only to the single-seed headline provenance described above. The model comprises convolutional layers with shared SU(2) kernels, coherence-preserving pooling layers, and a final variational classification head. Training uses mini-batch optimisation with Adam, gradient clipping, and EMA of parameters. The exact Q1 settings are listed in Table~\ref{tab:training}.
 
 \begin{table}[!t]
-\caption{Training Configuration}
+\caption{Training configuration for the validated Q1 comparison.}
 \label{tab:training}
 \centering
 \begin{tabular}{ll}
 \toprule
 \textbf{Parameter} & \textbf{Value} \\
 \midrule
-Epochs & 50 max; early-stopped at 25 \\
+Epochs & 30 maximum; patience 3 \\
 Batch size & 32 \\
-Learning rate & 0.005 \\
+Learning rate & 0.02 \\
 Optimizer & Adam \\
-Loss function & Binary Cross-Entropy \\
+Loss function & Weighted Binary Cross-Entropy \\
 Quantum device & lightning.qubit (PennyLane) \\
 Shots & None (exact statevector) \\
-Random seed & 42 (NumPy / Python / PennyLane) \\
+Seeds & 0, 1, 2, 3, 4 \\
+Per-task split & 400 / 100 / 166 (train / validation / test) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Results}
 \label{sec:results}
-The previously reported optimisation profile is a historical single-seed MNIST reference, not the Q1 headline result. The final performance statement is taken from the validated five-seed, four-task aggregate and reports uncertainty and paired baseline tests; the old 3,166-image confusion counts are not reused as multi-domain evidence.
+The previously reported optimisation profile used a single seeded MNIST
+reference run with a 0.005 learning rate and a 50-epoch maximum; it is retained
+as provenance, not as the Q1 headline result. The final performance statement is
+taken from the validated five-seed, four-task aggregate and reports uncertainty
+and paired baseline tests; the old 3,166-image confusion counts are not reused as
+multi-domain evidence.
 
-\begin{table}[!t]
-\caption{Historical single-seed reference metrics; final Q1 values are generated from the validated multi-task aggregate.}
-\label{tab:final}
-\centering
-\begin{tabular}{ll}
-\toprule
-\textbf{Metric} & \textbf{Value} \\
-\midrule
-Training accuracy & Historical single-seed reference \\
-Validation accuracy & Historical single-seed reference \\
-Test accuracy & See Q1 aggregate artifact \\
-\bottomrule
-\end{tabular}
-\end{table}
+For each task and arm, accuracy is summarised across the five seed-level test
+evaluations by its mean and population standard deviation. The primary paired
+test uses the five per-seed accuracies in a two-sided Wilcoxon signed-rank test;
+the twelve task--comparator tests are corrected as one Holm--Bonferroni family at
+$\alpha=0.05$. The reported 95\% intervals are seeded percentile bootstrap
+intervals for the mean using 10,000 resamples. Exact McNemar tests are retained
+as descriptive per-seed diagnostics on paired correctness vectors; no pooled
+McNemar p-value is used for confirmatory inference. With five paired seeds, these
+tests have limited power, so non-significance is not interpreted as equivalence.
 
 \subsection{Analysis of Model Performance}
 The unitary construction preserves the global state until the terminal observable, and the pooling theorem establishes exact equivalence to the corresponding measure-and-condition channel for the stated block. The empirical contribution is assessed by the Q1 aggregate, pooling-transfer ablation, finite-size diagnostics, and local resource/noise evidence; no accuracy advantage, universal trainability, or generalisation guarantee is inferred from the historical single-seed gap.
@@ -398,7 +433,7 @@ The unitary construction preserves the global state until the terminal observabl
 \subsection{Comparison with Existing QCNN Approaches}
 
 \begin{table}[!t]
-\caption{Within-study comparison protocol. Values are generated from the validated Q1 aggregate; heterogeneous literature percentages are not ranked against these results.}
+\caption{Within-study comparison protocol. Values are generated from the validated Q1 aggregate; heterogeneous literature percentages are not ranked against these results. TTN denotes the balanced tree tensor network of Grant et al.~\cite{ref46}.}
 \label{tab:comparison}
 \centering
 \begin{tabular}{@{}lcccl@{}}
@@ -408,7 +443,7 @@ The unitary construction preserves the global state until the terminal observabl
 FQCNN (ours) & U & Yes & 269/74 & Q1 aggregate \\
 Logistic & -- & -- & 785 & Q1 aggregate \\
 MLP (2-unit) & -- & -- & 1,573 & Q1 aggregate \\
-TTN & U & Yes & -- & Q1 aggregate \\
+TTN & U & Yes & 48 & Q1 aggregate \\
 Prior literature & Mixed & Mixed & -- & Context only \\
 \bottomrule
 \end{tabular}
@@ -430,6 +465,22 @@ mnist\_3v5 & 0.800 $\pm$ 0.030 & 0.948 $\pm$ 0.012 & 0.877 $\pm$ 0.044 & 0.730 $
 \end{tabular}
 \end{table*}
 
+\begin{table*}[!t]
+\caption{Validated Q1 metrics for FQCNN (mean $\pm$ population standard deviation over five seeds). These values expose the metric-level result behind the accuracy comparison; the corresponding baseline metrics, confidence intervals, and paired effects are retained in the aggregate artifact.}
+\label{tab:q1metrics}
+\centering
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Task} & \textbf{Accuracy} & \textbf{Balanced acc.} & \textbf{F1} & \textbf{ROC-AUC} & \textbf{PR-AUC} \\
+\midrule
+fashion\_mnist\_0v6 & 0.789 $\pm$ 0.019 & 0.789 $\pm$ 0.019 & 0.784 $\pm$ 0.021 & 0.863 $\pm$ 0.017 & 0.842 $\pm$ 0.045 \\
+kmnist\_2v3 & 0.884 $\pm$ 0.023 & 0.884 $\pm$ 0.023 & 0.893 $\pm$ 0.020 & 0.968 $\pm$ 0.005 & 0.969 $\pm$ 0.003 \\
+mnist\_0v1 & 0.975 $\pm$ 0.013 & 0.975 $\pm$ 0.013 & 0.975 $\pm$ 0.013 & 0.997 $\pm$ 0.002 & 0.998 $\pm$ 0.002 \\
+mnist\_3v5 & 0.800 $\pm$ 0.030 & 0.800 $\pm$ 0.030 & 0.776 $\pm$ 0.033 & 0.901 $\pm$ 0.035 & 0.896 $\pm$ 0.040 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{figs_final/q1_comparison.png}
@@ -437,13 +488,50 @@ mnist\_3v5 & 0.800 $\pm$ 0.030 & 0.948 $\pm$ 0.012 & 0.877 $\pm$ 0.044 & 0.730 $
 \label{fig:q1comparison}
 \end{figure}
 
-The primary comparison is within-study: logistic regression, a compact two-unit dense MLP, and TTN are evaluated on the same ordered samples, split manifests, and seed set as the FQCNN. The logistic model has 785 trainable coefficients for the 784 flattened pixels, while the two-unit MLP has 1,573 dense parameters; the MLP is therefore not parameter-matched to the FQCNN's 269 allocated/74 effective quantum slots, and this conservative capacity mismatch is disclosed rather than hidden. The aggregate does not show FQCNN dominance: it is below logistic regression and the MLP on all four tasks, while exceeding TTN on all four in mean accuracy (with uncertainty and multiplicity-adjusted tests reported in the machine-readable artifact). We retain this bounded result rather than converting the architectural contribution into an accuracy claim. Prior literature uses different datasets, preprocessing, parameter budgets, and evaluation protocols, so its percentages are context rather than a ranked baseline. The pooling theorem separates the architectural distinction (removing mid-circuit control) from any empirical accuracy question; relative-performance statements are restricted to the aggregate's paired effects and multiplicity-adjusted tests.
+The primary comparison is within-study: logistic regression, a compact two-unit dense MLP, and the balanced tree tensor network (TTN) of Grant et al.~\cite{ref46} are evaluated on the same ordered samples, split manifests, and seed set as the FQCNN. The arm definitions and parameter accounting are given in Table~\ref{tab:comparison}. The logistic model has 785 trainable coefficients for the 784 flattened pixels, the two-unit MLP has 1,573 dense parameters, and the ten-qubit TTN has 48 trainable parameters under the executed consecutive-pair tree schedule. The MLP is therefore not parameter-matched to the FQCNN's 269 allocated/74 effective quantum slots, and this conservative capacity mismatch is disclosed rather than hidden. Table~\ref{tab:q1comparison} and Fig.~\ref{fig:q1comparison} show the accuracy result, while Table~\ref{tab:q1metrics} reports the FQCNN metric vector. The aggregate does not show FQCNN dominance: it is below logistic regression and the MLP on all four tasks, while exceeding TTN on all four in mean accuracy (with uncertainty and multiplicity-adjusted tests reported in the machine-readable artifact). We retain this bounded result rather than converting the architectural contribution into an accuracy claim. Prior literature uses different datasets, preprocessing, parameter budgets, and evaluation protocols, so its percentages are context rather than a ranked baseline. The pooling theorem separates the architectural distinction (removing mid-circuit control) from any empirical accuracy question; relative-performance statements are restricted to the aggregate's paired effects and multiplicity-adjusted tests.
+
+\begin{table}[!t]
+\caption{Pooling-transfer ablation on Fashion-MNIST 0-vs-6 (three seeds). Holm-adjusted $p$ values are two-sided seed-level Wilcoxon tests versus the unitary reference over four variants.}
+\label{tab:pooling-transfer}
+\centering
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Pooling variant} & \textbf{Accuracy} & \textbf{$p_{\mathrm{Holm}}$} \\
+\midrule
+Unitary (reference) & 0.803 $\pm$ 0.006 & -- \\
+No pooling & 0.815 $\pm$ 0.006 & 0.719 \\
+Measurement & 0.803 $\pm$ 0.006 & 1.000 \\
+Coherent & 0.791 $\pm$ 0.023 & 1.000 \\
+SU(4) & 0.801 $\pm$ 0.013 & 1.000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The transfer experiment in Table~\ref{tab:pooling-transfer} uses the same 166-example test set and clean checkpoints for seeds 0--2. It is a finite ablation rather than a universal ranking: no variant differs from the unitary reference after Holm correction, and the small three-seed sample is not powered to establish equivalence. Per-seed McNemar values are retained as descriptive diagnostics only.
 
 \subsection{Noise Robustness}
-The pooling theorem and dephasing controls establish circuit-level identities, not end-to-end noise robustness. The Q1 package therefore reports a bounded local validation experiment using clean checkpoints, declared depolarising/dephasing channels, fixed validation subsets, and an isolated Qiskit/Aer environment. Those results are simulator evidence only; no accuracy-retention or device-noise claim is made beyond the exact tasks, seeds, shots, and noise levels recorded in the machine-readable artifact.
+The pooling theorem and dephasing controls establish circuit-level identities, not end-to-end noise robustness. The Q1 package therefore reports a bounded local validation experiment using clean checkpoints, declared depolarising/dephasing channels, fixed validation subsets, and an isolated Qiskit/Aer environment. The protocol covers MNIST 3-vs-5 and Fashion-MNIST 0-vs-6, seeds 0--2, 25 validation samples per seed, noise levels $p\in\{0,0.005,0.01,0.02\}$, and 128 shots at nonzero levels; checkpoints are not retrained and the test split is never used. The zero-noise agreement check passes, while the finite-shot nonzero results vary across task, seed, channel, and level without a monotone pattern. Those values are simulator evidence only; no accuracy-retention or device-noise claim is made beyond this declared scope.
 
 \subsection{Scalability and Practicality}
-Amplitude encoding fixes the state-vector width at the declared qubit count, while parameter sharing controls the number of variational slots. We report logical, decomposed, and transpiled resource counts for $n=4,6,8,10$ and a controlled fake-backend pooling comparison. These are local resource estimates, not a scalability theorem, a hardware execution result, or a deployment-readiness guarantee.
+Amplitude encoding fixes the state-vector width at the declared qubit count, while parameter sharing controls the number of variational slots. Table~\ref{tab:resources} reports total logical, decomposed, and transpiled depths for $n=4,6,8,10$, including state preparation and readout. The transpilation target is the local Qiskit ``FakePeekskill'' BackendV2 with optimisation level 1 and a transpiler seed of 42; no provider or QPU was contacted. These are local resource estimates, not a scalability theorem, a hardware execution result, or a deployment-readiness guarantee.
+
+\begin{table}[!t]
+\caption{Total circuit-depth estimates from the local FakePeekskill transpilation audit. Counts include state preparation, model body, and readout; no hardware execution is implied.}
+\label{tab:resources}
+\centering
+\begin{tabular}{@{}rccc@{}}
+\toprule
+\textbf{$n$} & \textbf{Logical} & \textbf{Decomposed} & \textbf{Transpiled} \\
+\midrule
+4 & 38 & 73 & 343 \\
+6 & 65 & 191 & 934 \\
+8 & 113 & 626 & 2,549 \\
+10 & 116 & 2,160 & 7,362 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The finite trainability audit samples 200 random parameter initialisations and four random inputs per size on ``default.qubit'' with backpropagation. For a designated live slot, the observed gradient variances at $n=4,6,8,10,12,14$ are respectively $0.0134,0.0093,0.0044,0.0019,0.00073,0.00104$; an exponential fit has $R^2=0.923$ for that designated slot, whereas the median-live-slot fit prefers a power law with $R^2=0.663$ and is non-monotone at $n=14$. This finite diagnostic motivates caution about trainability; it is not evidence of a universal barren-plateau law or its absence.
 
 \subsection{Limitations and Future Work}
 The current evaluation is limited to four binary tasks drawn from three 28$\times$28 grayscale dataset families, small training subsets, five-seed comparisons, finite-size diagnostics, and classical simulation/local noise models. The globally amplitude-encoded register is not an image-space convolutional representation, and the experiments do not establish quantum advantage, asymptotic trainability, noise robustness on a device, or real-QPU performance. Scaling to larger datasets, multi-class tasks, alternative encodings, and hardware execution remains open.
@@ -517,6 +605,8 @@ We proposed a fully quantum-native convolutional neural network (FQCNN) that per
 \bibitem{ref49} Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner, ``Gradient-based learning applied to document recognition,'' Proceedings of the IEEE, vol. 86, no. 11, pp. 2278--2324, 1998, doi: 10.1109/5.726791.
 \bibitem{ref50} S. Sim, P. D. Johnson, and A. Aspuru-Guzik, ``Expressibility and entangling capability of parameterized quantum circuits for hybrid quantum-classical algorithms,'' Advanced Quantum Technologies, vol. 2, no. 12, art. 1900070, 2019, doi: 10.1002/qute.201900070.
 \bibitem{ref51} M. A. Nielsen and I. L. Chuang, \emph{Quantum Computation and Quantum Information}, 10th anniversary ed. Cambridge, U.K.: Cambridge Univ. Press, 2010, doi: 10.1017/CBO9780511976667.
+\bibitem{ref52} H. Xiao, K. Rasul, and R. Vollgraf, ``Fashion-MNIST: A novel image dataset for benchmarking machine learning algorithms,'' arXiv:1708.07747, 2017.
+\bibitem{ref53} T. Clanuwat et al., ``Deep learning for classical Japanese literature,'' arXiv:1812.01718, 2018.
 \end{thebibliography}
 
 \end{document}

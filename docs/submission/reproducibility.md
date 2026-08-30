@@ -12,8 +12,14 @@ python -m pytest tests -q
 pdflatex -interaction=nonstopmode -halt-on-error fqcnn.tex
 pdflatex -interaction=nonstopmode -halt-on-error fqcnn.tex
 pdflatex -interaction=nonstopmode -halt-on-error fqcnn.tex
-python -m ruff check .
+ruff check .  # optional release lint tool; not part of the runtime lock
 python -m compileall -q QCNN baselines experiments scripts tests
+```
+
+The architecture overview is regenerated deterministically with:
+
+```text
+python QCNN/utils/draw_fig1_architecture.py --output figs_final/fig1.png --dpi 600
 ```
 
 The committed aggregate JSON is validated against its per-cell manifests and source
