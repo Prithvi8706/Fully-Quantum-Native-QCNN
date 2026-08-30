@@ -3,7 +3,7 @@
     "name": "fqcnn_q1_claim_ledger",
     "version": 2
   },
-  "generated_at_utc": "2026-08-30T12:37:09.704379Z",
+  "generated_at_utc": "2026-08-30T15:17:49.409606Z",
   "status": "ready_for_release",
   "purpose": "Machine-readable audit of numerical and scope-sensitive claims against the current manuscript and the evidence available at ledger generation time. A claim is not publication-ready unless its status is supported or supported_with_scope and every required action is closed.",
   "scope": {
@@ -12,7 +12,7 @@
     "reconciliation": "docs/paper_code_reconciliation.md",
     "comparison_artifact": "Results/evidence/q1_comparison.json",
     "evidence_rule": "Bind every numerical claim to a hashed artifact and preserve the exact simulator, split, seed, and scope. Do not upgrade a mathematical identity, a finite diagnostic, a local simulation, or a historical single-seed result into an accuracy, hardware, or asymptotic claim.",
-    "observation": "The corrected Q1 comparison and pooling-transfer campaigns are complete and parseable: 80/80 comparison cells and 15/15 transfer cells have complete status, with no failed runs. All manifests use n_total=666 with train/validation/test=400/100/166. Dataset checksums, aggregate provenance, fixed-input pooling controls, and the passing clean reproduction report are archived; the verified package gate has also passed locally from the release commit."
+    "observation": "The corrected Q1 comparison and pooling-transfer campaigns are complete and parseable: 80/80 comparison cells and 15/15 transfer cells have complete status, with no failed runs. All manifests use n_total=666 with train/validation/test=400/100/166. Dataset checksums, aggregate provenance, and fixed-input pooling controls are now archived; the remaining release gate is clean reproduction and package verification."
   },
   "status_legend": {
     "supported": "The cited evidence directly supports the bounded statement.",
@@ -26,7 +26,7 @@
     "ready_for_release": "No high-severity claim or release blocker remains; listed medium notes are bounded release-hygiene limitations."
   },
   "source_hashes_sha256": {
-    "fqcnn.tex": "27d85d0dea8ec9e11b480f04cba9c4e76b6a456e15e7db8fe099592d5523f08c",
+    "fqcnn.tex": "7248addade204e454e6d543bfb2404d3ef6eb97b4510975cf79fd085c95c02cd",
     "docs/paper_code_reconciliation.md": "d0f9fbdc727df0edc6426c5f1498d40c40d792db58f03732dc644b89cbb2d3bc",
     "Results/evidence/q1_fast_track_inventory.json": "b2d82ed83eec6b097d098c56340290a53e18df7ccabfafe54a740f7b3070ef4b",
     "experiments/q1_fast_track_analysis.py": "c5e360285ef27c313ef21e9e92f5e1731cc821f4abf94609b5f0b84d912b25a2",
@@ -530,7 +530,7 @@
       "id": "A-016",
       "path": "Results/evidence/q1_reproduction.json",
       "status": "pass",
-      "sha256": "d4ebcc0bfe3a64f93ecda09feb683e8a9837b29163ac3f101ddf18990b6cf0e1",
+      "sha256": "9752b3950ecc35dde0f81439771862d044aab810eec4fcbeb927d34c16cf0b01",
       "protocol": {
         "pytest": {
           "errors": 0,
