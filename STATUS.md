@@ -13,13 +13,20 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 
 **Planning amendment (2026-08-27):** The maximal Tasks 8–19 program has been compressed into a seven-focused-day Q1-journal fast track with two bounded unattended compute windows. Task 7 was integrated from `origin/dev` on 2026-08-27. The Q1 target is retained; evidence breadth is reduced only through explicit minimum bars and honest claim limits.
 
-**Last updated:** 2026-08-30 · **Branch:** `dev` · **Verification:** final manuscript refresh, clean reproduction, evidence validation, and verified package build passed
+**Last updated:** 2026-08-31 · **Branch:** `dev` · **Verification:** expanded journal build passed; clean reproduction, evidence refresh, and package rebuild pending
 
 **State labels:** `pending` · `running` · `failed` · `complete`
 
 **Current gate:** venue selection and venue-specific submission adaptation. Until
 the authors select a journal, `fqcnn.tex` remains the venue-neutral IEEEtran
 draft; no submission, upload, authentication, or real-QPU execution is authorized.
+
+**Journal expansion (2026-08-31):** The venue-neutral draft now exposes the
+completed fast-track evidence as an 18-page IEEEtran working paper: 4 retained
+figures, 23 tables, per-seed and paired-effect results, secondary pooling-arm
+evidence, information dynamics, capacity/tape accounting, finite
+trainability/DLA diagnostics, and a dedicated discussion. No validated
+numerical result or experiment was rerun or changed.
 
 ---
 
@@ -32,7 +39,7 @@ draft; no submission, upload, authentication, or real-QPU execution is authorize
 | **3 — comparison campaign** | `complete` | Complete proposed/logistic/MLP/TTN matrix at the declared seed floor; complete Fashion-MNIST pooling transfer; aggregate paired statistics | `q1_comparison.json`: 4 tasks × 4 arms × 5 seeds, 80/80 complete, 0 failures; `q1_pooling_transfer.json`: 5 arms × 3 seeds, 15/15 complete, 0 failures; all manifests exactly 666/400/100/166; two-unit MLP capacity (1,573 parameters) is disclosed rather than called parameter-matched |
 | **4 — local practicality evidence** | `complete` | Freeze statistics/tables; complete n=4,6,8,10 resources, pooling practicality, clean two-task noise ladder, and fake-backend rehearsal | `q1_resources.json`, `q1_pooling_practicality.json`, `q1_noise_validation.json` (6 records, zero-noise agreement pass), and `q1_fake_backend_rehearsal.json` all validate |
 | **5 — core manuscript rewrite** | `complete` | Rewrite positioning, methods, theory, experiments, results, and limitations from canonical evidence | `fqcnn.tex` now uses the corrected protocol, cautious scope, exact Q1 table, and generated `figs_final/q1_comparison.png` |
-| **6 — citations + final manuscript** | `complete` | Finish introduction/discussion/conclusion, sentence-level citation audit, Q1-journal-only quartile filter, complete claim ledger, and final PDF inspection | Manuscript revision adds registered Q1 provenance, metric/ablation/resource tables, corrected pooling schedule, a documented 2024 SJR Q1 journal-only bibliography (15 cited keys; no preprints/books), regenerated architecture figure, and a clean three-pass 10-page IEEE PDF; refreshed ledger is `ready_for_release` |
+| **6 — citations + final manuscript** | `complete` | Finish introduction/discussion/conclusion, sentence-level citation audit, Q1-journal-only quartile filter, complete claim ledger, and final PDF inspection | Manuscript revision adds registered Q1 provenance, metric/ablation/resource tables, corrected pooling schedule, secondary pooling-arm and model-analysis evidence, a documented 2024 SJR Q1 journal-only bibliography (15 cited keys; no preprints/books), finalized figures, and a clean three-pass 18-page IEEEtran working PDF; refreshed ledger is `ready_for_release` |
 | **7 — reproduce + package** | `complete` | Run bounded clean-environment reproduction/health checks, reviewer-risk correction pass, and scoped release package | `q1_reproduction.json`: 652 tests, 0 failures, 2 documented Windows symlink skips; lint, compile, LaTeX, dependency, Qiskit, secret, and evidence gates pass; verified 282-file ZIP is generated from the release commit and records its SHA-256 in the manifest |
 
 ---

@@ -17,7 +17,11 @@ The journal version extends the earlier draft in the following concrete ways:
 4. The journal package adds the finite pooling-transfer ablation, trainability and
    expressibility diagnostics, resource counts, local noise/fake-backend checks,
    provenance bindings, and clean-reproduction gate.
-5. The journal manuscript reports the negative or inconclusive empirical findings
+5. The expanded journal manuscript now exposes the completed secondary pooling-arm
+   campaign, per-seed and paired-effect tables, information-dynamics audit,
+   capacity/tape accounting, and a dedicated discussion of architectural,
+   predictive, and scaling implications.
+6. The journal manuscript reports the negative or inconclusive empirical findings
    and explicitly limits claims to simulator evidence; it does not claim quantum
    advantage, hardware performance, or universal trainability.
 

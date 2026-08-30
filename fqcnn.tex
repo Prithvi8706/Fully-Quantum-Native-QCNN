@@ -15,6 +15,7 @@
 \usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{bm}
+\usepackage{algorithm}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
@@ -83,7 +84,15 @@ and reproducibility evidence.  The conference draft's single-task accuracy is
 therefore treated as historical provenance only; the numerical claims in this
 manuscript are taken from the validated Q1 evidence package.
 
-The rest of the paper is organised as follows. Section II reviews related work on quantum convolutional and variational quantum models. Section III describes the proposed FQCNN architecture and its mathematical formulation. Section IV covers the training dynamics and optimisation strategy. Section V reports the experimental results and analysis. Section VI details the novelty and technical differentiation, and Section VII concludes with limitations and future directions.
+The rest of the paper is organised as follows. Section II reviews related work
+on quantum convolutional and variational quantum models. Section III defines
+the evaluation questions and evidence boundaries. Section IV describes the
+proposed FQCNN architecture and its mathematical formulation. Section V covers
+training and optimisation, and Section VI reports the experimental results and
+analysis. Section VII discusses the architectural and empirical implications
+and states the limitations and future work. Section VIII records the novelty
+and technical differentiation, followed by data and code availability and the
+conclusion.
 
 \begin{figure*}[!t]
 \centering
@@ -105,7 +114,145 @@ Dimensionality reduction in quantum models is often expressed through quantum au
 \subsection{Noise and Error Mitigation in Quantum Learning}
 Noise remains a primary obstacle to deploying quantum machine learning models on near-term hardware. Comprehensive reviews of quantum error mitigation cover strategies such as zero-noise extrapolation, data-driven correction, and probabilistic error cancellation~\cite{ref22}. Recent work also studies data-augmented learning for noise mitigation~\cite{ref16}. These methods operate at the error-mitigation or training layer; the present manuscript instead treats architectural noise behaviour as a specified finite-simulation question.
 
+\section{Evaluation Questions and Evidence Boundaries}
+The journal extension is organised around four questions that separate an
+architectural identity from an empirical performance claim. This separation is
+important for a fully coherent model: a circuit can remove a dynamic-control
+requirement without improving accuracy, and an accuracy result can be useful as
+a benchmark without establishing a quantum advantage. The questions are
+therefore evaluated with different units of evidence rather than collapsed into
+one score.
+
+\begin{table*}[!t]
+\caption{Evaluation questions, evidence layers, and the corresponding claim boundary. The table distinguishes exact statements about the implemented circuit from finite empirical observations.}
+\label{tab:questions}
+\centering
+\small
+\begin{tabular}{@{}p{0.19\textwidth}p{0.25\textwidth}p{0.25\textwidth}p{0.23\textwidth}@{}}
+\toprule
+\textbf{Question} & \textbf{Operational test} & \textbf{Evidence used} & \textbf{Interpretation permitted} \\
+\midrule
+Does the main path remain coherent? & Inspect the frozen circuit signature and terminal measurement; verify that intermediate operations are unitary. & Canonical circuit source, architecture fixtures, and the state-purity audit. & A property of the frozen implementation; not a hardware execution claim. \\
+Does coherent pooling reproduce the compared channel? & Compare the controlled unitary followed by a partial trace with the explicitly constructed measure-and-condition channel. & Theorem~\ref{thm:exact}, E1 channel comparison, and E2 dephasing controls. & Exact equivalence for the stated block, with no claim that information or accuracy is recovered. \\
+How does the frozen model behave empirically? & Use predeclared binary tasks, common ordered samples, common split manifests, five seeds, and one final test evaluation. & Four-task Q1 aggregate, same-split logistic/MLP/TTN baselines, uncertainty, and paired tests. & A finite within-study comparison; no state-of-the-art or quantum-advantage claim. \\
+What limits practical interpretation? & Audit effective capacity, finite-size gradients, expressibility, information dynamics, noise sensitivity, and logical/transpiled resources. & Versioned model-analysis and local Qiskit evidence, each with its own protocol. & Bounded simulator and local-transpilation observations; no asymptotic or device-performance guarantee. \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{From architectural identity to empirical estimands}
+The first two questions are principally mathematical. The statement that the
+main path is unitary follows from the operation types in the executed tape, and
+the pooling statement follows from the controlled-unitary factorisation proved
+in Section~\ref{sec:pooling-theory}. Their numerical checks are regression tests
+at the frozen headline configuration rather than estimates of a population.
+This distinction prevents a finite floating-point residual from being mistaken
+for an empirical approximation to a theorem.
+
+The performance question has a different estimand. For task $d$ and model arm
+$m$, let $A_{d,m,s}$ be the accuracy on the final test partition for seed $s$.
+The reported point estimate is the mean over the registered seed set,
+\begin{equation}
+\begin{aligned}
+\bar{A}_{d,m}&=\frac{1}{S}\sum_{s=1}^{S}A_{d,m,s},\\
+s_{d,m}&=\left[\frac{1}{S}\sum_{s=1}^{S}
+\left(A_{d,m,s}-\bar{A}_{d,m}\right)^2\right]^{1/2}.
+\end{aligned}
+\label{eq:seedestimand}
+\end{equation}
+where $S=5$ in the primary matrix. The standard deviation in the tables is the
+population standard deviation of these five registered runs, not a claim that
+the five seeds are independent draws from all possible training procedures.
+For a comparator $c$, the paired effect is computed seed by seed as
+$\Delta_{d,c,s}=A_{d,\mathrm{FQCNN},s}-A_{d,c,s}$. This makes the split and seed
+the unit of the primary comparison and keeps per-example tests in a descriptive
+role.
+
+The third question is consequently not phrased as ``is the FQCNN better?''
+Instead, it asks where the fixed architecture sits relative to transparent
+baselines under one reproducible protocol. This choice is deliberate. The
+model has a globally amplitude-encoded input and only ten qubits, while the
+classical baselines see the original 784 flattened features. The fair comparison
+is therefore same data identity, same split identity, same seed set, and the
+same validation-only selection rule; it is not an assertion of equal parameter
+count or equal computational cost.
+
+\subsection{Evidence hierarchy and negative findings}
+The evidence package is layered so that a failed or null result at one layer
+does not get silently replaced by a stronger claim at another layer. Exact
+channel equivalence is not converted into a claim of better information
+retention. A non-significant paired test is not converted into equivalence with
+five pairs. A finite gradient sweep is not converted into an asymptotic
+trainability theorem. Similarly, local fake-backend transpilation is not called
+hardware validation. This hierarchy is also why the journal version retains
+the negative findings: the FQCNN is below the logistic and dense baselines on
+all four primary tasks, the wider coherent and SU(4) pooling families do not
+automatically improve the frozen construction, and the full dynamical Lie
+algebra does not supply the planned polynomial-size trainability certificate.
+
+These are not discarded intermediate observations. They delimit what the
+architectural contribution can support and make the paper useful as a checked
+reference implementation rather than a selective benchmark report. All
+quantities introduced in the remainder of the paper are either algebraic
+consequences of the circuit or are linked to a retained machine-readable
+artifact in the availability and reproducibility records.
+
 \section{Proposed FQCNN Architecture}
+\subsection{Design requirements and register notation}
+The architecture was frozen against four requirements. First, all trainable
+transformations after state preparation must be expressible as quantum gates
+with a single terminal observable. Second, the convolutional kernel must be
+shared across its register-index windows so that parameter allocation is
+independent of the number of windows. Third, pooling must reduce the active
+register without inserting a measurement or a classical branch. Fourth, the
+implementation must expose enough structure to audit dead parameter slots,
+discarded wires, and resource costs separately.
+
+Let $A_0=\{0,\ldots,n-1\}$ denote the active wires immediately after state
+preparation. At pooling stage $\ell$, the executed pairing is
+$P_\ell=\{(a_i,b_i)\}_{i=1}^{m_\ell}$, where $a_i$ is retained and $b_i$ is
+compressed. The retained and compressed sets are
+$R_\ell=\{a_i\}$ and $C_\ell=\{b_i\}$. If the active-register cardinality is
+odd, the final unpaired wire is collected in $O_\ell$ and retired at the same
+stage. Writing $U_\ell$ for the convolution and pooling operations emitted at
+that stage, the state passed to the next active register is represented by
+\begin{equation}
+\rho_{\ell+1}=\operatorname{Tr}_{C_\ell\cup O_\ell}
+\!\left[U_\ell\rho_\ell U_\ell^{\dagger}\right],
+\qquad A_{\ell+1}=R_\ell.
+\label{eq:active-register}
+\end{equation}
+Equation~\eqref{eq:active-register} is a description of the reduced state on
+the wires used later; the full state remains pure before the inactive wires are
+ignored. No reset is inserted into the headline circuit. The partial trace is
+the mathematical description of the fact that a retired wire is not addressed
+by later gates or the terminal observable.
+
+\begin{table*}[!t]
+\caption{Executed register schedules and parameter allocation used by the finite-size audits. ``Allocated'' includes slots reserved by the model layout; ``effective'' counts slots with a gradient magnitude above $10^{-12}$ in the corresponding finite diagnostic.}
+\label{tab:schedule}
+\centering
+\small
+\begin{tabular}{@{}rccccc@{}}
+\toprule
+\textbf{$n$} & \textbf{Input geometry} & \textbf{Active-wire schedule} & \textbf{Pooling stages} & \textbf{Allocated slots} & \textbf{Effective slots} \\
+\midrule
+4 & $4\times4$ & $4\rightarrow2\rightarrow1$ & 2 & 188 & 62 \\
+6 & $8\times8$ & $6\rightarrow3\rightarrow1$ & 2 & 194 & 62 \\
+8 & $16\times16$ & $8\rightarrow4\rightarrow2\rightarrow1$ & 3 & 260 & 122 \\
+10 & $28\times28$ & $10\rightarrow5\rightarrow2\rightarrow1$ & 3 & 269 & 74 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The headline schedule is not a conventional square image lattice after the
+first reduction: ten wires become five, then two, then one. The convolutional
+window generator therefore operates on the current active-index arrangement,
+whereas the input itself remains a global amplitude state. This is the reason
+the paper uses ``register-index window'' throughout. It describes the actual
+gate support while avoiding an unsupported claim of pixel-space translation
+equivariance.
+
 \subsection{Problem Formulation}
 Consider a labelled dataset $\mathcal{D} = \{(x^{(k)}, y^{(k)})\}$ for $k = 1, \ldots, N$ in a supervised setting, where $x \in \mathbb{R}^d$ is the input feature vector, $x_i \in [-1, 1]$, $y \in \{-1, 1\}$, and $d$ is the number of features after preprocessing. To scale efficiently, we use amplitude encoding, which maps the input vector into a quantum state. We consider a register of $n = 10$ qubits all initialised in the ground state
 \begin{equation}
@@ -233,6 +380,30 @@ with $V_0 = I$ and $V_1 = R_Z(\beta) R_Y(\alpha)$. The local $R_Y^{(a)}(\gamma)$
 \end{equation}
 \end{proof}
 
+The same result can be written in Kraus form, which makes the deferred
+measurement interpretation explicit. Define
+\begin{equation}
+K_m=U_m\,{}_b\!\langle m|,\qquad m\in\{0,1\}.
+\label{eq:pool-kraus}
+\end{equation}
+The operators map the joint pair to the retained subsystem and satisfy
+$\sum_m K_m^{\dagger}K_m=I_a\otimes I_b$. Hence
+$\mathcal{M}_{\{U_m\}}(\rho)=\sum_mK_m\rho K_m^{\dagger}$ is a completely
+positive trace-preserving map. The coherent implementation replaces the
+classical record $m$ with the computational-basis value already present in
+the control wire. Tracing that wire at the end of the pooling block produces
+the same Kraus sum because the partial trace contracts the two copies of
+$|m\rangle\langle m|$ and removes cross terms between distinct outcomes.
+
+This derivation also identifies the exact boundary of the result. The
+compressed wire's off-diagonal blocks are not used by the controlled block,
+so they cannot influence the retained output after tracing out that wire. A
+general two-qubit unitary need not have this property: it can rotate the
+compressed subsystem before the reduction and thereby make its coherences
+operationally visible. The strict-containment proposition is therefore a
+statement about the available channel family, not a claim that the frozen
+three-angle block exploits its whole family.
+
 Theorem~\ref{thm:exact} gives a direct deferred-measurement construction for the stated pooling channel. Three consequences follow, each true of the executed model:
 \begin{enumerate}
 \item Coherent pooling \emph{loses nothing} relative to measurement-based pooling for the retained-register channel; it simulates that class without mid-circuit control, with its resource cost reported explicitly below.
@@ -283,6 +454,56 @@ A final $R_Z(\theta_{31})$ is syntactically applied to the readout wire immediat
 \subsection{Global Parameter Scaling}
 Parameter sharing prevents the number of allocated slots from scaling with the number of windows, but the executed topology determines which slots are used. We therefore report allocated, tape-reaching, and effective counts separately rather than applying a closed-form count that assumes every module is independently instantiated.
 
+\subsection{Capacity accounting and executed-tape audit}
+The parameter vector is intentionally larger than the set of values that
+influence the terminal observable. Each of the four convolutional arrays is
+allocated as a $4\times4\times3$ tensor, giving 48 slots per layer. Three
+pooling arrays reserve five three-angle pairs each, and the classifier reserves
+32 slots. The headline layout therefore allocates
+$4(48)+3(5\times3)+32=269$ slots. The executed active-wire schedule addresses
+only a subset of the nominal convolutional windows, and the classifier uses
+modular indexing; these implementation details make a single nominal
+parameter-count number misleading.
+
+\begin{table*}[!t]
+\caption{Headline capacity and operation accounting. The distinct rows answer different questions and must not be substituted for one another.}
+\label{tab:capacity}
+\centering
+\small
+\begin{tabular}{@{}p{0.31\textwidth}r p{0.55\textwidth}@{}}
+\toprule
+\textbf{Quantity} & \textbf{Value} & \textbf{Definition} \\
+\midrule
+Allocated parameter slots & 269 & Reserved by the model layout \\
+Tape-reaching slots & 78 & Slots syntactically read by the frozen tape \\
+Effective slots & 74 & $|\partial f/\partial\theta|>10^{-12}$ audit \\
+Trainable gates on tape & 222 & Parameterised gate occurrences \\
+Gates driven by effective slots & 218 & Occurrences from the 74 live slots \\
+Total tape operations & 327 & Trainable and fixed operations \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The 269-to-74 comparison is a parameter-allocation observation, not a
+generalisation theorem. Conversely, the gate count used in the capacity
+scaling diagnostic is 222, not 74: 48 effective slots are reused across more
+than one gate occurrence, with up to four occurrences driven by one slot. The
+two counts thus differ in opposite directions. The audit was performed both on
+the archived headline weights over 20 fixed regression inputs and in the
+independent random-initialisation gradient sweep described in
+Section~\ref{sec:diagnostics}; the agreement of the headline effective count is
+reported as a structural check, not as evidence of a universal effective
+dimension.
+
+The same distinction matters for classical simulation. At ten qubits, the
+statevector has $2^{10}=1024$ complex amplitudes and is directly tractable on a
+classical computer. The small state space and shallow executed tape are the
+reasons every result in this paper can be checked exactly or with explicitly
+declared finite-shot local simulation. They are not evidence of a quantum
+computational advantage. In particular, the resource counts below separate
+state preparation from the model body so that the cost of loading a classical
+image is not hidden behind the variational circuit.
+
 \subsection{Architectural Interpretation}
 The FQCNN implements global amplitude state preparation, shared register-index convolutional mixing, coherent dimensional compression, and variational classification before a terminal Pauli-$Z$ expectation. Its effective capacity is described by the executed-tape and gradient audits above; no expressive benefit is attributed to the inert terminal $R_Z$.
 
@@ -320,6 +541,77 @@ where, for one eligible gate occurrence $j$, $\partial f/\partial\theta_j = \tfr
 
 \subsection{Optimization Procedure}
 The optimisation loop utilises the Adam optimiser to adapt step sizes throughout the parameter landscape. The historical headline run used $\eta = 0.005$, mini-batches of $M = 32$, gradient clipping, and an Exponential Moving Average (EMA) with decay $\gamma = 0.99$ for at most 50 epochs with early stopping. The bounded Q1 comparison uses its separately declared 30-epoch protocol. These settings are reported as finite experimental choices, not as a proof that barren plateaus are absent.
+
+\subsection{Reproducible training protocol}
+The comparison campaign treats data identity, split identity, model selection,
+and test evaluation as separate objects. The protocol is summarised in
+Algorithm~\ref{alg:protocol}. In particular, a run cannot become a valid
+comparison cell merely because it produced a metric: its configuration, split
+identifier, ordered test sample identifiers, completion state, weights, and
+prediction archive must all agree with the registered task.
+
+\begin{algorithm}[!t]
+\caption{Registered training and evaluation protocol}
+\label{alg:protocol}
+\begin{algorithmic}[1]
+\STATE Select a dataset family and binary class pair from the frozen task list.
+\STATE Load the checksum-validated source snapshot and retain source-stable IDs.
+\STATE Form the 666-example task pool and create a deterministic stratified 60/15/25 manifest.
+\STATE Apply the fixed preprocessing and amplitude encoding; preserve the manifest ID.
+\FOR{each arm and seed in the declared matrix}
+  \STATE Initialise the arm with the recorded seed and frozen configuration.
+  \STATE Train on the training partition only; monitor validation loss.
+  \STATE Restore the validation-selected checkpoint and record its selection metadata.
+  \STATE Evaluate the test partition once and save ordered IDs, labels, outputs, and metrics.
+\ENDFOR
+\STATE Aggregate only complete cells with matching manifests and configuration hashes.
+\STATE Compute seed-level uncertainty and paired tests from the retained archives.
+\end{algorithmic}
+\end{algorithm}
+
+The 666-example pool is a protocol consequence rather than a hidden sample
+count: rounding the fixed fractions gives 400 training, 100 validation, and
+166 test examples. The sample pool is selected before any test evaluation and
+the same ordered identifiers are supplied to every arm. A test label is never
+used for checkpoint selection, early stopping, or hyperparameter choice. The
+historical 12,665-image MNIST run follows a different, larger split and is
+retained only as provenance; it is not merged into the Q1 aggregate.
+
+\begin{table*}[!t]
+\caption{Protocol controls used to make the within-study comparison auditable. These controls describe the unit of inference; they do not turn the finite campaign into an estimate of all possible datasets or training procedures.}
+\label{tab:protocol-controls}
+\centering
+\small
+\begin{tabular}{@{}p{0.20\textwidth}p{0.34\textwidth}p{0.34\textwidth}@{}}
+\toprule
+\textbf{Control} & \textbf{Implementation} & \textbf{Reason for reporting it} \\
+\midrule
+Task registration & Four binary tasks are listed before aggregation: MNIST 0-vs-1, MNIST 3-vs-5, Fashion-MNIST 0-vs-6, and KMNIST 2-vs-3. & Separates continuity, harder in-domain behavior, and two dataset-family checks from post hoc task selection. \\
+Split identity & Each seed has a persisted stratified manifest with source-stable sample IDs and a SHA-256-derived split ID. & Prevents an arm from silently using a different partition or a reconstructed random split. \\
+Model selection & Validation loss controls checkpoint restoration and early stopping; the test partition is read once at the end. & Prevents test-driven selection and keeps the final metric attached to the selected checkpoint. \\
+Capacity disclosure & FQCNN allocation, tape usage, effective slots, logistic coefficients, and MLP parameters are reported separately. & Avoids calling the two-unit MLP parameter-matched when its dense parameter count is larger. \\
+Seed aggregation & Five registered seeds are paired by task and split; population standard deviation and seeded bootstrap intervals are reported. & Displays training variability and avoids treating individual test examples as independent repetitions of training. \\
+Artifact validation & Complete status, expected configuration, weights, predictions, IDs, and metric schema are checked before aggregation. & Excludes partial, stale, wrong-split, or malformed outputs from the scientific tables. \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The main simulator path uses PennyLane's 	exttt{default.qubit} backpropagation
+device for batched training and retains 	exttt{lightning.qubit} as a sequential
+correctness oracle. A separate regression suite verifies agreement of outputs,
+losses, all 269 parameter gradients, and one Adam update between the two paths.
+This engineering check is relevant to reproducibility: the faster training path
+is not a second circuit definition. It calls the same canonical circuit builder
+and is subject to the same frozen topology signature.
+
+The local preprocessing function min--max normalises the image matrix to
+$[0,1]$, flattens each native $28\times28$ image, pads it with zeros to 1024
+entries, and maps the two source labels to $-1$ and $+1$. The amplitude embedding
+then performs the per-state $\ell_2$ normalisation required by state preparation.
+The preprocessing mode, image size, qubit count, encoding type, pooling mode,
+seed, and split ID are all written to run metadata. This is a fixed-input
+pipeline choice, not a learned feature-extraction stage, and its global nature
+is why the manuscript does not attribute image-space locality to the model.
 
 \subsection{Computational Complexity}
 For the simulator path, adjoint/backpropagation cost is determined by the retained state and circuit evaluation rather than by parameter-shift executions. If parameter-shift is used on hardware, its leading evaluation count is two shifted circuits per eligible gate occurrence and datapoint, with additional accounting for reused slots and shot cost set by the measurement budget. Statevector simulation scales as $\mathcal{O}(2^n)$ in memory. The resource and any local-noise evidence reported below are explicitly simulation/fake-backend evidence; they do not establish hardware compatibility or deployment readiness.
@@ -480,6 +772,55 @@ mnist\_3v5 & 0.800 $\pm$ 0.030 & 0.800 $\pm$ 0.030 & 0.776 $\pm$ 0.033 & 0.901 $
 \end{tabular}
 \end{table*}
 
+\begin{table*}[!t]
+\caption{Per-seed accuracy values underlying the primary comparison. The seed order is 0, 1, 2, 3, 4 for every column; values are shown to four decimal places to make the seed-level pairing visible.}
+\label{tab:seedvalues}
+\centering
+\small
+\begin{tabular}{@{}llrrrrr@{}}
+\toprule
+\textbf{Task} & \textbf{Arm} & \textbf{Seed 0} & \textbf{Seed 1} & \textbf{Seed 2} & \textbf{Seed 3} & \textbf{Seed 4} \\
+\midrule
+Fashion 0-vs-6 & FQCNN & 0.8072 & 0.7952 & 0.8072 & 0.7771 & 0.7590 \\
+ & Logistic & 0.8313 & 0.8614 & 0.8373 & 0.8554 & 0.8253 \\
+ & MLP & 0.8072 & 0.8434 & 0.8253 & 0.8373 & 0.8072 \\
+ & TTN & 0.8072 & 0.8012 & 0.8313 & 0.8494 & 0.6446 \\
+\addlinespace
+KMNIST 2-vs-3 & FQCNN & 0.8855 & 0.8554 & 0.9036 & 0.9157 & 0.8614 \\
+ & Logistic & 0.9819 & 0.9096 & 0.9578 & 0.9458 & 0.9398 \\
+ & MLP & 0.9518 & 0.9157 & 0.9518 & 0.9277 & 0.9157 \\
+ & TTN & 0.9277 & 0.7892 & 0.9096 & 0.9157 & 0.7952 \\
+\addlinespace
+MNIST 0-vs-1 & FQCNN & 0.9759 & 0.9639 & 0.9578 & 0.9819 & 0.9940 \\
+ & Logistic & 1.0000 & 0.9880 & 0.9940 & 0.9940 & 1.0000 \\
+ & MLP & 0.9940 & 0.9819 & 0.9880 & 0.9759 & 1.0000 \\
+ & TTN & 0.9819 & 0.9578 & 0.9699 & 0.9337 & 0.9639 \\
+\addlinespace
+MNIST 3-vs-5 & FQCNN & 0.7651 & 0.8133 & 0.7771 & 0.7952 & 0.8494 \\
+ & Logistic & 0.9398 & 0.9337 & 0.9518 & 0.9458 & 0.9699 \\
+ & MLP & 0.8675 & 0.8795 & 0.9036 & 0.8012 & 0.9337 \\
+ & TTN & 0.7651 & 0.7470 & 0.6386 & 0.7590 & 0.7410 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[!t]
+\caption{Seed-level paired effects for the primary comparison. Each entry is FQCNN accuracy minus comparator accuracy, followed by the unadjusted and Holm-adjusted two-sided Wilcoxon $p$ values. The twelve tests form one declared family.}
+\label{tab:pairedeffects}
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Task} & \textbf{FQCNN $-$ Logistic} & \textbf{FQCNN $-$ MLP} & \textbf{FQCNN $-$ TTN} \\
+\midrule
+Fashion-MNIST 0-vs-6 & $-0.0530$; $p=.0625$, $p_H=.7500$ & $-0.0349$; $p=.0656$, $p_H=.7500$ & $+0.0024$; $p=.7150$, $p_H=1.0000$ \\
+KMNIST 2-vs-3 & $-0.0627$; $p=.0625$, $p_H=.7500$ & $-0.0482$; $p=.0625$, $p_H=.7500$ & $+0.0169$; $p=.4652$, $p_H=1.0000$ \\
+MNIST 0-vs-1 & $-0.0205$; $p=.0625$, $p_H=.7500$ & $-0.0133$; $p=.1250$, $p_H=.7500$ & $+0.0133$; $p=.6250$, $p_H=1.0000$ \\
+MNIST 3-vs-5 & $-0.1482$; $p=.0625$, $p_H=.7500$ & $-0.0771$; $p=.0625$, $p_H=.7500$ & $+0.0699$; $p=.0679$, $p_H=.7500$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{figs_final/q1_comparison.png}
@@ -488,6 +829,37 @@ mnist\_3v5 & 0.800 $\pm$ 0.030 & 0.800 $\pm$ 0.030 & 0.776 $\pm$ 0.033 & 0.901 $
 \end{figure}
 
 The primary comparison is within-study: logistic regression, a compact two-unit dense MLP, and the balanced tree tensor network (TTN) of Grant et al.~\cite{ref46} are evaluated on the same ordered samples, split manifests, and seed set as the FQCNN. The arm definitions and parameter accounting are given in Table~\ref{tab:comparison}. The logistic model has 785 trainable coefficients for the 784 flattened pixels, the two-unit MLP has 1,573 dense parameters, and the ten-qubit TTN has 48 trainable parameters under the executed consecutive-pair tree schedule. The MLP is therefore not parameter-matched to the FQCNN's 269 allocated/74 effective quantum slots, and this conservative capacity mismatch is disclosed rather than hidden. Table~\ref{tab:q1comparison} and Fig.~\ref{fig:q1comparison} show the accuracy result, while Table~\ref{tab:q1metrics} reports the FQCNN metric vector. The aggregate does not show FQCNN dominance: it is below logistic regression and the MLP on all four tasks, while exceeding TTN on all four in mean accuracy (with uncertainty and multiplicity-adjusted tests reported in the machine-readable artifact). We retain this bounded result rather than converting the architectural contribution into an accuracy claim. Prior literature uses different datasets, preprocessing, parameter budgets, and evaluation protocols, so its percentages are context rather than a ranked baseline. The pooling theorem separates the architectural distinction (removing mid-circuit control) from any empirical accuracy question; relative-performance statements are restricted to the aggregate's paired effects and multiplicity-adjusted tests.
+
+\subsubsection{Cross-task interpretation}
+The per-seed values in Table~\ref{tab:seedvalues} show why the seed distribution is
+more informative than a single headline score. On MNIST 0-vs-1, every arm is
+strong and the FQCNN reaches $0.975\pm0.013$, so the task mainly verifies
+continuity with the historical implementation. The harder MNIST 3-vs-5 task
+separates the hierarchical quantum arm from the linear baseline: FQCNN accuracy
+is $0.800\pm0.030$, TTN is $0.730\pm0.047$, and the logistic baseline is
+$0.948\pm0.012$. This is a useful positive result for the comparison with TTN,
+but it is not evidence that the quantum model outperforms a strong classical
+classifier.
+
+The cross-domain tasks expose a different pattern. FQCNN reaches
+$0.789\pm0.019$ on Fashion-MNIST 0-vs-6 and $0.884\pm0.023$ on KMNIST 2-vs-3,
+while logistic regression remains higher on both. The TTN variance is notably
+larger on Fashion-MNIST ($0.073$ versus $0.019$ for FQCNN), whereas the mean
+accuracies are nearly tied. On KMNIST, FQCNN exceeds TTN by roughly two
+percentage points in mean accuracy, again without a multiplicity-adjusted
+significant paired effect. These patterns support a more precise conclusion:
+the architecture is a reproducible hierarchical quantum comparator whose
+finite behavior depends strongly on the task, not a uniformly competitive
+replacement for classical image baselines.
+
+Table~\ref{tab:pairedeffects} makes the inferential limitation explicit. The
+FQCNN--logistic and FQCNN--MLP effects are negative for every task, and the
+FQCNN--TTN effects are positive for every task. Nevertheless, the five-seed
+Wilcoxon tests do not survive the declared Holm correction. This combination
+of consistent direction and limited power is reported as an observation, not
+as proof of equivalence or superiority. The test unit is the seed-level score;
+the 166 test examples within a split do not create additional independent
+training replicates.
 
 \begin{table}[!t]
 \caption{Pooling-transfer ablation on Fashion-MNIST 0-vs-6 (three seeds). Holm-adjusted $p$ values are two-sided seed-level Wilcoxon tests versus the unitary reference over four variants.}
@@ -508,8 +880,142 @@ SU(4) & 0.801 $\pm$ 0.013 & 1.000 \\
 
 The transfer experiment in Table~\ref{tab:pooling-transfer} uses the same 166-example test set and clean checkpoints for seeds 0--2. It is a finite ablation rather than a universal ranking: no variant differs from the unitary reference after Holm correction, and the small three-seed sample is not powered to establish equivalence. Per-seed McNemar values are retained as descriptive diagnostics only.
 
+\subsection{Secondary pooling-family evidence}
+The completed E3 pooling-arm campaign provides a complementary, smaller-budget
+view of the pooling family. It used the headline ten-qubit geometry, 400
+training examples, 30 epochs, five seeds, and three binary tasks, with 142
+test examples per task and split. These runs are reported separately from the
+primary Q1 matrix because they predate its four-task, 666-example registration;
+they are not used to replace the primary aggregate or to select a new
+headline architecture.
+
+\begin{table*}[!t]
+\caption{Secondary E3 pooling-arm comparison. Entries are test accuracy means $\pm$ population standard deviation over five seeds for each task. Each arm has 15 cells in total (three tasks and five seeds); these matched-budget runs are descriptive support for the pooling interpretation, not the primary Q1 comparison.}
+\label{tab:secondary-pooling}
+\centering
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Task} & \textbf{No pooling} & \textbf{Measurement} & \textbf{Unitary} & \textbf{Coherent} & \textbf{SU(4)} \\
+\midrule
+MNIST 0-vs-1 & $0.9507\pm0.0134$ & $0.9662\pm0.0082$ & $0.9662\pm0.0082$ & $0.9634\pm0.0113$ & $0.9718\pm0.0161$ \\
+MNIST 3-vs-5 & $0.7620\pm0.0376$ & $0.8070\pm0.0440$ & $0.8070\pm0.0440$ & $0.8099\pm0.0134$ & $0.8634\pm0.0451$ \\
+MNIST 4-vs-9 & $0.8394\pm0.0113$ & $0.8606\pm0.0233$ & $0.8606\pm0.0233$ & $0.8662\pm0.0461$ & $0.8704\pm0.0580$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Across these secondary tasks, removing pooling lowers the aggregate mean by
+2.7 percentage points relative to the frozen unitary arm and is significant in
+the archived paired tests. The measurement and unitary rows tie exactly in the
+statevector implementation, as expected from the theorem and deferred
+measurement. The coherent extension improves the aggregate by only 0.19
+percentage points and is not significant. The SU(4) arm has a 2.4 percentage
+point aggregate advantage, with the largest task-level separation on
+MNIST 3-vs-5; the seed-level Wilcoxon result does not confirm that advantage
+after the declared correction. This is family headroom, not evidence that the
+frozen three-angle block is optimal, and it is why the frozen arm remains the
+reference construction throughout this paper.
+
+\subsection{Information dynamics across the pooling cascade}
+The word ``coherent'' can refer either to the purity of the complete state or to
+the coherence of a reduced subsystem. These are not interchangeable. To make
+the distinction observable, we recorded reduced-state diagnostics at the
+encoded state, immediately before and after each pooling stage, and after the
+classifier for eight archived-weight inputs. For a reduced density matrix
+$\rho_A$, the reported $\ell_1$ coherence is
+\begin{equation}
+C_{\ell_1}(\rho_A)=\sum_{i\ne j}|(\rho_A)_{ij}|,
+\end{equation}
+and the entropy and mutual information are
+{\scriptsize
+\begin{equation}
+S(\rho_A)=-\operatorname{Tr}(\rho_A\log_2\rho_A),qquad
+I(A:B)=S(\rho_A)+S(\rho_B)-S(\rho_{AB}).
+\end{equation}
+}
+Purity is $\operatorname{Tr}(\rho_A^2)$. Entropies and mutual information in
+Table~\ref{tab:information} are in bits; entries are mean $\pm$ standard
+deviation over the eight inputs.
+
+\begin{table*}[!t]
+\caption{Per-stage information diagnostics for the frozen ten-qubit circuit. The reduced state is taken on the active/kept wires; mutual information is reported only at pooling boundaries. Values are from the archived-weight E4 artifact and are descriptive, not causal attribution of accuracy.}
+\label{tab:information}
+\centering
+\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Stage} & \textbf{Kept wires} & \textbf{$C_{\ell_1}$} & \textbf{Purity} & \textbf{$S$} & \textbf{$I(\mathrm{keep}:\mathrm{discard})$} \\
+\midrule
+Encoded & 10 & $767.262\pm7.232$ & $1.0000\pm0.0000$ & $0.0000\pm0.0000$ & -- \\
+Before pooling 0 & 5 & $5.906\pm0.206$ & $0.0919\pm0.0037$ & $3.9070\pm0.0321$ & $7.814\pm0.064$ \\
+After pooling 0 & 5 & $6.567\pm0.170$ & $0.0942\pm0.0030$ & $3.8901\pm0.0309$ & $7.780\pm0.062$ \\
+Before pooling 1 & 2 & $0.819\pm0.051$ & $0.3356\pm0.0051$ & $1.7565\pm0.0120$ & $0.204\pm0.009$ \\
+After pooling 1 & 2 & $0.697\pm0.038$ & $0.3134\pm0.0044$ & $1.8214\pm0.0111$ & $0.358\pm0.013$ \\
+Before pooling 2 & 1 & $0.403\pm0.017$ & $0.5923\pm0.0072$ & $0.8624\pm0.0111$ & $0.005\pm0.002$ \\
+After pooling 2 & 1 & $0.332\pm0.022$ & $0.5879\pm0.0074$ & $0.8691\pm0.0114$ & $0.016\pm0.004$ \\
+After classifier & 1 & $0.253\pm0.016$ & $0.5879\pm0.0074$ & $0.8691\pm0.0114$ & -- \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The encoded ten-wire state has unit purity and near-zero entropy, as expected
+for a pure state preparation. After tracing out the compressed wires, the
+active reduced state is mixed because it is entangled with the inactive
+subsystem; this is compatible with a globally pure unitary computation. By the
+final readout, the one-wire reduced state has purity approximately $0.588$ and
+entropy approximately $0.869$ bits, so ``fully coherent'' should not be read as
+``locally pure'' or ``classically inaccessible.''
+
+The mutual information falls from approximately $7.814$ bits before the first
+pool to $0.204$ bits before the second and $0.005$ bits before the third. The
+last pooling stage therefore has little measured keep--discard correlation on
+these archived inputs. Pooling changes the entropy by less than $0.07$ bits at
+each boundary, and the final classifier changes basis-dependent coherence
+without changing the reduced state's spectrum. These observations qualify the
+architectural language: the controlled rotations provide a prescribed gate
+path for consolidation, but the diagnostic does not demonstrate that each
+pool concentrates useful information or that the deepest stage is active for
+every task.
+
+The information audit also supplies a control for the partial-trace description.
+If the reported changes were merely an artifact of an insensitive readout, a
+local operation on the retained wires would be expected to have the same null
+effect. Instead, dephasing the retained wires changes the readout by $0.4094$
+on the fixed-input control, whereas dephasing the compressed wires changes it by
+at most $5.86\times10^{-14}$. The difference is consistent with the theorem's
+specific subsystem statement and does not imply that the discarded subsystem is
+irrelevant to the global state.
+
 \subsection{Noise Robustness}
 The pooling theorem and dephasing controls establish circuit-level identities, not end-to-end noise robustness. The Q1 package therefore reports a bounded local validation experiment using clean checkpoints, declared depolarising/dephasing channels, fixed validation subsets, and an isolated Qiskit/Aer environment. The protocol covers MNIST 3-vs-5 and Fashion-MNIST 0-vs-6, seeds 0--2, 25 validation samples per seed, noise levels $p\in\{0,0.005,0.01,0.02\}$, and 128 shots at nonzero levels; checkpoints are not retrained and the test split is never used. The zero-noise agreement check passes, while the finite-shot nonzero results vary across task, seed, channel, and level without a monotone pattern. Those values are simulator evidence only; no accuracy-retention or device-noise claim is made beyond this declared scope.
+
+\begin{table*}[!t]
+\caption{Local noise-ladder validation accuracy averaged over three clean checkpoints and 25 validation examples per checkpoint. The zero-noise column is an exact statevector reference; nonzero columns use 128-shot local Aer simulation. Non-monotone values are retained because the experiment was not retrained and is not a device-noise benchmark.}
+\label{tab:noise}
+\centering
+\small
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+\textbf{Task} & \textbf{Channel} & \textbf{$p=0$} & \textbf{$p=0.005$} & \textbf{$p=0.01$} & \textbf{$p=0.02$} \\
+\midrule
+MNIST 3-vs-5 & Depolarising & 0.4400 & 0.4667 & 0.4933 & 0.5333 \\
+ & Dephasing & 0.4400 & 0.5067 & 0.5067 & 0.4267 \\
+Fashion-MNIST 0-vs-6 & Depolarising & 0.5867 & 0.4933 & 0.4667 & 0.4667 \\
+ & Dephasing & 0.5867 & 0.5067 & 0.5333 & 0.4400 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The exact statevector and Aer statevector outputs agree at zero noise to a
+maximum absolute difference below $1.34\times10^{-15}$ across the six
+checkpoint records. This establishes that the local noise harness begins from
+the canonical circuit rather than from a silently modified model. It does not
+validate the noisy channel against a physical device. The finite-shot columns
+are intentionally presented as a sensitivity probe: with only 25 validation
+examples per checkpoint, a change in a few signs can move the accuracy by a
+large amount, and increasing $p$ need not produce a monotone sequence when the
+checkpoint is fixed and shot noise is present.
 
 \subsection{Scalability and Practicality}
 Amplitude encoding fixes the state-vector width at the declared qubit count, while parameter sharing controls the number of variational slots. Table~\ref{tab:resources} reports total logical, decomposed, and transpiled depths for $n=4,6,8,10$, including state preparation and readout. The transpilation target is the local Qiskit ``FakePeekskill'' BackendV2 with optimisation level 1 and a transpiler seed of 42; no provider or QPU was contacted. These are local resource estimates, not a scalability theorem, a hardware execution result, or a deployment-readiness guarantee.
@@ -530,7 +1036,299 @@ Amplitude encoding fixes the state-vector width at the declared qubit count, whi
 \end{tabular}
 \end{table}
 
+\begin{table*}[!t]
+\caption{Pooling-arm practicality comparison at $n=4$ on the same local FakePeekskill BackendV2 target. Entries are depth/operation count at logical, decomposed, and transpiled levels; they are local resource estimates, not hardware executions.}
+\label{tab:pooling-resources}
+\centering
+\small
+\begin{tabular}{@{}lccccl@{}}
+\toprule
+\textbf{Arm} & \textbf{Mode} & \textbf{Logical} & \textbf{Decomposed} & \textbf{Transpiled} & \textbf{Control characteristic} \\
+\midrule
+No pooling & none & 30/78 & 30/78 & 225/381 & Wires retired without transfer \\
+Measurement & measurement & 36/87 & 36/87 & 240/401 & 3 measurements and 3 classical branches \\
+Unitary & unitary & 36/90 & 48/108 & 280/457 & CRY/CRZ; no dynamic branch \\
+Coherent & coherent & 38/90 & 54/117 & 309/493 & Additional keep-to-discard CRY \\
+SU(4) & su4 & 32/81 & 44/111 & 278/475 & General two-qubit unitary arm \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The frozen unitary arm is not the shallowest arm in this local comparison; the
+no-pooling and measurement-style arms have lower logical depth, while the
+coherent extension and SU(4) arm add different forms of expressivity. The
+engineering distinction is instead that the frozen arm avoids the measurement
+and classical branch in the pooling stage. Its transpiled depth is higher than
+the measurement arm under this particular target and layout, which is a useful
+warning against treating removal of dynamic control as an automatic reduction
+in compiled depth. A different compiler, coupling map, or native instruction
+set could change that ordering; no such hardware-dependent conclusion is made
+here.
+
 The finite trainability audit samples 200 random parameter initialisations and four random inputs per size on ``default.qubit'' with backpropagation. For a designated live slot, the observed gradient variances at $n=4,6,8,10,12,14$ are respectively $0.0134,0.0093,0.0044,0.0019,0.00073,0.00104$; an exponential fit has $R^2=0.923$ for that designated slot, whereas the median-live-slot fit prefers a power law with $R^2=0.663$ and is non-monotone at $n=14$. This finite diagnostic motivates caution about trainability; it is not evidence of a universal barren-plateau law or its absence.
+
+\subsection{Finite trainability, expressibility, and Lie-algebra diagnostics}
+\label{sec:diagnostics}
+The journal extension reports the model-analysis evidence in enough detail to
+show both what was measured and what the measurements cannot establish. These
+diagnostics concern the frozen ansatz and its finite-size instances, not the
+four-task test scores. They are included because parameter count, state-space
+coverage, and gradients answer different questions in a variational circuit.
+
+\subsubsection{Gradient-variance sweep}
+For each $n\in\{4,6,8,10,12,14\}$, we drew 200 parameter initialisations and
+four random encoded inputs, yielding 800 gradient draws per size. Angles were
+sampled uniformly from $[0,2\pi)$ and gradients were computed with backpropagation
+on 	exttt{default.qubit}. A designated convolution-slot index was kept fixed
+across sizes, and a second summary took the median variance over slots that
+were live under the finite diagnostic. The designated slot is the more stable
+cross-size estimand; the live-slot population changes with the active-wire
+schedule and therefore makes its median a descriptive secondary reduction.
+
+\begin{table*}[!t]
+\caption{Finite gradient-variance diagnostics for the frozen ansatz family. ``Live'' is the number of slots retained by the $10^{-12}$ finite criterion. The designated slot has the same index and convolutional role at every size; the median is not used to claim an asymptotic law.}
+\label{tab:gradient}
+\centering
+\small
+\begin{tabular}{@{}rrrrrr@{}}
+\toprule
+\textbf{$n$} & \textbf{Allocated slots} & \textbf{Live slots} & \textbf{Median live variance} & \textbf{Designated variance} & \textbf{Mean $|\partial f/\partial\theta|$} \\
+\midrule
+4 & 188 & 62 & $2.816\times10^{-2}$ & $1.335\times10^{-2}$ & $1.287\times10^{-1}$ \\
+6 & 194 & 62 & $1.413\times10^{-2}$ & $9.270\times10^{-3}$ & $8.788\times10^{-2}$ \\
+8 & 260 & 122 & $2.910\times10^{-3}$ & $4.416\times10^{-3}$ & $4.653\times10^{-2}$ \\
+10 & 269 & 74 & $3.768\times10^{-3}$ & $1.889\times10^{-3}$ & $4.092\times10^{-2}$ \\
+12 & 278 & 128 & $3.334\times10^{-4}$ & $7.304\times10^{-4}$ & $1.619\times10^{-2}$ \\
+14 & 287 & 74 & $2.951\times10^{-3}$ & $1.037\times10^{-3}$ & $3.352\times10^{-2}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The controlled-slot series is compatible with either an exponential fit,
+$0.0466\exp(-0.3035n)$ with $R^2=0.923$, or a power-law fit,
+$0.5162n^{-2.430}$ with $R^2=0.915$, on only six points. The difference in
+fit quality is too small to identify a decay law, and the designated variance
+increases at $n=14$ relative to $n=12$. The median-live-slot series is even
+less suitable for extrapolation because the number and composition of live
+slots are non-monotone. The defensible statement is therefore finite: gradients
+remain measurable in the tested range and no barren plateau is observed through
+$n=14$ under this protocol. Neither the presence nor absence of an asymptotic
+barren plateau follows.
+
+The $n=10$ row independently reproduces the 74-slot effective count obtained
+from the archived-weight, fixed-input audit, despite using random parameters,
+random inputs, and a variance criterion. This agreement strengthens the
+interpretation that the distinction between allocated and effective slots is a
+property of the executed topology. It does not mean that 74 is an effective
+dimension in the statistical-learning sense.
+
+\subsubsection{Dynamical Lie algebra}
+We computed commutator closure in the Pauli basis for three generator sets:
+``parameterized'' contains the trainable gate generators as they appear in the
+ansatz; ``propagated'' conjugates those generators through the fixed prefix so
+that it describes the ordered circuit factorisation; and ``full'' includes the
+fixed entangling gates as well. The latter two are the relevant sets when
+asking whether the complete circuit is contained in the exponential of a
+small algebra. The exact special-unitary ceiling is $4^n-1$.
+
+\begin{table*}[!t]
+\caption{Dynamical Lie-algebra closure of the frozen ansatz. Exact rows enumerate the closure; $\geq 120{,}000$ marks the explicit enumeration cap for the larger instances and is a lower bound, not an equality.}
+\label{tab:dla}
+\centering
+\small
+\begin{tabular}{@{}rrrrrl@{}}
+\toprule
+\textbf{$n$} & \textbf{$4^n-1$} & \textbf{Parameterized} & \textbf{Propagated} & \textbf{Full} & \textbf{Status} \\
+\midrule
+4 & 255 & 255 & 255 & 255 & exact closure \\
+6 & 4,095 & 270 & 4,095 & 4,095 & exact closure \\
+8 & 65,535 & 65,535 & 65,535 & 65,535 & exact closure \\
+10 & 1,048,575 & 65,550 & 1,048,575 & 1,048,575 & exact closure \\
+12 & 16,777,215 & 65,790 & $\geq120,000$ & $\geq120,000$ & capped lower bound \\
+14 & 268,435,455 & 65,805 & $\geq120,000$ & $\geq120,000$ & capped lower bound \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+At the headline $n=10$, the propagated and full closures are the complete
+$\mathfrak{su}(2^{10})$ algebra of dimension 1,048,575. The literal
+parameterized set has dimension 65,550 because its connectivity decomposes into
+full blocks, but this smaller number is not the algebra relevant to the complete
+ordered circuit's fixed entanglers. The exact full closure is a negative result
+for the planned polynomial-size DLA trainability certificate. It is also not a
+hardness theorem: the tape is shallow, the headline state has only 1,024
+amplitudes, and other simulation methods may remain effective at larger sizes.
+
+The closure routine was checked against controls with independently known
+dimensions: local rotations give $3n$, and the open-chain transverse-field
+Ising control gives $2n^2-n$. Both controls agree with their expected values
+over the tested sizes. This makes the FQCNN result interpretable as a property
+of the ansatz rather than an artefact of a closure routine that always returns
+the full algebra. The input-dependent amplitude-embedding operation is not
+included in the generator set; it defines the state on which the variational
+ansatz acts.
+
+\subsubsection{Expressibility and entangling capability}
+For the headline ten-qubit ansatz, one fixed amplitude-encoded input was held
+constant while 3,000 parameter pairs were sampled. The fidelity distribution
+between each pair of output states was compared with the finite-sample Haar
+fidelity reference using 75 bins. This is an ansatz-ensemble diagnostic, not a
+measure of variation across the image dataset. The resulting KL divergence is
+$1.087\times10^{-6}$, while the Haar reference scored with the same sample size
+and bins has the same value to the reported precision. The mean pairwise
+fidelity is $9.742\times10^{-4}$ versus the Haar expectation
+$9.766\times10^{-4}$. The Meyer--Wallach entangling capability is
+$0.9745\pm0.0135$ over 3,000 states, with observed range $0.895$--$0.995$.
+
+\begin{table}[!t]
+\caption{Controls for interpreting the finite expressibility score at $n=10$. A small KL value is meaningful only relative to the identically scored Haar reference and the deviation controls.}
+\label{tab:expressibility}
+\centering
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Ensemble or control} & \textbf{KL divergence} \\
+\midrule
+Frozen ansatz & $1.087\times10^{-6}$ \\
+Haar reference & $1.087\times10^{-6}$ \\
+Ten-times inflated Haar fidelities & 3.823 \\
+Degenerate fidelity ensemble & 25.809 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The ansatz is therefore Haar-indistinguishable at this resolution, rather than
+``maximally expressible'' in an unrestricted sense. The controls show that the
+metric can detect gross deviations, but the Haar law places 0.9999989 of its
+mass in the first of these 75 bins at ten qubits, which limits the resolution.
+The result should be read alongside the gradient sweep: high expressibility
+under one finite fidelity statistic does not by itself determine the gradients
+of a shallow, structured parameterisation.
+
+\subsubsection{Capacity-scaling diagnostic}
+Finally, we evaluated the finite gate-count expression
+$g(T,N)=\sqrt{T\log(T)/N}$ on the historical headline training partition,
+where $N=7,599$. The result is shown in Table~\ref{tab:generalization}. Here
+$T$ must count trainable gate occurrences rather than parameter slots. The
+quantity is reported as a scaling diagnostic with an omitted theorem-dependent
+constant; it is not presented as a numerical generalisation guarantee.
+
+\begin{table}[!t]
+\caption{Capacity-scaling readings at the historical headline training size $N=7,599$. Different choices of $T$ answer different accounting questions.}
+\label{tab:generalization}
+\centering
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Reading of $T$} & \textbf{$T$} & \textbf{$g(T,N)$} \\
+\midrule
+Trainable gates on tape & 222 & 0.3973 \\
+Gates driven by effective slots & 218 & 0.3930 \\
+Effective parameter slots & 74 & 0.2047 \\
+Allocated parameter slots & 269 & 0.4450 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All four values are below one for this finite reading, but the effective-slot
+value must not be called the bound: 74 slots drive 218 trainable gate
+occurrences, while 191 allocated slots never reach the tape. The gate-based
+readings 0.3973 and 0.3930 differ by only about one percent. The parameter
+audit can still support a statement about allocation efficiency, but it cannot
+be substituted into a gate-count theorem to manufacture a stronger
+generalisation conclusion.
+
+\subsubsection{Joint interpretation}
+The three diagnostics expose a useful tension. The state ensemble is close to
+the finite Haar reference, the complete ordered ansatz reaches the full
+special-unitary algebra at ten qubits, and yet the designated gradient remains
+measurable through the tested range. The correct resolution is not to select
+the most favourable interpretation. The expressibility statistic has finite
+resolution, the DLA result removes rather than supplies a polynomial-size
+certificate, and the gradient sweep has too few sizes to identify an
+asymptotic law. Together they support an empirical statement about the tested
+architecture and sizes, with no universal trainability claim in either
+direction.
+
+\section{Discussion}
+The journal extension changes the evidentiary role of the paper. The conference
+draft established the architecture and a compact proof-of-concept result; the
+present version separates architectural identity, statistical behavior,
+information dynamics, and implementation cost. This separation is important
+because those questions can point in different directions. An exact channel
+equivalence does not imply an accuracy advantage, and a finite trainability
+diagnostic does not imply scalable optimization.
+
+\subsection{Architectural contribution versus predictive performance}
+The central contribution is a change in the control boundary of pooling. The
+controlled unitary followed by a partial trace implements the same
+measure-and-condition channel as the compared mid-circuit construction. Thus,
+the coherent block removes intermediate measurement, reset, and classical
+feed-forward from the frozen path while preserving the corresponding retained
+register statistics. It does not recover the discarded subsystem, and the
+partial trace remains part of the reduced-state semantics. The E1, E2, and E3
+results jointly make this distinction testable at fixed parameters and after
+training.
+
+Predictive performance tells a different story. In the primary four-task
+matrix, the FQCNN is below both classical baselines and above TTN in mean
+accuracy on every task, but none of the twelve paired effects survives Holm
+correction. The secondary pooling campaign shows that removing pooling can
+hurt, while a larger SU(4) pooling family has finite headroom over the frozen
+three-angle block. These results do not weaken the architectural theorem; they
+prevent it from being used as a proxy for model superiority. The appropriate
+claim is therefore that the paper supplies a coherent implementation with
+measured, task-dependent predictive behavior and an explicit family-level
+ablation boundary.
+
+\subsection{What the diagnostics reveal about the frozen circuit}
+The information audit explains why a globally coherent computation should not
+be described as locally information-preserving at every stage. The full
+statevector remains pure under the unitary path, whereas the active register
+becomes mixed through entanglement with wires that are no longer active. The
+reported keep--discard mutual information decreases sharply across the
+cascade on the archived inputs. This is compatible with dimensional reduction,
+but it does not establish that each pooling stage concentrates the task-relevant
+feature or that the final stage is useful on every task.
+
+The finite trainability results impose a second boundary. Measurable gradients
+through $n=14$ do not identify an asymptotic scaling law; the full
+special-unitary Lie algebra at $n=10$ rules out a polynomial-DLA certificate
+for the complete frozen tape; and the expressibility statistic is a
+finite-resolution comparison rather than a proof of maximal expressivity.
+The generalization expression is reported as a capacity diagnostic and is
+not a generalization guarantee. Taken together, these checks favour a
+mechanism-oriented interpretation over a single favorable slogan.
+
+\subsection{Implementation implications and scaling boundary}
+The resource audit makes the cost of the coherent path concrete. On the local
+FakePeekskill transpilation target, total transpiled depth and operation count
+increase from 343 and 567 at four qubits to 7,362 and 15,239 at ten qubits.
+The pooling-arm audit also shows that a unitary replacement is not automatically
+the shallowest implementation: the measurement, unitary, coherent, and SU(4)
+variants have different logical and transpiled costs. These are compiler- and
+backend-specific observations, not device benchmarks.
+
+The ten-qubit experiment is consequently a controlled validation scale, not a
+claim of practical deployment at arbitrary register size. Global amplitude
+encoding requires a state-preparation interface that is itself outside the
+learned variational tape, and all reported numerical results were produced by
+classical simulation or a local fake backend. A hardware study would need to
+declare the provider, calibration date, shot budget, compilation settings,
+state-preparation method, and error model. Those external actions are not
+required to establish the present architectural result and remain outside this
+release.
+
+\subsection{Reproducibility as part of the contribution}
+The primary comparison binds every arm to the same ordered sample identifiers,
+split manifests, five seeds, validation protocol, and final test partition.
+The evidence files preserve per-seed outcomes rather than only aggregate
+means, and the source revision, environment locks, figures, and validation
+reports are packaged together. This makes the negative comparisons and the
+positive pooling checks auditable. It also makes the scope of replication
+clear: a new implementation should first reproduce the frozen simulator
+artifacts, then extend the task or hardware domain with a separately registered
+protocol.
 
 \subsection{Limitations and Future Work}
 The current evaluation is limited to four binary tasks drawn from three 28$\times$28 grayscale dataset families, small training subsets, five-seed comparisons, finite-size diagnostics, and classical simulation/local noise models. The globally amplitude-encoded register is not an image-space convolutional representation, and the experiments do not establish quantum advantage, asymptotic trainability, noise robustness on a device, or real-QPU performance. Scaling to larger datasets, multi-class tasks, alternative encodings, and optional hardware validation remains outside this release.
