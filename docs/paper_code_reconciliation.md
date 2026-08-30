@@ -233,18 +233,23 @@ than Q1 evidence. The validated five-seed comparison table is sourced from
 bound to `Results/evidence/q1_noise_validation.json` and
 `Results/evidence/q1_pooling_transfer.json`.
 
-## Q1 citation and claim closure (2026-08-29)
+## Q1 citation and claim closure (2026-08-30)
 
-The final citation pass parses `fqcnn.tex` and confirms that every citation key has one
-matching bibliography entry and every retained bibliography entry is cited: 34 cited
-keys, 34 entries, zero missing keys, and zero uncited entries. The four entries that
-were left over after removing the superseded data-encoding and hybrid-model discussion
-(`ref31`, `ref39`, `ref43`, and `ref48`) were removed rather than cited out of context.
-The previously considered `ref44` trainability citation is not present; the manuscript
-now states register-index locality and finite empirical trainability results without a
-cross-study or universal-scaling inference. Broad literature sentences in the
-introduction and related-work section retain only citations whose scope matches the
-sentence, while all performance, resource, noise, and pooling numbers are sourced from
-the repository's hashed evidence artifacts and are not compared as cross-study rankings.
-This bounded audit closes the citation-scope gate; venue-specific editorial review and
-independent novelty assessment remain external to the repository.
+The manuscript now applies the stricter Q1-journal-only policy recorded in
+`docs/submission/citation-quartile-audit.md`: 15 cited keys, 15 matching
+bibliography entries, zero missing keys, and zero uncited entries. All retained
+items are peer-reviewed journal articles reported as Q1 in the documented 2024
+SJR/Scopus criterion; arXiv-only preprints, the Nielsen--Chuang book, and
+conditional/mixed-quartile venues were removed. Fashion-MNIST and KMNIST remain
+reproducible inputs whose upstream URLs and checksums are recorded in the
+provenance artifact, without citing their non-journal dataset preprints.
+
+The previously considered `ref44` trainability citation is not present; the
+manuscript states register-index locality and finite empirical trainability
+results without a cross-study or universal-scaling inference. Broad literature
+sentences in the introduction and related-work section retain only citations
+whose scope matches the sentence, while all performance, resource, noise, and
+pooling numbers are sourced from the repository's hashed evidence artifacts and
+are not compared as cross-study rankings. Quartiles remain database-, category-,
+and year-dependent, so the selected venue and current institutional JCR/SJR
+record must be rechecked immediately before submission.

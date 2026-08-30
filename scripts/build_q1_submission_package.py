@@ -83,6 +83,7 @@ REQUIRED_FILES = {
     "docs/q1-reviewer-checklist.md",
     "docs/submission/README.md",
     "docs/submission/cover-letter.md",
+    "docs/submission/citation-quartile-audit.md",
 }
 
 GRAPHICS_PATTERN = re.compile(

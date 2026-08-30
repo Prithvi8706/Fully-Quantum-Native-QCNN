@@ -16,6 +16,8 @@ Included preparation documents:
 - `author-declarations.md` - plain-language all-author confirmation checklist;
 - `data-code-availability.md` - precise data and software availability statement;
 - `conference-extension.md` - disclosure of what the journal version adds;
+- `citation-quartile-audit.md` - dated Q1-journal-only bibliography audit and
+  its database/category caveat;
 - `reproducibility.md` - commands, locks, evidence scope, and external-data notes.
 
 The declaration checklist is not another experiment. It asks the authors to
@@ -24,6 +26,12 @@ approved the paper, contribution roles, funding, conflicts, correspondence,
 ethics and rights, prior conference disclosure, AI-tool disclosure, and
 APC/licence choices. Complete it only after all authors have reviewed the final
 PDF.
+
+The manuscript bibliography currently contains only peer-reviewed journal
+articles that pass the documented 2024 SJR Q1 filter. Quartiles are
+database-, category-, and year-dependent; the selected venue's current JCR/SJR
+record must be rechecked immediately before submission. Dataset provenance is
+kept through upstream URLs and checksums, not non-journal dataset preprints.
 
 Before upload, the authors must select a venue, adapt the IEEE draft to that
 venue's current template and graphics rules, deposit the code/evidence archive in
