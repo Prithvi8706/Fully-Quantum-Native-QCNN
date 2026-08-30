@@ -7,20 +7,21 @@
         "pytest",
         "tests",
         "-q",
-        "--junitxml=<temporary>\\fqcnn-q1-dmv95vsa\\pytest.xml"
+        "--junitxml=<temporary>\\fqcnn-q1-b6czlijv\\pytest.xml"
       ],
-      "elapsed_seconds": 670.719,
+      "elapsed_seconds": 730.109,
       "label": "full pytest suite",
       "returncode": 0,
       "status": "pass",
       "stderr_tail": "<user-home>\\AppData\\Roaming\\Python\\Python39\\site-packages\\pytest_asyncio\\plugin.py:217: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n",
-      "stdout_tail": "........................................................................ [ 11%]\n........................................................................ [ 22%]\n........................................s............................... [ 33%]\n...........s............................................................ [ 44%]\n........................................................................ [ 55%]\n........................................................................ [ 66%]\n........................................................................ [ 77%]\n........................................................................ [ 88%]\n........................................................................ [ 99%]\n....                                                                     [100%]\n============================== warnings summary ===============================\n..\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:170\n  <user-home>\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:170: DeprecationWarning: The class ``qiskit.utils.algorithm_globals.QiskitAlgorithmGlobals`` is deprecated as of qiskit 0.45.0. It will be removed no earlier than 3 months after the release date. This algorithm utility has been migrated to an independent package: http<absolute-path>\n    algorithm_globals = QiskitAlgorithmGlobals()\n\n..\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:49\n  <user-home>\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:49: DeprecationWarning: The property ``qiskit.utils.algorithm_globals.QiskitAlgorithmGlobals.num_processes`` is deprecated as of qiskit 0.45.0. It will be removed no earlier than 3 months after the release date. This algorithm utility belongs to a legacy workflow and has no replacement.\n    self.num_processes = settings.get(\"num_processes\", QiskitAlgorithmGlobals.CPU_COUNT)\n\n..\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:120\n  <user-home>\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:120: DeprecationWarning: The property ``qiskit.utils.algorithm_globals.QiskitAlgorithmGlobals.num_processes`` is deprecated as of qiskit 0.45.0. It will be removed no earlier than 3 months after the release date. This algorithm utility belongs to a legacy workflow and has no replacement.\n    parallel.CPU_COUNT = self.num_processes\n\n-- Docs: http<absolute-path>\n- generated xml file: <temporary>\\fqcnn-q1-dmv95vsa\\pytest.xml -\n=========================== short test summary info ===========================\nSKIPPED [1] tests\\test_campaign_manifest.py:1259: directory symlinks are not supported: [WinError 1314] A required privilege is not held by the client: '<absolute-path>' -> '<absolute-path>'\nSKIPPED [1] tests\\test_campaign_manifest.py:1499: file symlinks are not supported: [WinError 1314] A required privilege is not held by the client: '<absolute-path>' -> '<absolute-path>'\n650 passed, 2 skipped, 3 warnings in 662.10s (0:11:02)\n"
+      "stdout_tail": "........................................................................ [ 11%]\n........................................................................ [ 22%]\n........................................s............................... [ 33%]\n...........s............................................................ [ 44%]\n........................................................................ [ 55%]\n........................................................................ [ 66%]\n........................................................................ [ 77%]\n........................................................................ [ 88%]\n........................................................................ [ 99%]\n....                                                                     [100%]\n============================== warnings summary ===============================\n..\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:170\n  <user-home>\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:170: DeprecationWarning: The class ``qiskit.utils.algorithm_globals.QiskitAlgorithmGlobals`` is deprecated as of qiskit 0.45.0. It will be removed no earlier than 3 months after the release date. This algorithm utility has been migrated to an independent package: http<absolute-path>\n    algorithm_globals = QiskitAlgorithmGlobals()\n\n..\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:49\n  <user-home>\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:49: DeprecationWarning: The property ``qiskit.utils.algorithm_globals.QiskitAlgorithmGlobals.num_processes`` is deprecated as of qiskit 0.45.0. It will be removed no earlier than 3 months after the release date. This algorithm utility belongs to a legacy workflow and has no replacement.\n    self.num_processes = settings.get(\"num_processes\", QiskitAlgorithmGlobals.CPU_COUNT)\n\n..\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:120\n  <user-home>\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:120: DeprecationWarning: The property ``qiskit.utils.algorithm_globals.QiskitAlgorithmGlobals.num_processes`` is deprecated as of qiskit 0.45.0. It will be removed no earlier than 3 months after the release date. This algorithm utility belongs to a legacy workflow and has no replacement.\n    parallel.CPU_COUNT = self.num_processes\n\n-- Docs: http<absolute-path>\n- generated xml file: <temporary>\\fqcnn-q1-b6czlijv\\pytest.xml -\n=========================== short test summary info ===========================\nSKIPPED [1] tests\\test_campaign_manifest.py:1259: directory symlinks are not supported: [WinError 1314] A required privilege is not held by the client: '<absolute-path>' -> '<absolute-path>'\nSKIPPED [1] tests\\test_campaign_manifest.py:1499: file symlinks are not supported: [WinError 1314] A required privilege is not held by the client: '<absolute-path>' -> '<absolute-path>'\n650 passed, 2 skipped, 3 warnings in 722.63s (0:12:02)\n"
     },
     {
       "command": [
         "<user-home>\\AppData\\Local\\Programs\\Python\\Python311\\Scripts\\ruff.EXE",
         "check",
         "QCNN/utils/dataset_registry.py",
+        "QCNN/utils/exclusive_queue.py",
         "experiments/evidence_provenance.py",
         "experiments/pooling_analysis.py",
         "experiments/q1_fast_track_analysis.py",
@@ -39,7 +40,7 @@
         "tests/test_q1_reproduction.py",
         "tests/test_q1_submission_package.py"
       ],
-      "elapsed_seconds": 0.14,
+      "elapsed_seconds": 0.141,
       "label": "ruff release-source check",
       "returncode": 0,
       "status": "pass",
@@ -58,7 +59,7 @@
         "scripts",
         "tests"
       ],
-      "elapsed_seconds": 0.329,
+      "elapsed_seconds": 0.344,
       "label": "Python bytecode compilation",
       "returncode": 0,
       "status": "pass",
@@ -73,7 +74,7 @@
         "-file-line-error",
         "fqcnn.tex"
       ],
-      "elapsed_seconds": 1.906,
+      "elapsed_seconds": 1.922,
       "label": "LaTeX build pass 1",
       "returncode": 0,
       "status": "pass",
@@ -88,7 +89,7 @@
         "-file-line-error",
         "fqcnn.tex"
       ],
-      "elapsed_seconds": 1.735,
+      "elapsed_seconds": 1.765,
       "label": "LaTeX build pass 2",
       "returncode": 0,
       "status": "pass",
@@ -103,7 +104,7 @@
         "-file-line-error",
         "fqcnn.tex"
       ],
-      "elapsed_seconds": 1.812,
+      "elapsed_seconds": 1.953,
       "label": "LaTeX build pass 3",
       "returncode": 0,
       "status": "pass",
@@ -117,7 +118,7 @@
         "pip",
         "check"
       ],
-      "elapsed_seconds": 2.266,
+      "elapsed_seconds": 2.313,
       "label": "training environment dependency check",
       "returncode": 0,
       "status": "pass",
@@ -131,7 +132,7 @@
         "pip",
         "check"
       ],
-      "elapsed_seconds": 1.125,
+      "elapsed_seconds": 1.015,
       "label": "isolated Qiskit dependency check",
       "returncode": 0,
       "status": "pass",
@@ -144,7 +145,7 @@
         "-c",
         "from experiments import q1_local_evidence as e\nstate = e._build_state_preparation(4)\nbody = e._build_model_body(4, 'unitary', seed=0)\nassert state.count_ops().get('initialize') == 1\nassert body.count_ops().get('initialize', 0) == 0\nassert body.count_ops().get('cry') == 3\nassert body.count_ops().get('crz') == 3\nassert body.count_ops().get('cx', 0) > 0\ndynamic = e._build_model_body(4, 'measurement', seed=0)\ncounts = {str(k): int(v) for k, v in dynamic.count_ops().items()}\nassert counts.get('measure') == 3\nassert counts.get('if_else') == 3\n"
       ],
-      "elapsed_seconds": 2.422,
+      "elapsed_seconds": 2.407,
       "label": "isolated Qiskit schedule contract",
       "returncode": 0,
       "status": "pass",
@@ -166,7 +167,7 @@
     "required_files": 10,
     "status": "pass"
   },
-  "generated_at_utc": "2026-08-30T11:38:19.377779+00:00",
+  "generated_at_utc": "2026-08-30T12:36:55.137510+00:00",
   "next_step": "Build the verified ZIP with scripts/build_q1_submission_package.py after committing this report.",
   "pytest": {
     "errors": 0,
@@ -174,7 +175,7 @@
     "skipped": 2,
     "status": "pass",
     "tests": 652,
-    "time_seconds": 662.03
+    "time_seconds": 722.54
   },
   "schema": {
     "name": "fqcnn_q1_reproduction",
@@ -192,12 +193,17 @@
   },
   "source": {
     "branch": "dev",
-    "commit": "cac27057bf6fb5f4d1fc438c708c555075f6c752",
+    "commit": "09be6d1f09b44ba09ba7507c5df170bdc9ec96f2",
     "source_files": [
       {
         "bytes": 16352,
         "path": "QCNN/utils/dataset_registry.py",
         "sha256": "f77f285955fcf8b643e00f05f5011755db9c7a7ad2ac7747bb8618cb5fd057b8"
+      },
+      {
+        "bytes": 4661,
+        "path": "QCNN/utils/exclusive_queue.py",
+        "sha256": "72941b28c844201da2b6caad497b3bf3175661a0fddcf8e034648f70ed4ced88"
       },
       {
         "bytes": 2810,
@@ -245,19 +251,19 @@
         "sha256": "97ea5292428d071769f500866f06f32d408f1720731b6a2e5751f14bbe9bd6a8"
       },
       {
-        "bytes": 14409,
+        "bytes": 15317,
         "path": "scripts/build_q1_submission_package.py",
-        "sha256": "79dc510b1ed5a313b25df5daac1562e8fb0c7bd1a12190830b8c6cf31f14572d"
+        "sha256": "cff6feafb6bf24b25cb730a0ee13834f818b884d2607d723f17460683cf40cd1"
       },
       {
-        "bytes": 8812,
+        "bytes": 8849,
         "path": "scripts/refresh_q1_claim_ledger.py",
-        "sha256": "3df4f1db15e22d57da4166ba39787c4f89e7f678f4aa9be21a69a4d61179753e"
+        "sha256": "53ebc53c51f55ff84f49f40a49a0b58dfda20bf6f5d9230f68739b5548f89ad3"
       },
       {
-        "bytes": 33233,
+        "bytes": 33307,
         "path": "scripts/run_q1_reproduction.py",
-        "sha256": "31769f3736c9a06d85388f41b617320051cf22aee52aa5b68deb96873f9b85d6"
+        "sha256": "ddae1394e2b849bd56c7b61f8522995318be4660cc9b007f5d408fa89723e681"
       },
       {
         "bytes": 8445,
@@ -301,7 +307,7 @@
       }
     ],
     "tracked_tree_clean_before_run": true,
-    "tree": "61af455aa3d76b0eaffbea546c0e854887862d28"
+    "tree": "411d5ef2806b937f48c1a942c47ca464318a9de5"
   },
   "status": "pass"
 }
