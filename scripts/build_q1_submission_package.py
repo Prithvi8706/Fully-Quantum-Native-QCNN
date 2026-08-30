@@ -274,6 +274,25 @@ def assert_release_evidence(root: Path) -> dict:
     modules usable independently and to avoid an import cycle.
     """
 
+    # When this file is launched as ``python scripts/build_q1_submission_package.py``,
+    # Python puts ``scripts/`` (rather than the repository root) first on
+    # ``sys.path``.  On Windows that can resolve an unrelated installed
+    # ``scripts`` package and make the release gate unavailable.  Ensure the
+    # repository namespace wins while retaining the normal package import used
+    # by tests and ``python -m`` callers.
+    import sys
+
+    root_text = str(root)
+    scripts_text = str(root / "scripts")
+    if root_text not in sys.path:
+        sys.path.insert(0, root_text)
+    loaded_scripts = sys.modules.get("scripts")
+    loaded_paths = getattr(loaded_scripts, "__path__", ())
+    if loaded_scripts is not None and not any(
+        str(Path(path).resolve()) == scripts_text
+        for path in loaded_paths
+    ):
+        sys.modules.pop("scripts", None)
     from scripts import run_q1_reproduction
 
     result = run_q1_reproduction.validate_evidence(
