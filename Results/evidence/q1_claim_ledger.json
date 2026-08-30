@@ -3,7 +3,7 @@
     "name": "fqcnn_q1_claim_ledger",
     "version": 2
   },
-  "generated_at_utc": "2026-08-30T11:39:08.012728Z",
+  "generated_at_utc": "2026-08-30T12:24:09.081101Z",
   "status": "ready_for_release",
   "purpose": "Machine-readable audit of numerical and scope-sensitive claims against the current manuscript and the evidence available at ledger generation time. A claim is not publication-ready unless its status is supported or supported_with_scope and every required action is closed.",
   "scope": {
@@ -44,16 +44,17 @@
     "tests/fixtures/effective_params.json": "6c5021a78d4fce3ddecc331f08ec88ec4c7b252d8c0d74405b3f94d61622947f",
     "tests/fixtures/headline_signature.json": "773080573f9da762aaae93bfa46128cfc272854ad8cc31f0392c1233f77f6b54",
     "tests/fixtures/headline_expectations.npz": "46072f1eb8763b0233e42382253c3b602176f07feeb591ee0e173c840d93ab0e",
-    "scripts/build_q1_submission_package.py": "79dc510b1ed5a313b25df5daac1562e8fb0c7bd1a12190830b8c6cf31f14572d",
-    "scripts/refresh_q1_claim_ledger.py": "3df4f1db15e22d57da4166ba39787c4f89e7f678f4aa9be21a69a4d61179753e",
-    "scripts/run_q1_reproduction.py": "31769f3736c9a06d85388f41b617320051cf22aee52aa5b68deb96873f9b85d6",
+    "scripts/build_q1_submission_package.py": "cff6feafb6bf24b25cb730a0ee13834f818b884d2607d723f17460683cf40cd1",
+    "scripts/refresh_q1_claim_ledger.py": "53ebc53c51f55ff84f49f40a49a0b58dfda20bf6f5d9230f68739b5548f89ad3",
+    "scripts/run_q1_reproduction.py": "ddae1394e2b849bd56c7b61f8522995318be4660cc9b007f5d408fa89723e681",
     "experiments/evidence_provenance.py": "646d57c5bee428dd63c1b881307b0c44d1f4f347faa07e82113c4beace721e5f",
     "experiments/statistics.py": "1ce3bf4d3619a4219ac728424bd21be055149c6017e90e0278d5609daafffe3c",
     "baselines/classical_cnn.py": "88f0d8518ecd20ea34a0c1ebcfd26e6b4a8534df7fd085e3451521b3b28babc8",
     "baselines/quantum_baselines.py": "843b9a228de8db04b75b2e50a26982c3d489e5de53d57b2f2ac302b8828815c0",
     "QCNN/config/Qconfig.py": "6deeb6c445a5116a2e67d6b08262bdf59ff0633ac000cfa900204c714592447e",
     "QCNN/layers/QPool.py": "f10169f5cbd06646159276ce62011171e6bcee911a8ff7fe3ba163fd58ff9601",
-    "QCNN/models/QCNNModel.py": "d63083b6120503e0616db37e65d879d88ba1863a6f7b24352512ab70fb5f03ce"
+    "QCNN/models/QCNNModel.py": "d63083b6120503e0616db37e65d879d88ba1863a6f7b24352512ab70fb5f03ce",
+    "QCNN/utils/exclusive_queue.py": "72941b28c844201da2b6caad497b3bf3175661a0fddcf8e034648f70ed4ced88"
   },
   "artifact_inventory": [
     {
