@@ -3,7 +3,7 @@
     "name": "fqcnn_q1_claim_ledger",
     "version": 2
   },
-  "generated_at_utc": "2026-08-30T11:09:39.147165Z",
+  "generated_at_utc": "2026-08-30T11:39:08.012728Z",
   "status": "ready_for_release",
   "purpose": "Machine-readable audit of numerical and scope-sensitive claims against the current manuscript and the evidence available at ledger generation time. A claim is not publication-ready unless its status is supported or supported_with_scope and every required action is closed.",
   "scope": {
@@ -529,7 +529,7 @@
       "id": "A-016",
       "path": "Results/evidence/q1_reproduction.json",
       "status": "pass",
-      "sha256": "7b86f837d44389fba66da4c97db92795004ee92caf1c9fe4ac1e4e2e17e838f9",
+      "sha256": "aa37c982571010f67651cd9a6a67139649ab7ca5c3d1ff484261d3c2b5612cff",
       "protocol": {
         "pytest": {
           "errors": 0,

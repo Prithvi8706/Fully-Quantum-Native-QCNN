@@ -2,19 +2,19 @@
   "checks": [
     {
       "command": [
-        "<repository>\\.venv-q1-training\\Scripts\\python.exe",
+        "<absolute-path>",
         "-m",
         "pytest",
         "tests",
         "-q",
-        "--junitxml=<temporary>\\fqcnn-q1-wpafb3hs\\pytest.xml"
+        "--junitxml=<temporary>\\fqcnn-q1-dmv95vsa\\pytest.xml"
       ],
-      "elapsed_seconds": 618.563,
+      "elapsed_seconds": 670.719,
       "label": "full pytest suite",
       "returncode": 0,
       "status": "pass",
-      "stderr_tail": "",
-      "stdout_tail": "........................................................................ [ 11%]\n........................................................................ [ 22%]\n........................................s............................... [ 34%]\n...........s............................................................ [ 45%]\n........................................................................ [ 56%]\n........................................................................ [ 68%]\n................................................ss...................... [ 79%]\n........................................................................ [ 91%]\n........................................................                 [100%]\n============================== warnings summary ===============================\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:64\n  <repository>\\.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:64: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'\n    prop = Group((name + Suppress(\"=\") + comma_separated(value)) | oneOf(_CONSTANTS))\n\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85\n  <repository>\\.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:85: PyparsingDeprecationWarning: 'parseString' deprecated - use 'parse_string'\n    parse = parser.parseString(pattern)\n\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89\n  <repository>\\.venv-q1-training\\lib\\site-packages\\matplotlib\\_fontconfig_pattern.py:89: PyparsingDeprecationWarning: 'resetCache' deprecated - use 'reset_cache'\n    parser.resetCache()\n\n.venv-q1-training\\lib\\site-packages\\matplotlib\\_mathtext.py:45\n  <repository>\\.venv-q1-training\\lib\\site-packages\\matplotlib\\_mathtext.py:45: PyparsingDeprecationWarning: 'enablePackrat' deprecated - use 'enable_packrat'\n    ParserElement.enablePackrat()\n\n-- Docs: http<absolute-path>\n- generated xml file: <temporary>\\fqcnn-q1-wpafb3hs\\pytest.xml -\n=========================== short test summary info ===========================\nSKIPPED [1] tests\\test_campaign_manifest.py:1259: directory symlinks are not supported: [WinError 1314] A required privilege is not held by the client: '<absolute-path>' -> '<absolute-path>'\nSKIPPED [1] tests\\test_campaign_manifest.py:1499: file symlinks are not supported: [WinError 1314] A required privilege is not held by the client: '<absolute-path>' -> '<absolute-path>'\nSKIPPED [1] tests\\test_q1_local_evidence.py:78: Qiskit schedule contracts run in the isolated .venv-qiskit environment\nSKIPPED [1] tests\\test_q1_local_evidence.py:92: Qiskit schedule contracts run in the isolated .venv-qiskit environment\n628 passed, 4 skipped, 14 warnings in 612.75s (0:10:12)\n"
+      "stderr_tail": "<user-home>\\AppData\\Roaming\\Python\\Python39\\site-packages\\pytest_asyncio\\plugin.py:217: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n",
+      "stdout_tail": "........................................................................ [ 11%]\n........................................................................ [ 22%]\n........................................s............................... [ 33%]\n...........s............................................................ [ 44%]\n........................................................................ [ 55%]\n........................................................................ [ 66%]\n........................................................................ [ 77%]\n........................................................................ [ 88%]\n........................................................................ [ 99%]\n....                                                                     [100%]\n============================== warnings summary ===============================\n..\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:170\n  <user-home>\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:170: DeprecationWarning: The class ``qiskit.utils.algorithm_globals.QiskitAlgorithmGlobals`` is deprecated as of qiskit 0.45.0. It will be removed no earlier than 3 months after the release date. This algorithm utility has been migrated to an independent package: http<absolute-path>\n    algorithm_globals = QiskitAlgorithmGlobals()\n\n..\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:49\n  <user-home>\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:49: DeprecationWarning: The property ``qiskit.utils.algorithm_globals.QiskitAlgorithmGlobals.num_processes`` is deprecated as of qiskit 0.45.0. It will be removed no earlier than 3 months after the release date. This algorithm utility belongs to a legacy workflow and has no replacement.\n    self.num_processes = settings.get(\"num_processes\", QiskitAlgorithmGlobals.CPU_COUNT)\n\n..\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:120\n  <user-home>\\AppData\\Roaming\\Python\\Python39\\site-packages\\qiskit\\utils\\algorithm_globals.py:120: DeprecationWarning: The property ``qiskit.utils.algorithm_globals.QiskitAlgorithmGlobals.num_processes`` is deprecated as of qiskit 0.45.0. It will be removed no earlier than 3 months after the release date. This algorithm utility belongs to a legacy workflow and has no replacement.\n    parallel.CPU_COUNT = self.num_processes\n\n-- Docs: http<absolute-path>\n- generated xml file: <temporary>\\fqcnn-q1-dmv95vsa\\pytest.xml -\n=========================== short test summary info ===========================\nSKIPPED [1] tests\\test_campaign_manifest.py:1259: directory symlinks are not supported: [WinError 1314] A required privilege is not held by the client: '<absolute-path>' -> '<absolute-path>'\nSKIPPED [1] tests\\test_campaign_manifest.py:1499: file symlinks are not supported: [WinError 1314] A required privilege is not held by the client: '<absolute-path>' -> '<absolute-path>'\n650 passed, 2 skipped, 3 warnings in 662.10s (0:11:02)\n"
     },
     {
       "command": [
@@ -39,7 +39,7 @@
         "tests/test_q1_reproduction.py",
         "tests/test_q1_submission_package.py"
       ],
-      "elapsed_seconds": 1.688,
+      "elapsed_seconds": 0.14,
       "label": "ruff release-source check",
       "returncode": 0,
       "status": "pass",
@@ -48,7 +48,7 @@
     },
     {
       "command": [
-        "<repository>\\.venv-q1-training\\Scripts\\python.exe",
+        "<absolute-path>",
         "-m",
         "compileall",
         "-q",
@@ -58,7 +58,7 @@
         "scripts",
         "tests"
       ],
-      "elapsed_seconds": 0.343,
+      "elapsed_seconds": 0.329,
       "label": "Python bytecode compilation",
       "returncode": 0,
       "status": "pass",
@@ -73,7 +73,7 @@
         "-file-line-error",
         "fqcnn.tex"
       ],
-      "elapsed_seconds": 1.953,
+      "elapsed_seconds": 1.906,
       "label": "LaTeX build pass 1",
       "returncode": 0,
       "status": "pass",
@@ -88,7 +88,7 @@
         "-file-line-error",
         "fqcnn.tex"
       ],
-      "elapsed_seconds": 1.718,
+      "elapsed_seconds": 1.735,
       "label": "LaTeX build pass 2",
       "returncode": 0,
       "status": "pass",
@@ -103,7 +103,7 @@
         "-file-line-error",
         "fqcnn.tex"
       ],
-      "elapsed_seconds": 1.704,
+      "elapsed_seconds": 1.812,
       "label": "LaTeX build pass 3",
       "returncode": 0,
       "status": "pass",
@@ -112,12 +112,12 @@
     },
     {
       "command": [
-        "<repository>\\.venv-q1-training\\Scripts\\python.exe",
+        "<absolute-path>",
         "-m",
         "pip",
         "check"
       ],
-      "elapsed_seconds": 1.25,
+      "elapsed_seconds": 2.266,
       "label": "training environment dependency check",
       "returncode": 0,
       "status": "pass",
@@ -131,7 +131,7 @@
         "pip",
         "check"
       ],
-      "elapsed_seconds": 1.109,
+      "elapsed_seconds": 1.125,
       "label": "isolated Qiskit dependency check",
       "returncode": 0,
       "status": "pass",
@@ -144,7 +144,7 @@
         "-c",
         "from experiments import q1_local_evidence as e\nstate = e._build_state_preparation(4)\nbody = e._build_model_body(4, 'unitary', seed=0)\nassert state.count_ops().get('initialize') == 1\nassert body.count_ops().get('initialize', 0) == 0\nassert body.count_ops().get('cry') == 3\nassert body.count_ops().get('crz') == 3\nassert body.count_ops().get('cx', 0) > 0\ndynamic = e._build_model_body(4, 'measurement', seed=0)\ncounts = {str(k): int(v) for k, v in dynamic.count_ops().items()}\nassert counts.get('measure') == 3\nassert counts.get('if_else') == 3\n"
       ],
-      "elapsed_seconds": 2.141,
+      "elapsed_seconds": 2.422,
       "label": "isolated Qiskit schedule contract",
       "returncode": 0,
       "status": "pass",
@@ -153,19 +153,28 @@
     }
   ],
   "evidence_validation": {
+    "aggregate_recomputation": {
+      "errors": [],
+      "reason": null,
+      "status": "pass"
+    },
     "errors": [],
-    "required_files": 9,
+    "provenance": {
+      "errors": [],
+      "status": "pass"
+    },
+    "required_files": 10,
     "status": "pass"
   },
-  "generated_at_utc": "2026-08-29T18:30:57.861880+00:00",
+  "generated_at_utc": "2026-08-30T11:38:19.377779+00:00",
   "next_step": "Build the verified ZIP with scripts/build_q1_submission_package.py after committing this report.",
   "pytest": {
     "errors": 0,
     "failures": 0,
-    "skipped": 4,
+    "skipped": 2,
     "status": "pass",
-    "tests": 632,
-    "time_seconds": 612.734
+    "tests": 652,
+    "time_seconds": 662.03
   },
   "schema": {
     "name": "fqcnn_q1_reproduction",
@@ -183,9 +192,116 @@
   },
   "source": {
     "branch": "dev",
-    "commit": "7f6144f49bc5c160539f9b99a88ed50b6bdd611d",
+    "commit": "cac27057bf6fb5f4d1fc438c708c555075f6c752",
+    "source_files": [
+      {
+        "bytes": 16352,
+        "path": "QCNN/utils/dataset_registry.py",
+        "sha256": "f77f285955fcf8b643e00f05f5011755db9c7a7ad2ac7747bb8618cb5fd057b8"
+      },
+      {
+        "bytes": 2810,
+        "path": "experiments/evidence_provenance.py",
+        "sha256": "646d57c5bee428dd63c1b881307b0c44d1f4f347faa07e82113c4beace721e5f"
+      },
+      {
+        "bytes": 32308,
+        "path": "experiments/pooling_analysis.py",
+        "sha256": "b605e583db271285416ac7064ddedebb1868ab0062bec7595edef44baf41b030"
+      },
+      {
+        "bytes": 31833,
+        "path": "experiments/q1_fast_track_analysis.py",
+        "sha256": "c5e360285ef27c313ef21e9e92f5e1731cc821f4abf94609b5f0b84d912b25a2"
+      },
+      {
+        "bytes": 29160,
+        "path": "experiments/q1_pooling_transfer.py",
+        "sha256": "6ed3f0473fda41199f056ccdf1340d3072a4d66d9e2d95e84c45e1097fdb5cff"
+      },
+      {
+        "bytes": 40177,
+        "path": "experiments/run_experiments.py",
+        "sha256": "9e9eb4577919174b7d5155b469268d472205b58f0c8e3fdc3dafb5607e332929"
+      },
+      {
+        "bytes": 7125,
+        "path": "experiments/statistics.py",
+        "sha256": "1ce3bf4d3619a4219ac728424bd21be055149c6017e90e0278d5609daafffe3c"
+      },
+      {
+        "bytes": 56839,
+        "path": "fqcnn.tex",
+        "sha256": "27d85d0dea8ec9e11b480f04cba9c4e76b6a456e15e7db8fe099592d5523f08c"
+      },
+      {
+        "bytes": 888,
+        "path": "requirements-lock.txt",
+        "sha256": "d731ba28b02eb9c7cd39ecdacc193f8eae6f34dfddf528fea5c0b9af63827efe"
+      },
+      {
+        "bytes": 624,
+        "path": "requirements-qiskit-lock.txt",
+        "sha256": "97ea5292428d071769f500866f06f32d408f1720731b6a2e5751f14bbe9bd6a8"
+      },
+      {
+        "bytes": 14409,
+        "path": "scripts/build_q1_submission_package.py",
+        "sha256": "79dc510b1ed5a313b25df5daac1562e8fb0c7bd1a12190830b8c6cf31f14572d"
+      },
+      {
+        "bytes": 8812,
+        "path": "scripts/refresh_q1_claim_ledger.py",
+        "sha256": "3df4f1db15e22d57da4166ba39787c4f89e7f678f4aa9be21a69a4d61179753e"
+      },
+      {
+        "bytes": 33233,
+        "path": "scripts/run_q1_reproduction.py",
+        "sha256": "31769f3736c9a06d85388f41b617320051cf22aee52aa5b68deb96873f9b85d6"
+      },
+      {
+        "bytes": 8445,
+        "path": "tests/test_dataset_registry.py",
+        "sha256": "273e7d86b748ecc3fe8dc0e0cde33c2743d2d5f758b1fed03cf6fa5286127482"
+      },
+      {
+        "bytes": 1555,
+        "path": "tests/test_evidence_provenance.py",
+        "sha256": "11c861fc461b3822be7cc22fd6d10e6e022285b0fa55056baefb8d04976d64d7"
+      },
+      {
+        "bytes": 11091,
+        "path": "tests/test_pooling_equivalence.py",
+        "sha256": "8cf826a9eb23a36bc0283e042c5216384f73a9f18ed84384975ba498358afcec"
+      },
+      {
+        "bytes": 7175,
+        "path": "tests/test_q1_fast_track.py",
+        "sha256": "feae6bc3cb631292570683dc2e6e49873485b26e155c528c6c915b4ae8de0e63"
+      },
+      {
+        "bytes": 5768,
+        "path": "tests/test_q1_local_evidence.py",
+        "sha256": "8087b9afe511cda5d5eb1e105768b57d27c314cc410d735b9c17db106e212122"
+      },
+      {
+        "bytes": 10190,
+        "path": "tests/test_q1_pooling_transfer.py",
+        "sha256": "7532e341491d39c74c6dce5967f45e67243e08f93044a64722ebaf0470e17d7e"
+      },
+      {
+        "bytes": 3931,
+        "path": "tests/test_q1_reproduction.py",
+        "sha256": "ac2a1ca21470db3fae688bc0007ddc6a4c77aa1a127e694a8071270f627921ab"
+      },
+      {
+        "bytes": 2275,
+        "path": "tests/test_q1_submission_package.py",
+        "sha256": "a6c681a55eaf51a5d86bd50698d9c770148278fb7de916cd4ac6c7ddd28daa0c"
+      }
+    ],
     "tracked_tree_clean_before_run": true,
-    "tree": "df132c09a53f529824f9b533de27da08a69055f0"
+    "tree": "61af455aa3d76b0eaffbea546c0e854887862d28"
   },
   "status": "pass"
 }
