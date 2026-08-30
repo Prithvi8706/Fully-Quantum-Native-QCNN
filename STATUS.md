@@ -33,7 +33,13 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 
 ---
 
-## 1. Milestone state
+## 1. Legacy milestone history (superseded)
+
+The table below records the original M0-M11 roadmap for audit history. It is not
+the current release gate: the active seven-day Q1 fast-track above is authoritative,
+and all of its required days are complete. The remaining entries describe deferred
+research directions, not unfinished work required for the current IEEE journal
+draft.
 
 | Milestone | State | Gate | Evidence |
 |---|---|---|---|
@@ -56,9 +62,11 @@ Roadmap §20 program dashboard. Update at every gate. One row per milestone.
 - **Local practicality tooling:** `experiments/q1_local_evidence.py` and `tests/test_q1_local_evidence.py`; resource, pooling-practicality, six-record noise, and fake-backend rehearsal artifacts validate in the isolated Qiskit environment.
 - **Manuscript audit:** `Results/evidence/q1_claim_ledger.json`; 23 claim records with the active manuscript bound to hashed evidence. `q1_claim_ledger_draft.json` remains diagnostic only and is excluded from release staging.
 
-## 2. Active queue and blockers
+## 2. Legacy queue and deferred research (not release blockers)
 
-**Active queue:** repair baseline leakage, align the experiment registry to the headline n=10 geometry, and isolate Qiskit tooling for E5/hardware work. M1 is complete; dataset, baseline, ablation, resource, noise, hardware, and manuscript claims remain pending unless backed by canonical artifacts.
+**Current release queue:** none. The original queue is retained below only to
+document deferred research and historical blockers; it does not block the current
+IEEE journal draft or its validated evidence package.
 
 | # | Blocker | Severity | Owner milestone | Status |
 |---|---|---|---|---|

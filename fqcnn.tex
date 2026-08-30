@@ -1,3 +1,7 @@
+% Canonical full IEEE journal draft (venue-neutral IEEEtran format).
+% The earlier conference draft is retained as
+% ``FQCNN conference version (historical).pdf`` for disclosure/comparison.
+% Build with three passes of pdflatex; the generated PDF is fqcnn.pdf.
 \documentclass[journal]{IEEEtran}
 \IEEEoverridecommandlockouts
 \usepackage{cite}
@@ -51,6 +55,16 @@ The main contributions of this work are as follows:
 \item We develop a coherent unitary pooling mechanism that performs dimensionality reduction through quantum operations alone.
 \item We evaluate the frozen model with same-split classical and quantum baselines across four binary tasks from three dataset families, reporting uncertainty and negative results.
 \end{enumerate}
+
+An earlier conference version of this work is retained in the repository as a
+historical artifact.  This manuscript is a substantial journal extension rather
+than a reformatting: it fixes the frozen main path to global amplitude encoding
+and register-index gate support, formalises the exact channel-equivalence and
+strict-containment results, adds the predeclared multi-domain five-seed baseline
+campaign and pooling-transfer ablation, and adds bounded resource, local-noise,
+and reproducibility evidence.  The conference draft's single-task accuracy is
+therefore treated as historical provenance only; the numerical claims in this
+manuscript are taken from the validated Q1 evidence package.
 
 The rest of the paper is organised as follows. Section II reviews related work on quantum convolutional and variational quantum models. Section III describes the proposed FQCNN architecture and its mathematical formulation. Section IV covers the training dynamics and optimisation strategy. Section V reports the experimental results and analysis. Section VI details the novelty and technical differentiation, and Section VII concludes with limitations and future directions.
 
@@ -450,6 +464,20 @@ The kernel applies a fixed six-CNOT pattern in each 2 $\times$ 2 register-index 
 
 \subsection{Global amplitude encoding and register-index structure}
 Inputs are min-max normalised, flattened, zero-padded to 1024 entries, and prepared by the single global amplitude-encoding operation described above. No local rotation map or data-dependent cyclic-ring correlation layer is part of the frozen main path. The subsequent variational kernel and pooling blocks use shared register-index supports; this distinction keeps the implementation and the paper's locality language aligned.
+
+\section*{Data and Code Availability}
+The manuscript source, implementation, tests, environment locks, machine-readable
+evidence, figures, and reproduction instructions are maintained in the
+version-controlled repository at the release commit identified by the submission
+package manifest.  That manifest records the source revision and SHA-256 hashes
+for the files used to produce the reported results.  MNIST, Fashion-MNIST, and
+KMNIST are obtained from their upstream sources and are not redistributed here;
+the dataset-provenance artifact records the source URLs, labels, local snapshot
+identities, and checksums needed to reconstruct the registered tasks.  The
+validated aggregates are simulator evidence, and ignored run weights and
+prediction archives are regenerable rather than a substitute for a public data
+deposit.  A persistent repository DOI or immutable URL will be added to the
+final submission record after the venue is selected.
 
 \section{Conclusion}
 We proposed a fully quantum-native convolutional neural network (FQCNN) that performs state preparation, convolution, pooling, and classification through a single coherent unitary path before the terminal observable. The exact pooling result identifies removal of mid-circuit control as the architectural contribution; the Q1 aggregate and transfer experiments quantify empirical behavior against same-split baselines without presupposing an advantage. Resource, noise, and trainability statements are restricted to their finite local evidence and simulation scope. Future work will extend the evaluation to larger and multi-class tasks and, subject to separate approval, real quantum hardware.

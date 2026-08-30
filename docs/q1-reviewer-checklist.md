@@ -41,7 +41,7 @@ The final pass explicitly resolved five concrete risks before release:
 
 These are intentionally outside the repository's completion claim: all-author
 approval and contribution statements, conflict/funding details, a public code/data
-archive with a DOI, final IEEE TQE template/graphics checks, and the APC decision.
-They must be completed by the authors before using a journal portal. They do not
-justify changing the scientific evidence or claiming that a submission has already
-occurred.
+archive with a DOI, final template/graphics/ethics checks for the selected IEEE
+venue, and the APC or licence decision. They must be completed by the authors
+before using a journal portal. They do not justify changing the scientific evidence
+or claiming that a submission has already occurred.

@@ -1,13 +1,13 @@
-# Q1 journal shortlist (verified 2026-08-29)
+# Q1 journal shortlist (candidate venues, verified 2026-08-29)
 
-This is a submission-preparation document, not a guarantee of acceptance. Quartile
-labels are category- and database-dependent and must be checked again immediately
-before submission. The manuscript's scientific scope remains simulation-only; no
-venue choice authorises a QPU job or a submission.
+This is a candidate list, not a final venue decision or a guarantee of acceptance.
+Quartile labels are category- and database-dependent and must be checked again
+immediately before submission. The manuscript's scientific scope remains
+simulation-only; no venue choice authorises a QPU job or a submission.
 
-## Primary target: IEEE Transactions on Quantum Engineering (TQE)
+## Primary candidate: IEEE Transactions on Quantum Engineering (TQE)
 
-**Status:** selected primary target for the current package.
+**Status:** candidate only; the current manuscript is venue-neutral IEEEtran.
 
 - **Q1 evidence:** IEEE's January 2026 title list reports TQE (ISSN 2689-1808) as
   full open access, JIF 4.6, and Q1. This is the Q1 basis recorded here; the
@@ -70,10 +70,11 @@ Source: [QST scope, selectivity, and charges](https://publishingsupport.iopscien
 
 ## Decision and adaptation order
 
-1. Prepare and internally review the journal-style TQE package.
-2. Recheck TQE's JCR category, APC, author template, ethics, and all-author consent
-   at the intended submission date.
-3. If TQE is not suitable after that check, adapt the same evidence package to QMI,
+1. Prepare and internally review the venue-neutral IEEE journal package.
+2. Select a venue, then recheck its JCR category, APC, author template, ethics, and
+   all-author consent at the intended submission date.
+3. If TQE is selected, adapt the package to its current requirements; otherwise
+   adapt the same evidence package to QMI,
    then MLST, then QST. Do not alter the reported results merely to fit a venue.
 4. Keep the claims bounded: no quantum advantage, hardware validation, universal
    trainability, image-space locality, or broad-domain generalisation claim is
