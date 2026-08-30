@@ -283,13 +283,13 @@ def assert_release_evidence(root: Path) -> dict:
     import sys
 
     root_text = str(root)
-    scripts_text = str(root / "scripts")
+    repository_scripts_text = str(Path(__file__).resolve().parent)
     if root_text not in sys.path:
         sys.path.insert(0, root_text)
     loaded_scripts = sys.modules.get("scripts")
     loaded_paths = getattr(loaded_scripts, "__path__", ())
     if loaded_scripts is not None and not any(
-        str(Path(path).resolve()) == scripts_text
+        str(Path(path).resolve()) == repository_scripts_text
         for path in loaded_paths
     ):
         sys.modules.pop("scripts", None)
