@@ -6,6 +6,10 @@ publication facts that are not inferable from the code. Every listed author
 should review the final PDF and the answers below before a journal portal is
 used.
 
+**Listed authors in the current draft:** Aasa Singh Bhui and Prithvi Raghu.
+Names, affiliations, student status, and email addresses were transcribed from
+the historical conference PDF; the authors must confirm that they remain current.
+
 ## What must be confirmed
 
 - **Authorship and approval:** every listed author made a qualifying contribution,

@@ -1,4 +1,4 @@
-# Q1 journal shortlist (candidate venues, checked 2026-08-30)
+# Q1 journal shortlist (candidate venues, checked 2026-08-31)
 
 This is a candidate list, not a final venue decision or a guarantee of acceptance.
 Quartile labels are category- and database-dependent and must be checked again
@@ -31,11 +31,33 @@ result.
 | **MLST** | Strong fit for quantum computing, neural architectures, codes/datasets, and benchmark studies; the open evidence package is an editorial asset. | Q1 classifications for MLST vary by database and category; treat them as conditional and verify the current target record immediately before submission rather than as a package fact. | Fully OA; current IOP guidance lists a US$3,125 APC and no submission charge, subject to agreements/discounts. Research papers are normally no more than 8,500 words; IOP uses a PDF-first submission workflow and optional templates. | Count words after conversion and retain enough technical detail for the benchmark/reproducibility bar. Keep all negative and inconclusive findings visible rather than optimizing the narrative for a benchmark win. |
 | **QST** | Covers quantum computation, QML, software, algorithms, and engineering, but is aimed at work with significant and lasting broad impact. | Q1 appears in relevant current SJR/JCR records, but the exact category/year must be verified at selection. This is not treated as an unconditional release fact. | Hybrid; subscription publication is free, while the current IOP page lists OA at £2,930 / US$4,090 / €3,335. Generic IOP guidance uses a concise title, an abstract up to 300 words, embedded figures, and data/supplement options. | Highest selectivity risk. The current bounded simulator evidence and absence of a hardware result may be a weaker match for the journal's stated lasting-impact bar; do not add unsupported claims to compensate. |
 
-Only TQE's Q1 label is tied here to a current official IEEE title-list source. The
-other candidates remain suitable conditional Q1 options whose classification must
-be verified in the target indexing system and category at the time of selection.
-Costs, discounts, and review-time metrics are also time-sensitive and are not
-promises about editorial outcome.
+## Quartile recheck (2026-08-31)
+
+This recheck uses the latest publicly accessible 2025 records and keeps JCR and
+SCImago/SJR distinct. A quartile is still category-, database-, and year-specific;
+the authors' institutional JCR/SJR access remains the final authority for a
+submission decision.
+
+| Journal | Latest accessible JCR record | Latest accessible SJR record | Q1 conclusion for venue selection |
+|---|---|---|---|
+| **TQE** | The official IEEE January 2026 title list reports JIF 4.6 and Q1. | Public 2024 SCImago records report Q1. | **Confirmed Q1 for this shortlist**, subject to checking the target institutional category. |
+| **QMI** | Public current records report JCR Q2 in Artificial Intelligence. | 2025 SJR 0.864 and Q1 in Applied Mathematics, Computational Theory and Mathematics, and Theoretical Computer Science. | **Q1 only on the SJR/category basis**; do not describe QMI as universally Q1. |
+| **MLST** | Public 2025 records report JCR Q1, with the category affecting the result. | 2025 SJR 0.872 and Q2; 2024 SJR was Q1. | **Q1 on the JCR/category or frozen-2024-SJR basis, not on latest SJR overall.** |
+| **QST** | Public 2025 records report JCR Q1. | 2025 SJR 1.492 and Q1. | **Confirmed Q1 in the accessible 2025 JCR/SJR records**, pending the authors' institutional category check. |
+
+Sources for the recheck are the [IEEE January 2026 title list](https://open.ieee.org/wp-content/uploads/IEEE-Title-List-January-2026.pdf),
+the current [QMI SJR record](https://researchjournalrank.com/journal/quantum-machine-intelligence),
+[MLST metric record](https://www.iit.comillas.edu/publicacion/info_revista/en/886/Machine_Learning%3A_Science_and_Technology),
+[MLST SJR record](https://researchjournalrank.com/journal/machine-learning-science-and-technology),
+and [QST metric record](https://www.iit.comillas.edu/publicacion/info_revista/en/755/Quantum_Science_and_Technology).
+The official publisher pages remain authoritative for scope and submission rules:
+[QMI](https://link.springer.com/journal/42484), [MLST](https://publishingsupport.iopscience.iop.org/journals/machine-learning-science-and-technology/about-machine-learning-science-technology/),
+and [QST](https://publishingsupport.iopscience.iop.org/journals/quantum-science-and-technology/about-quantum-science-and-technology/).
+
+The manuscript citation policy is unchanged: its 15 bibliography entries remain
+restricted to peer-reviewed journal articles passing the documented 2024 SJR Q1
+filter. Venue quartile evidence is administrative metadata, not a manuscript
+citation.
 
 ## Primary candidate: IEEE Transactions on Quantum Engineering (TQE)
 

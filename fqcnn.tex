@@ -21,9 +21,8 @@
 
 \title{FQCNN: A Fully Quantum-Native Convolutional Neural Network with Coherent Unitary Pooling}
 
-\author{Aasa Singh Bhui, Prithvi Raghu, and Rohan Jain%
-\thanks{Aasa Singh Bhui and Prithvi Raghu are with the School of Computer Science and Engineering, Vellore Institute of Technology, Vellore, India (e-mail: aasasingh2005@gmail.com; prithviraghu080706@gmail.com).}%
-\thanks{Rohan Jain is with AstraZeneca, Gaithersburg, Maryland, USA (e-mail: rohan.jain7@gmail.com).}}
+\author{Aasa Singh Bhui and Prithvi Raghu%
+\thanks{Aasa Singh Bhui and Prithvi Raghu are with the School of Computer Science and Engineering, Vellore Institute of Technology, Vellore, India (e-mail: aasasingh2005@gmail.com; prithviraghu080706@gmail.com). Aasa Singh Bhui is a fourth-year B.Tech student in Computer Science; Prithvi Raghu is a third-year B.Tech student in Computer Science.}}
 
 \maketitle
 
@@ -534,7 +533,7 @@ Amplitude encoding fixes the state-vector width at the declared qubit count, whi
 The finite trainability audit samples 200 random parameter initialisations and four random inputs per size on ``default.qubit'' with backpropagation. For a designated live slot, the observed gradient variances at $n=4,6,8,10,12,14$ are respectively $0.0134,0.0093,0.0044,0.0019,0.00073,0.00104$; an exponential fit has $R^2=0.923$ for that designated slot, whereas the median-live-slot fit prefers a power law with $R^2=0.663$ and is non-monotone at $n=14$. This finite diagnostic motivates caution about trainability; it is not evidence of a universal barren-plateau law or its absence.
 
 \subsection{Limitations and Future Work}
-The current evaluation is limited to four binary tasks drawn from three 28$\times$28 grayscale dataset families, small training subsets, five-seed comparisons, finite-size diagnostics, and classical simulation/local noise models. The globally amplitude-encoded register is not an image-space convolutional representation, and the experiments do not establish quantum advantage, asymptotic trainability, noise robustness on a device, or real-QPU performance. Scaling to larger datasets, multi-class tasks, alternative encodings, and hardware execution remains open.
+The current evaluation is limited to four binary tasks drawn from three 28$\times$28 grayscale dataset families, small training subsets, five-seed comparisons, finite-size diagnostics, and classical simulation/local noise models. The globally amplitude-encoded register is not an image-space convolutional representation, and the experiments do not establish quantum advantage, asymptotic trainability, noise robustness on a device, or real-QPU performance. Scaling to larger datasets, multi-class tasks, alternative encodings, and optional hardware validation remains outside this release.
 
 \section{Novelty and Technical Differentiation}
 The proposed FQCNN departs from previous quantum convolutional architectures on four precise technical fronts that together make up the main contributions of this paper.
@@ -568,7 +567,7 @@ deposit.  A persistent repository DOI or immutable URL will be added to the
 final submission record after the venue is selected.
 
 \section{Conclusion}
-We proposed a fully quantum-native convolutional neural network (FQCNN) that performs state preparation, convolution, pooling, and classification through a single coherent unitary path before the terminal observable. The exact pooling result identifies removal of mid-circuit control as the architectural contribution; the Q1 aggregate and transfer experiments quantify empirical behavior against same-split baselines without presupposing an advantage. Resource, noise, and trainability statements are restricted to their finite local evidence and simulation scope. Future work will extend the evaluation to larger and multi-class tasks and, subject to separate approval, real quantum hardware.
+We proposed a fully quantum-native convolutional neural network (FQCNN) that performs state preparation, convolution, pooling, and classification through a single coherent unitary path before the terminal observable. The exact pooling result identifies removal of mid-circuit control as the architectural contribution; the Q1 aggregate and transfer experiments quantify empirical behavior against same-split baselines without presupposing an advantage. Resource, noise, and trainability statements are restricted to their finite local evidence and simulation scope. Future work may extend the evaluation to larger and multi-class tasks or optional real quantum hardware; neither extension is required for this release.
 
 \begin{thebibliography}{00}
 \bibitem{ref14} Z. Holmes, K. Sharma, M. Cerezo, and P. J. Coles, ``Connecting ansatz expressibility to gradient magnitudes and barren plateaus,'' PRX Quantum, vol. 3, no. 1, art. 010313, 2022, doi: 10.1103/PRXQuantum.3.010313.

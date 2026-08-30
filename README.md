@@ -135,9 +135,10 @@ py -3.11 -m venv .venv-qiskit
 .venv-qiskit\Scripts\python.exe scripts/check_qiskit_environment.py
 ```
 
-Task 6 needs no credentials or network for the smoke itself. Real-QPU submission
-remains a later explicit approval gate. Do not install these Qiskit packages into
-the Python 3.9.13 training environment or modify `requirements-lock.txt`.
+Task 6 needs no credentials or network for the smoke itself. No QPU run is needed
+for the current release; any future real-QPU validation remains a separate,
+explicit-approval gate. Do not install these Qiskit packages into the Python
+3.9.13 training environment or modify `requirements-lock.txt`.
 
 Exercise the current reproduction scripts with:
 
@@ -199,14 +200,20 @@ python noise_sim.py --noise-model depolarizing --classes 0 1
 python noise_sim.py --noise-model realistic    --classes 0 1
 ```
 
-### Optional: real quantum hardware
-Hardware execution is pending. Its Qiskit dependencies belong in a separate isolated environment, not the frozen `requirements-lock.txt` environment. `experiments/hardware_run.py` requires `pennylane-qiskit`, `qiskit-ibm-runtime`, and an IBM Quantum token; no hardware result or quantum-advantage claim is currently supported.
+### Optional future hardware validation (not a release requirement)
+The FQCNN implementation and the current Q1 release are complete for classical
+simulation, local noise models, and fake-backend/transpilation checks. A real-QPU
+point is not required to complete or submit this release. The opt-in scaffold
+`experiments/hardware_run.py` belongs to a separate future validation lane; it
+requires `pennylane-qiskit`, `qiskit-ibm-runtime`, and an IBM Quantum token, and
+would need fresh explicit approval before authentication or execution. No
+hardware result or quantum-advantage claim is included.
 
 ---
 
 ## Citation & Contact
 **Title**: FQCNN: A Fully Quantum-Native Convolutional Neural Network with Coherent Unitary Pooling  
-**Authors**: Aasa Singh Bhui, Prithvi Raghu (Vellore Institute of Technology), and Rohan Jain (AstraZeneca)
+**Authors**: Aasa Singh Bhui, Prithvi Raghu (Vellore Institute of Technology)
 **GitHub**: [AasaSingh05/Fully-Quantum-Native-QCNN](https://github.com/AasaSingh05/Fully-Quantum-Native-QCNN)
 
 If you use this work, please cite it. Citation metadata is maintained in
@@ -214,13 +221,13 @@ If you use this work, please cite it. Citation metadata is maintained in
 generates APA/BibTeX from it automatically.
 
 **Cite as:**
-> Singh Bhui, A., Raghu, P., & Jain, R. FQCNN: A Fully Quantum-Native Convolutional Neural Network with Coherent Unitary Pooling. https://github.com/AasaSingh05/Fully-Quantum-Native-QCNN
+> Singh Bhui, A., & Raghu, P. FQCNN: A Fully Quantum-Native Convolutional Neural Network with Coherent Unitary Pooling. https://github.com/AasaSingh05/Fully-Quantum-Native-QCNN
 
 **BibTeX:**
 ```bibtex
 @software{fqcnn,
   title     = {FQCNN: A Fully Quantum-Native Convolutional Neural Network with Coherent Unitary Pooling},
-  author    = {Singh Bhui, Aasa and Raghu, Prithvi and Jain, Rohan},
+  author    = {Singh Bhui, Aasa and Raghu, Prithvi},
   year      = {2025},
   license   = {MIT},
   url       = {https://github.com/AasaSingh05/Fully-Quantum-Native-QCNN}

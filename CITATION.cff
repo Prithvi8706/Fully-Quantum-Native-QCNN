@@ -10,13 +10,12 @@ type: software
 authors:
   - family-names: "Singh Bhui"
     given-names: "Aasa"
-    affiliation: "Vellore Institute of Technology"
+    affiliation: "School of Computer Science and Engineering, Vellore Institute of Technology, Vellore, India"
+    email: "aasasingh2005@gmail.com"
   - family-names: "Raghu"
     given-names: "Prithvi"
-    affiliation: "Vellore Institute of Technology"
-  - family-names: "Jain"
-    given-names: "Rohan"
-    affiliation: "AstraZeneca"
+    affiliation: "School of Computer Science and Engineering, Vellore Institute of Technology, Vellore, India"
+    email: "prithviraghu080706@gmail.com"
 keywords:
   - quantum machine learning
   - quantum convolutional neural network
