@@ -3,8 +3,8 @@
     "executable": "python.exe",
     "git": {
       "dirty": true,
-      "dirty_entries": 23,
-      "head": "a86c89180b3f65c87b265beceedb75d9ab51c5a3"
+      "dirty_entries": 40,
+      "head": "5f60758d95247c4b1ab01bbabea0fd00bfce5cb2"
     },
     "python": "3.11.9"
   },
@@ -38,36 +38,36 @@
     },
     "circuit": {
       "logical": {
-        "depth": 65,
+        "depth": 62,
         "operation_counts": {
           "cry": 4,
           "crz": 4,
-          "cx": 51,
+          "cx": 48,
           "initialize": 1,
           "measure": 1,
-          "rx": 36,
-          "ry": 44,
-          "rz": 35
+          "rx": 34,
+          "ry": 42,
+          "rz": 34
         },
-        "size": 176,
+        "size": 168,
         "width": 12
       },
       "target_validation": {
-        "checked_instructions": 1708,
+        "checked_instructions": 1655,
         "invalid": [],
         "uses_actual_target": true
       },
       "transpiled": {
-        "depth": 934,
+        "depth": 908,
         "operation_counts": {
-          "ecr": 289,
+          "ecr": 277,
           "measure": 1,
           "reset": 6,
-          "rz": 800,
-          "sx": 562,
-          "x": 50
+          "rz": 781,
+          "sx": 544,
+          "x": 46
         },
-        "size": 1708,
+        "size": 1655,
         "width": 33
       },
       "unsupported_operations": []
@@ -85,7 +85,7 @@
     "seed_transpiler": 42,
     "shots": 1024
   },
-  "payload_sha256": "8369ea8bc0c1ab07baea869669437cb097e482a744a3b1ef4419f6a877095915",
+  "payload_sha256": "fca9425415de4c0ee7ee53b605de9da0bedc5550d3fa07f831ae8f2e7110007d",
   "schema": {
     "name": "fqcnn_q1_fake_backend_rehearsal",
     "version": 1

@@ -11,11 +11,19 @@ authors:
   - family-names: "Singh Bhui"
     given-names: "Aasa"
     affiliation: "School of Computer Science and Engineering, Vellore Institute of Technology, Vellore, India"
-    email: "aasasingh2005@gmail.com"
+    email: "aasasingh.bhui2023@vitstudent.ac.in"
   - family-names: "Raghu"
     given-names: "Prithvi"
     affiliation: "School of Computer Science and Engineering, Vellore Institute of Technology, Vellore, India"
-    email: "prithviraghu080706@gmail.com"
+    email: "prithvi.raghu2024@vitstudent.ac.in"
+  - family-names: "Jayashree"
+    given-names: "J"
+    affiliation: "School of Computer Science and Engineering, Vellore Institute of Technology, Vellore, India"
+    email: "jayashree.j@vit.ac.in"
+  - family-names: "Vijayashree"
+    given-names: "J"
+    affiliation: "School of Computer Science and Engineering, Vellore Institute of Technology, Vellore, India"
+    email: "vijayashree.j@vit.ac.in"
 keywords:
   - quantum machine learning
   - quantum convolutional neural network
@@ -23,4 +31,4 @@ keywords:
   - PennyLane
   - NISQ
 license: MIT
-repository-code: "https://github.com/AasaSingh05/Fully-Quantum-Native-QCNN"
+repository-code: "https://github.com/Prithvi8706/Fully-Quantum-Native-QCNN"

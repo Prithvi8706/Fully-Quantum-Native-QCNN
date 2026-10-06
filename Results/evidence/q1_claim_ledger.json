@@ -3,7 +3,7 @@
     "name": "fqcnn_q1_claim_ledger",
     "version": 2
   },
-  "generated_at_utc": "2026-10-06T12:27:27.716830Z",
+  "generated_at_utc": "2026-10-06T13:55:08.286439Z",
   "status": "ready_for_release",
   "purpose": "Machine-readable audit of numerical and scope-sensitive claims against the current manuscript and the evidence available at ledger generation time. A claim is not publication-ready unless its status is supported or supported_with_scope and every required action is closed.",
   "scope": {
@@ -26,11 +26,11 @@
     "ready_for_release": "No high-severity claim or release blocker remains; listed medium notes are bounded release-hygiene limitations."
   },
   "source_hashes_sha256": {
-    "paper/fqcnn.tex": "22a21746dabd82ed1ca044852356d3fe5a97512f7fd27b1cd583261089888f80",
+    "paper/fqcnn.tex": "debbe204d35ebb24fff7c0792210c77f2801a2504e3ab2956d9189a87157fb75",
     "docs/paper_code_reconciliation.md": "6ed159d7ab5c1f2ea9fdb1eee3ec82e5f66f792fc03edbdfdcd377172897103b",
     "Results/evidence/q1_fast_track_inventory.json": "b2d82ed83eec6b097d098c56340290a53e18df7ccabfafe54a740f7b3070ef4b",
     "experiments/q1_fast_track_analysis.py": "9c6071f6d433022dafbf8b808f8177c51b5d9317c74f42c11ec0d103fe450573",
-    "experiments/q1_local_evidence.py": "76d1f008161645bbe5dd8fbd2a773284026a1134ff48a21a99d6929d5a4c6c13",
+    "experiments/q1_local_evidence.py": "d7ae9cb8cea0f32ff114fa39d3d10a3d1e5ae3f2a2afdbd7810d878d3522068e",
     "experiments/q1_pooling_transfer.py": "6ed3f0473fda41199f056ccdf1340d3072a4d66d9e2d95e84c45e1097fdb5cff",
     "experiments/run_experiments.py": "9e9eb4577919174b7d5155b469268d472205b58f0c8e3fdc3dafb5607e332929",
     "QCNN/circuits.py": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09",
@@ -157,7 +157,7 @@
       "id": "A-005",
       "path": "Results/evidence/q1_noise_validation.json",
       "status": "pass",
-      "sha256": "401ff57a545b987982a9e15ee95475f145ed11d8365a09fb63f7454703be3e1e",
+      "sha256": "0fefc166ced7ae04529993c982b4ed19a2f3389795aac053b8f01a9dfe972611",
       "protocol": {
         "tasks": [
           "mnist:3,5",
@@ -229,7 +229,7 @@
       "id": "A-006",
       "path": "Results/evidence/q1_pooling_practicality.json",
       "status": "pass",
-      "sha256": "91c70bd35918f8e7cdac2de67fd60f3aa2c8e620d788f842f3c23195153e5eca",
+      "sha256": "5acfa5ee3120bd3fe0668442b74102ef07e17f03f33cb10dbb7183831a1e0f25",
       "protocol": {
         "backend": "FakePeekskill",
         "n_qubits": 4,
@@ -280,7 +280,7 @@
       "id": "A-007",
       "path": "Results/evidence/q1_resources.json",
       "status": "pass",
-      "sha256": "a5b4e23fc2168766bbecca1bb5d88d33931d6102d13967aacace19fa4652ab0c",
+      "sha256": "aeeb9ec3804b16368e38a1a79a118c5ce9d741e2cf894665bafa4f5319f5417d",
       "protocol": {
         "qubits": [
           4,
@@ -333,7 +333,7 @@
       "id": "A-008",
       "path": "Results/evidence/q1_fake_backend_rehearsal.json",
       "status": "pass",
-      "sha256": "7523b4d99c661c30b6b7b39306b8e4f7346ebd01a932a104e0a03307449da467",
+      "sha256": "2a4ea9f1b4066103d18770e2caf988deca970b7368a5e59ad50a2f36bf099eef",
       "protocol": {
         "backend": "FakePeekskill",
         "n_qubits": 6,
@@ -1077,7 +1077,7 @@
         {
           "path": "Results/evidence/q1_noise_validation.json",
           "pointer": "six loaded checkpoints, two tasks, three seeds, 25 validation samples, four levels, 128 shots, test_data_used=false",
-          "sha256": "401ff57a545b987982a9e15ee95475f145ed11d8365a09fb63f7454703be3e1e"
+          "sha256": "0fefc166ced7ae04529993c982b4ed19a2f3389795aac053b8f01a9dfe972611"
         },
         {
           "path": "requirements-qiskit-lock.txt",
@@ -1127,7 +1127,7 @@
         {
           "path": "Results/evidence/q1_pooling_practicality.json",
           "pointer": "pool_measurement=87 logical/87 decomposed/401 transpiled; pool_unitary=90/108/457; pool_none=78/78/381",
-          "sha256": "91c70bd35918f8e7cdac2de67fd60f3aa2c8e620d788f842f3c23195153e5eca"
+          "sha256": "5acfa5ee3120bd3fe0668442b74102ef07e17f03f33cb10dbb7183831a1e0f25"
         },
         {
           "path": "Results/evidence/e1_pooling_equivalence.json",
@@ -1154,12 +1154,12 @@
         {
           "path": "Results/evidence/q1_resources.json",
           "pointer": "four n-qubit resource records; all target validation arrays empty and transpilation pass",
-          "sha256": "a5b4e23fc2168766bbecca1bb5d88d33931d6102d13967aacace19fa4652ab0c"
+          "sha256": "aeeb9ec3804b16368e38a1a79a118c5ce9d741e2cf894665bafa4f5319f5417d"
         },
         {
           "path": "Results/evidence/q1_pooling_practicality.json",
           "pointer": "five pooling arms against FakePeekskill",
-          "sha256": "91c70bd35918f8e7cdac2de67fd60f3aa2c8e620d788f842f3c23195153e5eca"
+          "sha256": "5acfa5ee3120bd3fe0668442b74102ef07e17f03f33cb10dbb7183831a1e0f25"
         }
       ],
       "caveat": "These are local structural estimates, not hardware runs, scalability proofs, or deployment readiness."
@@ -1183,7 +1183,7 @@
         {
           "path": "Results/evidence/q1_fake_backend_rehearsal.json",
           "pointer": "credentials_accessed=false; network_accessed=false; authenticated=false; submitted=false",
-          "sha256": "7523b4d99c661c30b6b7b39306b8e4f7346ebd01a932a104e0a03307449da467"
+          "sha256": "2a4ea9f1b4066103d18770e2caf988deca970b7368a5e59ad50a2f36bf099eef"
         }
       ],
       "caveat": "This explicitly limits the result to local rehearsal and cannot be used as physical-device evidence."
@@ -1352,12 +1352,12 @@
         {
           "path": "Results/evidence/q1_noise_validation.json",
           "pointer": "local Aer-only scope",
-          "sha256": "401ff57a545b987982a9e15ee95475f145ed11d8365a09fb63f7454703be3e1e"
+          "sha256": "0fefc166ced7ae04529993c982b4ed19a2f3389795aac053b8f01a9dfe972611"
         },
         {
           "path": "Results/evidence/q1_fake_backend_rehearsal.json",
           "pointer": "no provider contact or submission",
-          "sha256": "7523b4d99c661c30b6b7b39306b8e4f7346ebd01a932a104e0a03307449da467"
+          "sha256": "2a4ea9f1b4066103d18770e2caf988deca970b7368a5e59ad50a2f36bf099eef"
         }
       ],
       "caveat": "This claim remains bounded by the corrected finite protocol; the dated citation-quartile audit records the database/category caveat for the retained Q1 journal sources."

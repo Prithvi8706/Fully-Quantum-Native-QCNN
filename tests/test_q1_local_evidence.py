@@ -82,7 +82,7 @@ def test_hash_is_canonical_and_does_not_allow_nonfinite_values():
 )
 def test_qiskit_circuit_schedule_separates_state_and_model_components():
     state = evidence._build_state_preparation(4)
-    body = evidence._build_model_body(4, "unitary", seed=0)
+    body = evidence._build_model_body(4, "unitary")
     assert state.count_ops().get("initialize") == 1
     assert body.count_ops().get("initialize", 0) == 0
     assert body.count_ops().get("cry") == 3
@@ -95,11 +95,35 @@ def test_qiskit_circuit_schedule_separates_state_and_model_components():
     reason="Qiskit schedule contracts run in the isolated .venv-qiskit environment",
 )
 def test_measurement_style_schedule_is_explicitly_dynamic():
-    body = evidence._build_model_body(4, "measurement", seed=0)
+    body = evidence._build_model_body(4, "measurement")
     counts = {str(name): int(value) for name, value in body.count_ops().items()}
     assert counts.get("measure") == 3
     assert counts.get("if_else") == 3
     assert "if_else" not in {"rx", "ry", "rz", "cx"}
+
+
+def test_exported_schedule_is_the_canonical_tape():
+    """The Qiskit translation consumes exactly the operations build_circuit emits."""
+    pytest.importorskip("pennylane")
+    model = evidence._canonical_model(4, "unitary", seed=0)
+    operations = evidence._serialise_operations(np.arange(1.0, 17.0), model)
+    gates = [record["gate"] for record in operations]
+    assert gates.count("cry") == 3 and gates.count("crz") == 3
+    # The 2x2 kernel applies RX, then RY, then RZ to each qubit (Eq. 9).
+    assert gates[:3] == ["rx", "ry", "rz"]
+    assert set(gates) <= {"rx", "ry", "rz", "cx", "cry", "crz"}
+
+
+def test_noise_schedules_reproduce_pennylane_at_zero_noise():
+    """The recorded noise run must start from the trained PennyLane model."""
+    path = evidence.EVIDENCE_ROOT / "q1_noise_validation.json"
+    records = json.loads(path.read_text(encoding="utf-8"))["records"]
+    assert records
+    for record in records:
+        agreement = record["zero_noise_agreement"]
+        assert agreement["max_abs_difference_vs_pennylane"] <= 1e-8
+        zero = [item for item in record["noise_ladder"] if item["level"] == 0.0]
+        assert all(item["accuracy"] == agreement["pennylane_accuracy"] for item in zero)
 
 
 def test_noise_ladder_requires_zero_noise_anchor():

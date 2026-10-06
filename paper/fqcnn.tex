@@ -308,8 +308,9 @@ The convolutional layer applies a parameter-shared variational kernel over all 2
 \subsubsection{Kernel parameterisation}
 Let each window contain four qubits. For a kernel depth $d$ and depth slice $k$, the single-qubit rotation block is
 \begin{equation}
-V_q^{(k)}(\Theta_k) = R_X\!\big(\theta_{X,q}^{(k)}\big) R_Z\!\big(\theta_{Z,q}^{(k)}\big) R_Y\!\big(\theta_{Y,q}^{(k)}\big).
+V_q^{(k)}(\Theta_k) = R_Z\!\big(\theta_{Z,q}^{(k)}\big) R_Y\!\big(\theta_{Y,q}^{(k)}\big) R_X\!\big(\theta_{X,q}^{(k)}\big),
 \end{equation}
+with the rightmost rotation acting first.
 Each qubit is parameterised using full SU(2) rotations in the selected ansatz while keeping the circuit shallow. Here $\Theta_k \in \mathbb{R}^{4 \times d \times 3}$, so $|\Theta_k| = 12d$. Parameter sharing enforces $\Theta_k(\omega) = \Theta_k$ for all register-index windows $\omega$, so the parameter count does not grow with the number of windows. 
 
 \subsubsection{Intra-window entanglement}
@@ -959,30 +960,26 @@ imply that the discarded subsystem is irrelevant to the global state.
 
 \subsection{Noise Robustness}
 \label{sec:noise}
-The pooling theorem and dephasing controls are circuit-level identities. To probe noise sensitivity we ran a bounded local noise experiment using trained checkpoints, depolarising and dephasing channels, fixed validation subsets, and the Qiskit Aer simulator. The protocol covers MNIST 3-vs-5 and Fashion-MNIST 0-vs-6, seeds 0--2, 25 validation samples per seed, noise levels $p\in\{0,0.005,0.01,0.02\}$, and 128 shots at nonzero levels; checkpoints are not retrained and the test split is never used. The zero-noise agreement check passes, while the finite-shot nonzero results vary across task, seed, channel, and level without a monotone pattern. 
+The pooling theorem and dephasing controls are circuit-level identities. To probe noise sensitivity we simulated the trained checkpoints with Qiskit Aer. The Qiskit circuits are translated gate by gate from the operation list emitted by the PennyLane model, and before any noise is added they reproduce the PennyLane readouts of every input to within $1.4\times10^{-15}$. The protocol covers MNIST 3-vs-5 and Fashion-MNIST 0-vs-6, seeds 0--2, and 25 validation examples per seed. After compilation to $\{R_Z,\sqrt{X},X,\mathrm{CNOT}\}$, every gate of the model body is followed by a depolarising or phase-damping error with parameter $p\in\{0.005,0.01,0.02\}$ ($2p$ for CNOT); state preparation is ideal, readouts use 128 shots, checkpoints are not retrained, and the test split is never used.
 
 \begin{table*}[!t]
-\caption{Local noise-ladder validation accuracy averaged over three clean checkpoints and 25 validation examples per checkpoint. The zero-noise column is an exact statevector reference; nonzero columns use 128-shot local Aer simulation.  Checkpoints are not retrained.}
+\caption{Validation accuracy of the trained checkpoints under local Aer noise, averaged over three checkpoints and 25 validation examples each. The $p=0$ column is the exact noiseless readout; the shots-only column is the expected accuracy with 128 shots and no gate noise; the remaining columns use 128-shot noisy simulation. Checkpoints are not retrained.}
 \label{tab:noise}
 \centering
 \small
-\begin{tabular}{@{}llrrrr@{}}
+\begin{tabular}{@{}llrrrrr@{}}
 \toprule
-\textbf{Task} & \textbf{Channel} & \textbf{$p=0$} & \textbf{$p=0.005$} & \textbf{$p=0.01$} & \textbf{$p=0.02$} \\
+\textbf{Task} & \textbf{Channel} & \textbf{$p=0$} & \textbf{Shots only} & \textbf{$p=0.005$} & \textbf{$p=0.01$} & \textbf{$p=0.02$} \\
 \midrule
-MNIST 3-vs-5 & Depolarising & 0.4400 & 0.4667 & 0.4933 & 0.5333 \\
- & Dephasing & 0.4400 & 0.5067 & 0.5067 & 0.4267 \\
-Fashion-MNIST 0-vs-6 & Depolarising & 0.5867 & 0.4933 & 0.4667 & 0.4667 \\
- & Dephasing & 0.5867 & 0.5067 & 0.5333 & 0.4400 \\
+MNIST 3-vs-5 & Depolarising & 0.8000 & 0.7143 & 0.5333 & 0.5333 & 0.5200 \\
+ & Dephasing & 0.8000 & 0.7143 & 0.6400 & 0.6000 & 0.5600 \\
+Fashion-MNIST 0-vs-6 & Depolarising & 0.7333 & 0.6976 & 0.6000 & 0.5733 & 0.5600 \\
+ & Dephasing & 0.7333 & 0.6976 & 0.7067 & 0.6267 & 0.6267 \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-The exact statevector and Aer statevector outputs agree at zero noise to a
-maximum absolute difference below $1.34\times10^{-15}$ across the six
-checkpoint records, confirming that the noise simulations start from the same
-circuit as the noiseless model. With only 25 validation examples per checkpoint, a change in a few signs can move the accuracy by a large amount, so increasing $p$ need not produce a monotone sequence when the
-checkpoint is fixed and shot noise is present.
+The trained models' readouts are small ($|\langle Z\rangle|\le0.33$), so finite sampling alone lowers the expected accuracy from 0.800 to 0.714 on MNIST 3-vs-5 and from 0.733 to 0.698 on Fashion-MNIST. Gate noise lowers accuracy further: depolarising noise at $p=0.02$ leaves 0.520 and 0.560, close to chance, while phase damping is milder at equal $p$. With only 25 validation examples per checkpoint, a change in a few signs moves the accuracy noticeably, so the sequence need not be monotone in $p$.
 
 \subsection{Scalability and Practicality}
 Amplitude encoding fixes the state-vector width at the chosen qubit count, while parameter sharing controls the number of variational slots. Table~\ref{tab:resources} reports total logical, decomposed, and transpiled depths for $n=4,6,8,10$, including state preparation and readout. The transpilation target is the local Qiskit ``FakePeekskill'' BackendV2 with optimisation level 1 and a transpiler seed of 42; these are local resource estimates and no hardware was used.
@@ -996,9 +993,9 @@ Amplitude encoding fixes the state-vector width at the chosen qubit count, while
 \textbf{$n$} & \textbf{Logical} & \textbf{Decomposed} & \textbf{Transpiled} \\
 \midrule
 4 & 38 & 73 & 343 \\
-6 & 65 & 191 & 934 \\
+6 & 62 & 188 & 908 \\
 8 & 113 & 626 & 2,549 \\
-10 & 116 & 2,160 & 7,362 \\
+10 & 113 & 2,157 & 7,384 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1236,7 +1233,7 @@ not a generalization guarantee.
 \subsection{Implementation implications and scaling boundary}
 The resource audit makes the cost of the coherent path concrete. On the local
 FakePeekskill transpilation target, total transpiled depth and operation count
-increase from 343 and 567 at four qubits to 7,362 and 15,239 at ten qubits.
+increase from 343 and 567 at four qubits to 7,384 and 13,733 at ten qubits.
 The pooling-arm audit also shows that a unitary replacement is not automatically
 the shallowest implementation: the measurement, unitary, coherent, and SU(4)
 variants have different logical and transpiled costs. 

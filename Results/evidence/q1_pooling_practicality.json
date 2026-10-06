@@ -235,8 +235,8 @@
     "credentials_accessed": false,
     "git": {
       "dirty": true,
-      "dirty_entries": 23,
-      "head": "a86c89180b3f65c87b265beceedb75d9ab51c5a3"
+      "dirty_entries": 40,
+      "head": "5f60758d95247c4b1ab01bbabea0fd00bfce5cb2"
     },
     "network_accessed": false,
     "qiskit_lock": {
@@ -245,7 +245,7 @@
     }
   },
   "limitations": "Fake-backend transpilation is a local practicality comparison, not device execution. SU(4) is an expressivity/resource ceiling arm; it is not promoted to the headline model.",
-  "payload_sha256": "fb960983a1fba2090eaf4695ffb3ddad2ecb4d46fb6dbb2cc9dbe7f6e65b21f4",
+  "payload_sha256": "b2740d259274453b3350c5953a65d2212df717f236c7ad764918e9db53a9aab7",
   "protocol": {
     "arms": [
       "pool_none",

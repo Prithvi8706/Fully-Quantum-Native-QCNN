@@ -9,8 +9,8 @@
     "executable": "python.exe",
     "git": {
       "dirty": true,
-      "dirty_entries": 23,
-      "head": "a86c89180b3f65c87b265beceedb75d9ab51c5a3"
+      "dirty_entries": 39,
+      "head": "5f60758d95247c4b1ab01bbabea0fd00bfce5cb2"
     },
     "network_accessed": false,
     "python": "3.11.9",
@@ -20,7 +20,7 @@
     }
   },
   "limitations": "This artifact reports local transpilation/resource estimates only. State preparation and model-body counts are intentionally separated; no QPU execution is implied.",
-  "payload_sha256": "609c2f8c8796742a1c2806e578ba368732c6a87868b6755e456f7273b7590905",
+  "payload_sha256": "2e6f5251d617a246eb7bb3cc34306a0299f2401f148d84cd78bd2b137f29569c",
   "protocol": {
     "arm": "frozen unitary pooling",
     "backend": {
@@ -287,43 +287,43 @@
       "components": {
         "model_body": {
           "decomposed": {
-            "depth": 74,
+            "depth": 71,
             "operation_counts": {
-              "cx": 67,
-              "u": 131
+              "cx": 64,
+              "u": 126
             },
-            "size": 198,
+            "size": 190,
             "width": 12
           },
           "logical": {
-            "depth": 63,
+            "depth": 60,
             "operation_counts": {
               "cry": 4,
               "crz": 4,
-              "cx": 51,
-              "rx": 36,
-              "ry": 44,
-              "rz": 35
+              "cx": 48,
+              "rx": 34,
+              "ry": 42,
+              "rz": 34
             },
-            "size": 174,
+            "size": 166,
             "width": 12
           },
           "target_validation": {
-            "checked_instructions": 1003,
+            "checked_instructions": 937,
             "invalid": [],
             "uses_actual_target": true
           },
           "transpilation_error": null,
           "transpilation_status": "pass",
           "transpiled": {
-            "depth": 529,
+            "depth": 465,
             "operation_counts": {
-              "ecr": 163,
-              "rz": 469,
-              "sx": 346,
-              "x": 25
+              "ecr": 154,
+              "rz": 435,
+              "sx": 324,
+              "x": 24
             },
-            "size": 1003,
+            "size": 937,
             "width": 33
           },
           "unsupported_operations": []
@@ -404,56 +404,56 @@
         },
         "total": {
           "decomposed": {
-            "depth": 191,
+            "depth": 188,
             "operation_counts": {
-              "cx": 124,
+              "cx": 121,
               "measure": 1,
               "reset": 6,
-              "u": 194
+              "u": 189
             },
-            "size": 325,
+            "size": 317,
             "width": 12
           },
           "logical": {
-            "depth": 65,
+            "depth": 62,
             "operation_counts": {
               "cry": 4,
               "crz": 4,
-              "cx": 51,
+              "cx": 48,
               "initialize": 1,
               "measure": 1,
-              "rx": 36,
-              "ry": 44,
-              "rz": 35
+              "rx": 34,
+              "ry": 42,
+              "rz": 34
             },
-            "size": 176,
+            "size": 168,
             "width": 12
           },
           "target_validation": {
-            "checked_instructions": 1708,
+            "checked_instructions": 1655,
             "invalid": [],
             "uses_actual_target": true
           },
           "transpilation_error": null,
           "transpilation_status": "pass",
           "transpiled": {
-            "depth": 934,
+            "depth": 908,
             "operation_counts": {
-              "ecr": 289,
+              "ecr": 277,
               "measure": 1,
               "reset": 6,
-              "rz": 800,
-              "sx": 562,
-              "x": 50
+              "rz": 781,
+              "sx": 544,
+              "x": 46
             },
-            "size": 1708,
+            "size": 1655,
             "width": 33
           },
           "unsupported_operations": []
         }
       },
       "limitations": "Counts are local logical/decomposed/transpiled estimates. They are not a hardware run; measurement-style dynamic control may be unsupported by the fake target.",
-      "payload_sha256": "a52bba726c34e525207b5c40ba64cf8af3e41f0ba9448e33d2691be6ba55263c",
+      "payload_sha256": "6bbc6b567a8dad064467717c5857d754a20d83ca2382e291c5107728f6857ee0",
       "pooling_mode": "unitary",
       "qubits": 6,
       "status": "pass",
@@ -689,43 +689,43 @@
       "components": {
         "model_body": {
           "decomposed": {
-            "depth": 131,
+            "depth": 128,
             "operation_counts": {
-              "cx": 131,
-              "u": 251
+              "cx": 128,
+              "u": 246
             },
-            "size": 382,
+            "size": 374,
             "width": 20
           },
           "logical": {
-            "depth": 114,
+            "depth": 111,
             "operation_counts": {
               "cry": 8,
               "crz": 8,
-              "cx": 99,
-              "rx": 68,
-              "ry": 84,
-              "rz": 67
+              "cx": 96,
+              "rx": 66,
+              "ry": 82,
+              "rz": 66
             },
-            "size": 334,
+            "size": 326,
             "width": 20
           },
           "target_validation": {
-            "checked_instructions": 2070,
+            "checked_instructions": 1963,
             "invalid": [],
             "uses_actual_target": true
           },
           "transpilation_error": null,
           "transpilation_status": "pass",
           "transpiled": {
-            "depth": 1020,
+            "depth": 973,
             "operation_counts": {
-              "ecr": 347,
-              "rz": 968,
-              "sx": 701,
-              "x": 54
+              "ecr": 326,
+              "rz": 910,
+              "sx": 664,
+              "x": 63
             },
-            "size": 2070,
+            "size": 1963,
             "width": 37
           },
           "unsupported_operations": []
@@ -806,56 +806,56 @@
         },
         "total": {
           "decomposed": {
-            "depth": 2160,
+            "depth": 2157,
             "operation_counts": {
-              "cx": 1144,
+              "cx": 1141,
               "measure": 1,
               "reset": 10,
-              "u": 1274
+              "u": 1269
             },
-            "size": 2429,
+            "size": 2421,
             "width": 20
           },
           "logical": {
-            "depth": 116,
+            "depth": 113,
             "operation_counts": {
               "cry": 8,
               "crz": 8,
-              "cx": 99,
+              "cx": 96,
               "initialize": 1,
               "measure": 1,
-              "rx": 68,
-              "ry": 84,
-              "rz": 67
+              "rx": 66,
+              "ry": 82,
+              "rz": 66
             },
-            "size": 336,
+            "size": 328,
             "width": 20
           },
           "target_validation": {
-            "checked_instructions": 15239,
+            "checked_instructions": 13733,
             "invalid": [],
             "uses_actual_target": true
           },
           "transpilation_error": null,
           "transpilation_status": "pass",
           "transpiled": {
-            "depth": 7362,
+            "depth": 7384,
             "operation_counts": {
-              "ecr": 2695,
+              "ecr": 2449,
               "measure": 1,
               "reset": 10,
-              "rz": 6804,
-              "sx": 5276,
-              "x": 453
+              "rz": 6267,
+              "sx": 4525,
+              "x": 481
             },
-            "size": 15239,
+            "size": 13733,
             "width": 37
           },
           "unsupported_operations": []
         }
       },
       "limitations": "Counts are local logical/decomposed/transpiled estimates. They are not a hardware run; measurement-style dynamic control may be unsupported by the fake target.",
-      "payload_sha256": "0a72ce8cafc7a1517bf965a25df2d25d0f950382d57293861bd8a078ef6167dc",
+      "payload_sha256": "2f9c3b78f03e4305353ada2b1457910e33c58866c136e4d9353a9855f5cded30",
       "pooling_mode": "unitary",
       "qubits": 10,
       "status": "pass",

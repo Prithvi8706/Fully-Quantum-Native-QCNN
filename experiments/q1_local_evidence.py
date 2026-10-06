@@ -2,13 +2,16 @@
 
 This module is intentionally executable with the isolated ``.venv-qiskit``
 environment.  The training environment contains the canonical PennyLane model;
-the Qiskit environment deliberately does not.  Consequently this file builds
-one small Qiskit representation of the *same frozen gate schedule* for
-transpilation and Aer checks.  It never defines an alternative training model,
-contacts a provider, reads a token, or submits a job.
+the Qiskit environment deliberately does not.  The Qiskit circuits are therefore
+never written by hand: the ``export`` subcommand, run in the training
+environment, records the exact operation list emitted by
+``QCNN/circuits.py::build_circuit`` (plus the PennyLane readouts of every noise
+validation input) in ``Results/evidence/q1_canonical_schedules.json``, and the
+Qiskit subcommands translate that list gate by gate.  The noise command checks
+that the translated circuits reproduce the PennyLane readouts before any noise
+is added.  Nothing here contacts a provider, reads a token, or submits a job.
 
-The four subcommands correspond to Work Package D in the fast-track plan::
-
+    python -m experiments.q1_local_evidence export
     .venv-qiskit\\Scripts\\python -m experiments.q1_local_evidence resources
     .venv-qiskit\\Scripts\\python -m experiments.q1_local_evidence pooling
     .venv-qiskit\\Scripts\\python -m experiments.q1_local_evidence noise \
@@ -39,6 +42,12 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE_ROOT = ROOT / "Results" / "evidence"
 LOCK_PATH = ROOT / "requirements-qiskit-lock.txt"
 CANONICAL_SOURCE = ROOT / "QCNN" / "circuits.py"
+SCHEDULE_PATH = EVIDENCE_ROOT / "q1_canonical_schedules.json"
+# Image size whose amplitude encoding fills an n-qubit register (Table II).
+SCHEDULE_IMAGE_SIZE = {4: 4, 6: 8, 8: 16, 10: 28}
+# PennyLane operation name -> Qiskit gate name for the canonical gate set.
+PENNYLANE_TO_QISKIT = {"RX": "rx", "RY": "ry", "RZ": "rz", "CNOT": "cx", "CRY": "cry", "CRZ": "crz"}
+NOISE_BASIS = ("rz", "sx", "x", "cx")
 
 DEFAULT_BACKEND = "FakePeekskill"
 DEFAULT_SEED_TRANSPILER = 42
@@ -79,6 +88,7 @@ SCHEMAS = {
     "pooling": {"name": "fqcnn_q1_pooling_practicality", "version": 1},
     "noise": {"name": "fqcnn_q1_noise_validation", "version": 1},
     "rehearsal": {"name": "fqcnn_q1_fake_backend_rehearsal", "version": 1},
+    "schedules": {"name": "fqcnn_q1_canonical_schedules", "version": 1},
 }
 
 
@@ -92,6 +102,11 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _text_sha256(path: Path) -> str:
+    """SHA-256 of a text file with LF line endings, independent of the checkout."""
+    return sha256_bytes(Path(path).read_bytes().replace(b"\r\n", b"\n"))
 
 
 def _json_hash(payload: Any) -> str:
@@ -271,31 +286,6 @@ def _decompose(circuit):
         return circuit.decompose()
 
 
-class _ParameterStream:
-    """Deterministic angle source backed by a checkpoint or a declared fixture."""
-
-    def __init__(self, seed: int, weights: Optional[Mapping[str, np.ndarray]] = None):
-        self.seed = int(seed)
-        self.weights = weights
-        self._rng = np.random.default_rng(self.seed)
-        if weights:
-            values: List[float] = []
-            for key in sorted(weights):
-                values.extend(np.asarray(weights[key], dtype=float).reshape(-1).tolist())
-            self._values = np.asarray(values, dtype=float)
-        else:
-            self._values = np.asarray([], dtype=float)
-        self._index = 0
-
-    def next(self, default_scale: float = 0.17) -> float:
-        if self._values.size:
-            value = float(self._values[self._index % self._values.size])
-            self._index += 1
-            return value
-        self._index += 1
-        return float(self._rng.normal(0.0, default_scale))
-
-
 def _weights_from_path(path: Optional[Path]) -> Tuple[Optional[Dict[str, np.ndarray]], Dict[str, Any]]:
     if path is None or not Path(path).is_file():
         return None, {
@@ -395,52 +385,153 @@ def _find_checkpoint(dataset: str, classes: Sequence[int], seed: int, weights_ro
     return None
 
 
-def _conv_kernel(weights: Optional[Mapping[str, np.ndarray]], layer: int, stream: _ParameterStream) -> np.ndarray:
-    key = f"quantum_conv_kernel_{layer}"
-    if weights is not None and key in weights:
-        value = np.asarray(weights[key], dtype=float)
-        if value.size >= 4 * 3:
-            return value.reshape(4, -1, 3)
-    return np.asarray([[[stream.next() for _ in range(3)] for _ in range(4)] for _ in range(4)])
+def _canonical_model(n_qubits: int, pooling_mode: str = "unitary", seed: int = 0):
+    """Instantiate the canonical PennyLane model (training environment only)."""
+    from QCNN.config.Qconfig import QuantumNativeConfig
+    from QCNN.models.QCNNModel import PureQuantumNativeCNN
+
+    n_qubits = int(n_qubits)
+    if n_qubits not in SCHEDULE_IMAGE_SIZE:
+        raise ValueError(f"no canonical image size for n={n_qubits}; choose from {sorted(SCHEDULE_IMAGE_SIZE)}")
+    cfg = QuantumNativeConfig.from_image_size(SCHEDULE_IMAGE_SIZE[n_qubits], "amplitude")
+    if cfg.n_qubits != n_qubits:
+        raise ValueError(f"image size {SCHEDULE_IMAGE_SIZE[n_qubits]} configures {cfg.n_qubits} qubits, not {n_qubits}")
+    cfg.pooling_mode = pooling_mode
+    cfg.seed = int(seed)
+    return PureQuantumNativeCNN(cfg)
 
 
-def _pool_angles(weights: Optional[Mapping[str, np.ndarray]], layer: int, stream: _ParameterStream) -> np.ndarray:
-    key = f"quantum_pooling_{layer}"
-    if weights is not None and key in weights and np.asarray(weights[key]).size:
-        return np.asarray(weights[key], dtype=float).reshape(-1)
-    return np.asarray([stream.next() for _ in range(15)], dtype=float)
+def _serialise_operations(x: np.ndarray, model) -> List[Dict[str, Any]]:
+    """Record the model-body operations emitted by ``circuits.build_circuit``.
+
+    The amplitude-encoding operation is omitted: the Qiskit side prepares the
+    input state itself so that one schedule serves every input.
+    """
+    import pennylane as qml
+    from QCNN import circuits
+
+    tape = qml.tape.make_qscript(circuits.build_circuit)(x, model.quantum_params, model.config)
+    operations = list(tape.operations)
+    if not operations or type(operations[0]).__name__ != "AmplitudeEmbedding":
+        raise ValueError("canonical circuit must begin with amplitude encoding")
+    records: List[Dict[str, Any]] = []
+    for op in operations[1:]:
+        kind = type(op).__name__
+        wires = [int(w) for w in op.wires]
+        if kind == "MidMeasureMP":
+            records.append({"gate": "measure", "wires": wires, "id": str(op.id)})
+        elif kind == "Conditional":
+            base = op.base
+            if base.name not in PENNYLANE_TO_QISKIT:
+                raise ValueError(f"unsupported conditional operation {base.name}")
+            records.append({
+                "gate": PENNYLANE_TO_QISKIT[base.name],
+                "wires": [int(w) for w in base.wires],
+                "params": [float(p) for p in base.parameters],
+                "condition": [str(m.id) for m in op.meas_val.measurements],
+            })
+        elif kind in PENNYLANE_TO_QISKIT:
+            records.append({
+                "gate": PENNYLANE_TO_QISKIT[kind],
+                "wires": wires,
+                "params": [float(p) for p in op.parameters],
+            })
+        else:
+            # General multi-qubit unitaries (the SU(4) pooling arm).
+            matrix = np.asarray(qml.matrix(op, wire_order=op.wires), dtype=complex)
+            records.append({
+                "gate": "unitary",
+                "wires": wires,
+                "matrix_real": matrix.real.tolist(),
+                "matrix_imag": matrix.imag.tolist(),
+            })
+    return records
 
 
-def _classifier_angles(weights: Optional[Mapping[str, np.ndarray]], stream: _ParameterStream) -> np.ndarray:
-    if weights is not None and "quantum_classifier" in weights:
-        value = np.asarray(weights["quantum_classifier"], dtype=float).reshape(-1)
-        if value.size >= 32:
-            return value[:32]
-    return np.asarray([stream.next() for _ in range(32)], dtype=float)
+def build_canonical_schedules(
+    tasks: Sequence[str] = ("mnist:3,5", "fashion_mnist:0,6"),
+    seeds: Sequence[int] = (0, 1, 2),
+    *,
+    samples: int = 25,
+    data_root: Path = ROOT / "datasets",
+    weights_root: Path = ROOT / "Results" / "q1_comparison" / "runs",
+    output: Optional[Path] = SCHEDULE_PATH,
+) -> Dict[str, Any]:
+    """Export canonical operation lists (training environment, PennyLane)."""
+    import pennylane as qml
+
+    resources: Dict[str, Any] = {}
+    combos = [(n, "unitary") for n in RESOURCE_QUBITS] + [(4, mode) for mode in POOLING_ARMS if mode != "unitary"]
+    for n_qubits, mode in combos:
+        model = _canonical_model(n_qubits, mode, seed=0)
+        x = np.arange(1, 2 ** n_qubits + 1, dtype=float)
+        resources[f"{n_qubits}:{mode}"] = {
+            "n_qubits": n_qubits,
+            "image_size": SCHEDULE_IMAGE_SIZE[n_qubits],
+            "pooling_mode": mode,
+            "parameters": "model initialisation with seed 0 (resource counting only)",
+            "operations": _serialise_operations(x, model),
+        }
+
+    noise_records: List[Dict[str, Any]] = []
+    for dataset, classes in (_parse_task(value) for value in tasks):
+        for seed in (int(value) for value in seeds):
+            images, labels, sample_ids, split_id, _ = _validation_subset(
+                dataset, classes, seed, int(samples), Path(data_root), require_persisted=True)
+            checkpoint_path = _validate_checkpoint_identity(
+                _find_checkpoint(dataset, classes, seed, Path(weights_root)),
+                dataset, classes, seed, split_id)
+            weights, checkpoint = _weights_from_path(checkpoint_path)
+            model = _canonical_model(10, "unitary", seed=seed)
+            model.quantum_params = {key: np.asarray(value, dtype=float) for key, value in weights.items()}
+            # Same global min-max scaling (pixel range 0..255) and padding as training.
+            features = np.asarray(images, dtype=float).reshape(len(images), -1) / 255.0
+            padded = model._preprocess_input(features)
+            readouts = np.asarray(model.raw_expectations(padded, already_preprocessed=True), dtype=float)
+            predictions = np.where(readouts > 0.0, 1, -1)
+            noise_records.append({
+                "dataset": dataset,
+                "classes": list(classes),
+                "seed": seed,
+                "split_id": split_id,
+                "sample_ids": list(sample_ids),
+                "checkpoint": checkpoint,
+                "operations": _serialise_operations(padded[0], model),
+                "pennylane_readouts": [float(value) for value in readouts],
+                "pennylane_accuracy": float(np.mean(predictions == np.asarray(labels))),
+            })
+
+    payload = {
+        "schema": SCHEMAS["schedules"],
+        "status": "pass",
+        "canonical_source": {
+            "path": "QCNN/circuits.py",
+            "function": "build_circuit",
+            "sha256": _text_sha256(CANONICAL_SOURCE),
+        },
+        "pennylane": qml.version(),
+        "wire_convention": "wire index == Qiskit qubit index; amplitudes are bit-reversed for Qiskit",
+        "resources": resources,
+        "noise": noise_records,
+    }
+    payload["payload_sha256"] = _json_hash(payload)
+    if output is not None:
+        write_artifact(payload, output)
+    return payload
 
 
-def _conv_windows(width: int, height: int) -> List[List[int]]:
-    windows = []
-    for row in range(height - 1):
-        for col in range(width - 1):
-            windows.append([
-                row * width + col,
-                row * width + col + 1,
-                (row + 1) * width + col,
-                (row + 1) * width + col + 1,
-            ])
-    return windows
-
-
-def _n_conv_layers(n_qubits: int) -> int:
-    # Mirror QuantumNativeConfig.configure_for_image: n<8 retains at most
-    # three convolution layers, and only the genuinely tiny n<4 family is
-    # reduced to two.  In particular n=4 is a three-layer instance.
-    if n_qubits < 4:
-        return 2
-    if n_qubits < 8:
-        return 3
-    return 4
+def _load_schedules(path: Path = SCHEDULE_PATH) -> Dict[str, Any]:
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"{path} is missing; run `python -m experiments.q1_local_evidence export` "
+            "in the training environment first")
+    schedules = json.loads(path.read_text(encoding="utf-8"))
+    if schedules.get("schema") != SCHEMAS["schedules"]:
+        raise ValueError(f"{path} is not a canonical schedule artifact")
+    if schedules["canonical_source"]["sha256"] != _text_sha256(CANONICAL_SOURCE):
+        raise ValueError(f"{path} was exported from a different QCNN/circuits.py; re-run export")
+    return schedules
 
 
 def _build_state_preparation(n_qubits: int, amplitudes: Optional[np.ndarray] = None):
@@ -460,105 +551,69 @@ def _build_state_preparation(n_qubits: int, amplitudes: Optional[np.ndarray] = N
     return circuit
 
 
+def _apply_operation(circuit, record: Mapping[str, Any]) -> None:
+    gate, wires = record["gate"], [int(w) for w in record["wires"]]
+    params = [float(p) for p in record.get("params", [])]
+    if gate in ("rx", "ry", "rz"):
+        getattr(circuit, gate)(params[0], wires[0])
+    elif gate == "cx":
+        circuit.cx(wires[0], wires[1])
+    elif gate in ("cry", "crz"):
+        getattr(circuit, gate)(params[0], wires[0], wires[1])
+    elif gate == "unitary":
+        matrix = np.asarray(record["matrix_real"]) + 1j * np.asarray(record["matrix_imag"])
+        # PennyLane orders the first wire as the most-significant bit; Qiskit
+        # treats the first listed qubit as the least-significant one.
+        circuit.unitary(matrix, list(reversed(wires)))
+    else:
+        raise ValueError(f"unsupported schedule gate {gate!r}")
+
+
 def _build_model_body(
     n_qubits: int,
     pooling_mode: str = "unitary",
     *,
-    seed: int = 0,
-    weights: Optional[Mapping[str, np.ndarray]] = None,
+    operations: Optional[Sequence[Mapping[str, Any]]] = None,
 ):
-    """Build the Qiskit gate schedule corresponding to ``circuits.build_circuit``."""
+    """Translate the canonical ``circuits.build_circuit`` operations to Qiskit.
+
+    Without ``operations`` the exported resource schedule for ``(n, mode)`` is
+    used.  Mid-circuit measurements get their own classical bits after bit 0,
+    which is reserved for the terminal readout; consecutive conditional gates
+    on the same measurement share one ``if_test`` block.
+    """
     qiskit = _require_qiskit()
     if pooling_mode not in POOLING_ARMS:
         raise ValueError(f"unknown pooling mode {pooling_mode!r}; choose from {POOLING_ARMS}")
-    # Classical bits are present for every arm so the measurement arm can be
-    # composed into the same full-circuit container as unitary arms.
-    circuit = qiskit["QuantumCircuit"](int(n_qubits), int(n_qubits), name=f"model_{pooling_mode}")
-    stream = _ParameterStream(seed, weights)
-    active = list(range(int(n_qubits)))
-    n_layers = _n_conv_layers(int(n_qubits))
-
-    for layer in range(n_layers):
-        n_current = len(active)
-        if n_current >= 4:
-            width = int(math.sqrt(n_current))
-            while width > 1 and n_current % width:
-                width -= 1
-            height = n_current // width
-            width, height = max(width, height), min(width, height)
-            kernel = _conv_kernel(weights, layer, stream)
-            for relative in _conv_windows(width, height):
-                if max(relative) >= n_current:
-                    continue
-                window = [active[index] for index in relative]
-                for depth in range(kernel.shape[1]):
-                    for index, qubit in enumerate(window):
-                        circuit.rx(float(kernel[index, depth, 0]), qubit)
-                        circuit.ry(float(kernel[index, depth, 1]), qubit)
-                        circuit.rz(float(kernel[index, depth, 2]), qubit)
-                    q0, q1, q2, q3 = window
-                    circuit.cx(q0, q1)
-                    circuit.cx(q2, q3)
-                    circuit.cx(q0, q2)
-                    circuit.cx(q1, q3)
-                    circuit.cx(q0, q3)
-                    circuit.cx(q1, q2)
-
-        if layer >= n_layers - 1 or len(active) < 2:
-            continue
-        pairs = [(active[index], active[index + 1]) for index in range(0, len(active) - 1, 2)]
-        if not pairs:
-            continue
-        angles = _pool_angles(weights, layer, stream)
-        for pair_index, (keep, discard) in enumerate(pairs):
-            base = 3 * pair_index
-            if pooling_mode == "none":
-                continue
-            if pooling_mode == "measurement":
-                circuit.measure(discard, pair_index)
-                with circuit.if_test((pair_index, 1)):
-                    circuit.ry(float(angles[base % angles.size]), keep)
-                    circuit.rz(float(angles[(base + 1) % angles.size]), keep)
-                circuit.ry(float(angles[(base + 2) % angles.size]), keep)
-            elif pooling_mode == "unitary":
-                circuit.cry(float(angles[base % angles.size]), discard, keep)
-                circuit.crz(float(angles[(base + 1) % angles.size]), discard, keep)
-                circuit.ry(0.02, discard)
-                circuit.ry(float(angles[(base + 2) % angles.size]), keep)
-            elif pooling_mode == "coherent":
-                base4 = 4 * pair_index
-                circuit.cry(float(angles[base4 % angles.size]), discard, keep)
-                circuit.crz(float(angles[(base4 + 1) % angles.size]), discard, keep)
-                circuit.ry(float(angles[(base4 + 2) % angles.size]), keep)
-                circuit.cry(float(angles[(base4 + 3) % angles.size]), keep, discard)
-            elif pooling_mode == "su4":
-                # A deterministic SU(4)-class gate is sufficient for resource
-                # accounting; its 15-angle parameterisation is recorded in the
-                # arm metadata.  The matrix is made unitary by QR factorisation.
-                rng = np.random.default_rng(int(seed) + 991 * (layer + 1) + pair_index)
-                matrix = rng.normal(size=(4, 4)) + 1j * rng.normal(size=(4, 4))
-                unitary, upper = np.linalg.qr(matrix)
-                diagonal = np.diag(upper)
-                phase = np.where(np.abs(diagonal) > 0, diagonal / np.abs(diagonal), 1.0)
-                circuit.unitary(unitary @ np.diag(np.conjugate(phase)), [keep, discard])
-        active = active[::2]
-
-    classifier = _classifier_angles(weights, stream)
-    readout = active[0]
-    for index, qubit in enumerate(active[:min(len(active), 4)]):
-        circuit.rx(float(classifier[index * 2 % 32]), qubit)
-        circuit.ry(float(classifier[(index * 2 + 1) % 32]), qubit)
-        circuit.rz(float(classifier[(index * 2 + 8) % 32]), qubit)
-    for index in range(len(active) - 1):
-        circuit.cx(active[index], active[index + 1])
-    if len(active) >= 2:
-        circuit.cx(active[-1], active[0])
-    for index, qubit in enumerate(active[:min(len(active), 4)]):
-        circuit.rx(float(classifier[(index * 2 + 16) % 32]), qubit)
-        circuit.ry(float(classifier[(index * 2 + 17) % 32]), qubit)
-    if len(active) >= 2:
-        circuit.cx(active[0], active[min(len(active) - 1, 1)])
-    circuit.rz(float(classifier[31]), readout)
+    if operations is None:
+        key = f"{int(n_qubits)}:{pooling_mode}"
+        resources = _load_schedules()["resources"]
+        if key not in resources:
+            raise ValueError(f"no exported schedule for {key}")
+        operations = resources[key]["operations"]
+    n_measure = sum(1 for record in operations if record["gate"] == "measure")
+    circuit = qiskit["QuantumCircuit"](
+        int(n_qubits), max(int(n_qubits), 1 + n_measure), name=f"model_{pooling_mode}")
+    clbit_of: Dict[str, int] = {}
+    index = 0
+    while index < len(operations):
+        record = operations[index]
+        if record["gate"] == "measure":
+            clbit_of[record["id"]] = 1 + len(clbit_of)
+            circuit.measure(int(record["wires"][0]), clbit_of[record["id"]])
+            index += 1
+        elif "condition" in record:
+            (condition,) = record["condition"]
+            block = []
+            while index < len(operations) and operations[index].get("condition") == [condition]:
+                block.append(operations[index])
+                index += 1
+            with circuit.if_test((clbit_of[condition], 1)):
+                for item in block:
+                    _apply_operation(circuit, item)
+        else:
+            _apply_operation(circuit, record)
+            index += 1
     return circuit
 
 
@@ -574,19 +629,18 @@ def _build_full_circuit(
     pooling_mode: str = "unitary",
     *,
     amplitudes: Optional[np.ndarray] = None,
-    seed: int = 0,
-    weights: Optional[Mapping[str, np.ndarray]] = None,
+    operations: Optional[Sequence[Mapping[str, Any]]] = None,
     measure: bool = True,
 ):
     qiskit = _require_qiskit()
-    circuit = qiskit["QuantumCircuit"](int(n_qubits), int(n_qubits), name="fqcnn_local_probe")
     state = _build_state_preparation(n_qubits, amplitudes)
-    body = _build_model_body(n_qubits, pooling_mode, seed=seed, weights=weights)
+    body = _build_model_body(n_qubits, pooling_mode, operations=operations)
+    circuit = qiskit["QuantumCircuit"](int(n_qubits), body.num_clbits, name="fqcnn_local_probe")
     circuit.compose(state, qubits=list(range(int(n_qubits))), inplace=True)
     circuit.compose(
         body,
         qubits=list(range(int(n_qubits))),
-        clbits=list(range(int(n_qubits))),
+        clbits=list(range(body.num_clbits)),
         inplace=True,
     )
     if measure:
@@ -614,15 +668,13 @@ def _resource_record(
     pooling_mode: str,
     backend,
     *,
-    seed: int = 0,
     seed_transpiler: int = DEFAULT_SEED_TRANSPILER,
     optimization_level: int = DEFAULT_OPTIMIZATION_LEVEL,
-    weights: Optional[Mapping[str, np.ndarray]] = None,
 ) -> Dict[str, Any]:
     state = _build_state_preparation(n_qubits)
-    body = _build_model_body(n_qubits, pooling_mode, seed=seed, weights=weights)
+    body = _build_model_body(n_qubits, pooling_mode)
     readout = _build_readout(n_qubits)
-    full = _build_full_circuit(n_qubits, pooling_mode, seed=seed, weights=weights)
+    full = _build_full_circuit(n_qubits, pooling_mode)
     components = {
         "state_preparation": _component_record(state, backend, seed_transpiler, optimization_level),
         "model_body": _component_record(body, backend, seed_transpiler, optimization_level),
@@ -688,7 +740,7 @@ def build_resources(
         "canonical_source": {
             "path": "QCNN/circuits.py",
             "function": "build_circuit",
-            "sha256": sha256_file(CANONICAL_SOURCE),
+            "sha256": _text_sha256(CANONICAL_SOURCE),
         },
         "records": records,
         "environment": {
@@ -697,7 +749,7 @@ def build_resources(
             "executable": Path(sys.executable).name,
             "qiskit_lock": {
                 "path": "requirements-qiskit-lock.txt",
-                "sha256": sha256_file(LOCK_PATH) if LOCK_PATH.exists() else None,
+                "sha256": _text_sha256(LOCK_PATH) if LOCK_PATH.exists() else None,
             },
             "git": _git_snapshot(),
             "network_accessed": False,
@@ -771,12 +823,12 @@ def build_pooling_practicality(
         "canonical_source": {
             "path": "QCNN/circuits.py",
             "function": "build_circuit",
-            "sha256": sha256_file(CANONICAL_SOURCE),
+            "sha256": _text_sha256(CANONICAL_SOURCE),
         },
         "environment": {
             "qiskit_lock": {
                 "path": "requirements-qiskit-lock.txt",
-                "sha256": sha256_file(LOCK_PATH) if LOCK_PATH.exists() else None,
+                "sha256": _text_sha256(LOCK_PATH) if LOCK_PATH.exists() else None,
             },
             "git": _git_snapshot(),
             "network_accessed": False,
@@ -1028,10 +1080,29 @@ def _noise_model(kind: str, level: float):
         two = phase_damping_error(min(1.0, 2.0 * level)).tensor(phase_damping_error(min(1.0, 2.0 * level)))
     else:
         raise ValueError("noise model must be 'depolarizing' or 'dephasing'")
-    for gate in ("rz", "sx", "x"):
+    for gate in NOISE_BASIS[:-1]:
         model.add_all_qubit_quantum_error(one, gate)
     model.add_all_qubit_quantum_error(two, "cx")
     return model
+
+
+def _shot_only_expected_accuracy(readouts: Sequence[float], labels: Sequence[int], shots: int) -> float:
+    """Exact expected accuracy from finite-shot sampling alone (no gate noise).
+
+    With readout r, each shot returns 1 with probability (1 - r) / 2; the
+    estimate 1 - 2k/shots is classified +1 only when it is strictly positive,
+    matching ``_noisy_accuracy``.
+    """
+    shots = int(shots)
+    expected = []
+    for readout, label in zip(readouts, labels):
+        p_one = min(max((1.0 - float(readout)) / 2.0, 0.0), 1.0)
+        p_positive = sum(
+            math.comb(shots, k) * p_one ** k * (1.0 - p_one) ** (shots - k)
+            for k in range(shots) if 2 * k < shots
+        )
+        expected.append(p_positive if int(label) == 1 else 1.0 - p_positive)
+    return float(np.mean(expected))
 
 
 def _noisy_accuracy(
@@ -1058,7 +1129,11 @@ def _noisy_accuracy(
             candidate.measure(0, 0)
         measured.append(candidate)
     simulator = AerSimulator(noise_model=model, method="automatic")
-    compiled = qiskit["transpile"](measured, simulator, optimization_level=1, seed_transpiler=42)
+    # Compile every model gate to the basis the noise model is attached to, so
+    # RX/RY/CRY/CRZ are noisy too; state preparation stays an ideal initialize.
+    compiled = qiskit["transpile"](
+        measured, basis_gates=list(NOISE_BASIS) + ["initialize", "measure"],
+        optimization_level=0, seed_transpiler=42)
     result = simulator.run(compiled, shots=int(shots), seed_simulator=991).result()
     raw = []
     for index in range(len(compiled)):
@@ -1105,6 +1180,10 @@ def build_noise_validation(
     levels = tuple(float(value) for value in levels)
     if not levels or levels[0] != 0.0:
         raise ValueError("noise ladder must begin with declared zero-noise level 0.0")
+    schedules = {
+        (item["dataset"], tuple(item["classes"]), int(item["seed"])): item
+        for item in _load_schedules()["noise"]
+    }
     records: List[Dict[str, Any]] = []
     for dataset, classes in parsed_tasks:
         for seed in seeds:
@@ -1116,38 +1195,45 @@ def build_noise_validation(
             checkpoint_path = _validate_checkpoint_identity(
                 checkpoint_path, dataset, classes, seed, split_id
             )
-            weights, checkpoint = _weights_from_path(checkpoint_path)
+            _, checkpoint = _weights_from_path(checkpoint_path)
+            schedule = schedules.get((dataset, tuple(classes), int(seed)))
+            if schedule is None:
+                raise ValueError(f"no exported schedule for {dataset} {tuple(classes)} seed {seed}")
+            if (schedule["sample_ids"] != list(sample_ids) or schedule["split_id"] != split_id
+                    or schedule["checkpoint"]["sha256"] != checkpoint["sha256"]):
+                raise ValueError(f"exported schedule does not match {dataset} {tuple(classes)} seed {seed}")
+            operations = schedule["operations"]
             amplitudes = _amplitudes_from_pixels(images, 10)
             exact_values: List[float] = []
             aer_values: List[float] = []
             noisy_circuits = []
-            for index, vector in enumerate(amplitudes):
+            for vector in amplitudes:
                 base = _build_full_circuit(
-                    10,
-                    "unitary",
-                    amplitudes=vector,
-                    seed=seed,
-                    weights=weights,
-                    measure=False,
-                )
+                    10, "unitary", amplitudes=vector, operations=operations, measure=False)
                 exact_values.append(_exact_statevector_expectation(base))
                 aer_values.append(_aer_statevector_expectation(base))
                 noisy_circuits.append(_build_full_circuit(
-                    10,
-                    "unitary",
-                    amplitudes=vector,
-                    seed=seed,
-                    weights=weights,
-                    measure=True,
-                ))
+                    10, "unitary", amplitudes=vector, operations=operations, measure=True))
             exact_values_arr = np.asarray(exact_values, dtype=float)
             aer_values_arr = np.asarray(aer_values, dtype=float)
+            pennylane_arr = np.asarray(schedule["pennylane_readouts"], dtype=float)
             agreement = {
-                "method": "Qiskit Statevector.from_instruction versus AerSimulator statevector save_expectation_value",
+                "method": (
+                    "Qiskit Statevector.from_instruction of the translated canonical circuit versus "
+                    "the PennyLane readouts of the trained model, and versus AerSimulator statevector"
+                ),
+                "max_abs_difference_vs_pennylane": float(np.max(np.abs(exact_values_arr - pennylane_arr))),
                 "max_abs_difference": float(np.max(np.abs(exact_values_arr - aer_values_arr))),
                 "mean_abs_difference": float(np.mean(np.abs(exact_values_arr - aer_values_arr))),
-                "tolerance": 1e-10,
-                "passes": bool(np.max(np.abs(exact_values_arr - aer_values_arr)) <= 1e-10),
+                "tolerance": 1e-8,
+                "passes": bool(
+                    np.max(np.abs(exact_values_arr - pennylane_arr)) <= 1e-8
+                    and np.max(np.abs(exact_values_arr - aer_values_arr)) <= 1e-8
+                ),
+                "pennylane_accuracy": float(schedule["pennylane_accuracy"]),
+                "shot_only_expected_accuracy": _shot_only_expected_accuracy(
+                    exact_values_arr, labels, int(shots)),
+                "pennylane_readouts": [float(value) for value in pennylane_arr],
                 "statevector_readouts": [float(value) for value in exact_values_arr],
                 "aer_readouts": [float(value) for value in aer_values_arr],
             }
@@ -1205,7 +1291,7 @@ def build_noise_validation(
             "executable": Path(sys.executable).name,
             "qiskit_lock": {
                 "path": "requirements-qiskit-lock.txt",
-                "sha256": sha256_file(LOCK_PATH) if LOCK_PATH.exists() else None,
+                "sha256": _text_sha256(LOCK_PATH) if LOCK_PATH.exists() else None,
             },
             "git": _git_snapshot(),
             "network_accessed": False,
@@ -1234,7 +1320,7 @@ def build_rehearsal(
 ) -> Dict[str, Any]:
     """Prepare/hash a local payload for later QPU review, without submission."""
     backend = _select_backend(backend_name)
-    circuit = _build_full_circuit(int(n_qubits), "unitary", seed=0, measure=True)
+    circuit = _build_full_circuit(int(n_qubits), "unitary", measure=True)
     transpiled = _transpile_stage(circuit, backend, seed_transpiler, optimization_level)
     if transpiled["metrics"] is None:
         raise RuntimeError(f"fake-backend rehearsal transpilation failed: {transpiled['error']}")
@@ -1255,11 +1341,11 @@ def build_rehearsal(
         "canonical_source": {
             "path": "QCNN/circuits.py",
             "function": "build_circuit",
-            "sha256": sha256_file(CANONICAL_SOURCE),
+            "sha256": _text_sha256(CANONICAL_SOURCE),
         },
         "qiskit_lock": {
             "path": "requirements-qiskit-lock.txt",
-            "sha256": sha256_file(LOCK_PATH) if LOCK_PATH.exists() else None,
+            "sha256": _text_sha256(LOCK_PATH) if LOCK_PATH.exists() else None,
         },
     }
     payload = {
@@ -1297,6 +1383,14 @@ def write_artifact(payload: Mapping[str, Any], output: Path) -> None:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
+    export = sub.add_parser("export", help="export canonical PennyLane operation lists (training env)")
+    export.add_argument("--tasks", nargs="+", default=["mnist:3,5", "fashion_mnist:0,6"])
+    export.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2])
+    export.add_argument("--samples", type=int, default=25)
+    export.add_argument("--data-root", default=str(ROOT / "datasets"))
+    export.add_argument("--weights-root", default=str(ROOT / "Results" / "q1_comparison" / "runs"))
+    export.add_argument("--output", default=str(SCHEDULE_PATH.relative_to(ROOT)))
+
     resources = sub.add_parser("resources", help="count logical/decomposed/transpiled resource stages")
     resources.add_argument("--qubits", nargs="+", type=int, default=list(RESOURCE_QUBITS))
     resources.add_argument("--backend", default=DEFAULT_BACKEND)
@@ -1333,7 +1427,16 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: Optional[Iterable[str]] = None) -> int:
     args = _parser().parse_args(argv)
-    if args.command == "resources":
+    if args.command == "export":
+        payload = build_canonical_schedules(
+            args.tasks,
+            args.seeds,
+            samples=args.samples,
+            data_root=Path(args.data_root),
+            weights_root=Path(args.weights_root),
+            output=Path(args.output),
+        )
+    elif args.command == "resources":
         payload = build_resources(
             args.qubits,
             backend_name=args.backend,

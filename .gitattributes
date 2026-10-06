@@ -1,0 +1,8 @@
+# Keep text files LF in every checkout so recorded SHA-256 hashes match on Windows too.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.png binary
+*.pdf binary
+*.npz binary
+*.gz binary

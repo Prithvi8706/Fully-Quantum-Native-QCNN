@@ -12,7 +12,8 @@ Training remains pinned to Python 3.9.13 and the frozen lock:
 python -m pip install -r requirements-lock.txt
 ```
 
-Keep hardware tooling in a separate Python 3.11 environment:
+Keep the Qiskit tooling (resource and noise simulations) in a separate Python 3.11
+environment:
 
 ```bash
 py -3.11 -m venv .venv-qiskit
@@ -21,9 +22,10 @@ py -3.11 -m venv .venv-qiskit
 .venv-qiskit\Scripts\python.exe scripts/check_qiskit_environment.py
 ```
 
-The Task 6 local fake-backend smoke needs no credentials or network. Real-QPU
-submission remains a later explicit approval gate. Never add the Qiskit packages
-to the frozen training `requirements-lock.txt`.
+These checks run locally and need no credentials or network access. Never add the
+Qiskit packages to the training `requirements-lock.txt`.
+
+To reproduce the paper's tables and figures, see the README or run `./reproduce.sh`.
 
 ---
 
