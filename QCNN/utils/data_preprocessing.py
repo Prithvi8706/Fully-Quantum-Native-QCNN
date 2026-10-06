@@ -75,10 +75,10 @@ def resize_images(images: np.ndarray, target_size: Tuple[int, int]) -> np.ndarra
         Resized images with shape (n_samples, target_height, target_width)
     """
     try:
-        from scipy.ndimage import zoom, gaussian_filter
+        from scipy.ndimage import zoom
     except ImportError:
         raise ImportError("scipy is required for image resizing. Install with: pip install scipy")
-
+    
     if images.ndim == 3:
         # Grayscale images
         n_samples, h, w = images.shape
@@ -91,18 +91,10 @@ def resize_images(images: np.ndarray, target_size: Tuple[int, int]) -> np.ndarra
         images = np.mean(images, axis=-1)
     else:
         raise ValueError(f"Expected 3D or 4D image array, got shape {images.shape}")
-
+    
     target_h, target_w = target_size
-    # Anti-alias before DOWN-sampling: a naive zoom samples sparse points and, for small
-    # targets on centered content (e.g. MNIST digits), keeps mostly blank pixels — which
-    # collapses to a constant. A Gaussian pre-filter (sigma ~ half the sampling stride)
-    # area-averages so the downsampled image retains the signal.
-    if target_h < h or target_w < w:
-        sigma_h = (h / target_h) / 2.0
-        sigma_w = (w / target_w) / 2.0
-        images = gaussian_filter(images, sigma=(0, sigma_h, sigma_w))
     zoom_factors = (1, target_h / h, target_w / w)
-
+    
     resized = zoom(images, zoom_factors, order=1)  # Bilinear interpolation
     return resized
 
@@ -219,17 +211,7 @@ def preprocess_for_quantum(X: np.ndarray,
                 X = resize_images(X, (image_size, image_size))
                 X = X.reshape(X.shape[0], -1)
             else:
-                # X is flattened (N, D). If it's a square image being DOWN-sized, reshape
-                # to its native square and area-average downsample — do NOT truncate the
-                # flat vector: truncation keeps only the first `expected_features` pixels
-                # (the blank top-left corner for centered digits), collapsing to constant.
-                side = int(round(np.sqrt(X.shape[1])))
-                if side * side == X.shape[1] and image_size < side:
-                    X = resize_images(X.reshape(X.shape[0], side, side),
-                                      (image_size, image_size))
-                    X = X.reshape(X.shape[0], -1)
-                else:
-                    X = flatten_and_pad(X, expected_features)
+                X = flatten_and_pad(X, expected_features)
         else:
             if X.ndim > 2:
                 X = X.reshape(X.shape[0], -1)

@@ -1,0 +1,2882 @@
+{
+  "hash": "d29cbf3ec6d65fdc51777c89b80f2ec05b3d7aebf706d52f7b11ca48f673ffe3",
+  "signature": {
+    "measurements": [
+      "expval(Z(0))"
+    ],
+    "operations": [
+      {
+        "name": "AmplitudeEmbedding",
+        "params": [
+          "data1024"
+        ],
+        "wires": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot0"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot1"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot2"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot12"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot13"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot14"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot24"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot25"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot26"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot36"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot37"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot38"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          5,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          0,
+          5
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          0,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          5
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot3"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot4"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot5"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot15"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot16"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot17"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot27"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot28"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot29"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot39"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot40"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot41"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          5,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          0,
+          5
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          0,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          5
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot6"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot7"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot8"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot18"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot19"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot20"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot30"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot31"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot32"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot42"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot43"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot44"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          5,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          0,
+          5
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          0,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          5
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot9"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot10"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot11"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot21"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot22"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot23"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot33"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot34"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot35"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot45"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot46"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot47"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          0,
+          1
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          5,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          0,
+          5
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          0,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          5
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot0"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot1"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot2"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot12"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot13"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot14"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot24"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot25"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot26"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot36"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot37"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot38"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          6,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          6
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot3"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot4"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot5"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot15"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot16"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot17"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot27"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot28"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot29"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot39"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot40"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot41"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          6,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          6
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot6"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot7"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot8"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot18"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot19"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot20"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot30"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot31"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot32"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot42"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot43"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot44"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          6,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          6
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot9"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot10"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot11"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot21"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot22"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot23"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot33"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot34"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot35"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot45"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot46"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot47"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          6,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          6
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          1,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          6
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot0"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot1"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot2"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot12"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot13"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot14"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot24"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot25"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot26"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot36"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot37"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot38"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          3
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          7,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          7
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot3"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot4"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot5"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot15"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot16"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot17"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot27"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot28"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot29"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot39"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot40"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot41"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          3
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          7,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          7
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot6"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot7"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot8"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot18"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot19"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot20"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot30"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot31"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot32"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot42"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot43"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot44"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          3
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          7,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          7
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot9"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot10"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot11"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot21"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot22"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot23"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot33"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot34"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot35"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot45"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot46"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot47"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          3
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          7,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          7
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          2,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          7
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot0"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot1"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot2"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot12"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot13"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot14"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot24"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot25"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot26"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot36"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot37"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot38"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          4
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          8,
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          4,
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          4,
+          8
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot3"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot4"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot5"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot15"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot16"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot17"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot27"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot28"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot29"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot39"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot40"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot41"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          4
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          8,
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          4,
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          4,
+          8
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot6"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot7"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot8"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot18"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot19"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot20"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot30"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot31"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot32"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot42"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot43"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot44"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          4
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          8,
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          4,
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          4,
+          8
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot9"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot10"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot11"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot21"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot22"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot23"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot33"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot34"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot35"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot45"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot46"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot47"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          4
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          8,
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          8
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          4,
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          3,
+          9
+        ]
+      },
+      {
+        "name": "CNOT",
+        "params": [],
+        "wires": [
+          4,
+          8
+        ]
+      },
+      {
+        "name": "CRY",
+        "params": [
+          "slot192"
+        ],
+        "wires": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "CRZ",
+        "params": [
+          "slot193"
+        ],
+        "wires": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "const0.02"
+        ],
+        "wires": [
+          1
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot194"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "CRY",
+        "params": [
+          "slot195"
+        ],
+        "wires": [
+          3,
+          2
+        ]
+      },
+      {
+        "name": "CRZ",
+        "params": [
+          "slot196"
+        ],
+        "wires": [
+          3,
+          2
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "const0.02"
+        ],
+        "wires": [
+          3
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot197"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "CRY",
+        "params": [
+          "slot198"
+        ],
+        "wires": [
+          5,
+          4
+        ]
+      },
+      {
+        "name": "CRZ",
+        "params": [
+          "slot199"
+        ],
+        "wires": [
+          5,
+          4
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "const0.02"
+        ],
+        "wires": [
+          5
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot200"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "CRY",
+        "params": [
+          "slot201"
+        ],
+        "wires": [
+          7,
+          6
+        ]
+      },
+      {
+        "name": "CRZ",
+        "params": [
+          "slot202"
+        ],
+        "wires": [
+          7,
+          6
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "const0.02"
+        ],
+        "wires": [
+          7
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot203"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "CRY",
+        "params": [
+          "slot204"
+        ],
+        "wires": [
+          9,
+          8
+        ]
+      },
+      {
+        "name": "CRZ",
+        "params": [
+          "slot205"
+        ],
+        "wires": [
+          9,
+          8
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "const0.02"
+        ],
+        "wires": [
+          9
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot206"
+        ],
+        "wires": [
+          8
+        ]
+      },
+      {
+        "name": "CRY",
+        "params": [
+          "slot207"
+        ],
+        "wires": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "CRZ",
+        "params": [
+          "slot208"
+        ],
+        "wires": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "const0.02"
+        ],
+        "wires": [
+          2
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot209"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "CRY",
+        "params": [
+          "slot210"
+        ],
+        "wires": [
+          6,
+          4
+        ]
+      },
+      {
+        "name": "CRZ",
+        "params": [
+          "slot211"
+        ],
+        "wires": [
+          6,
+          4
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "const0.02"
+        ],
+        "wires": [
+          6
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot212"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "CRY",
+        "params": [
+          "slot222"
+        ],
+        "wires": [
+          4,
+          0
+        ]
+      },
+      {
+        "name": "CRZ",
+        "params": [
+          "slot223"
+        ],
+        "wires": [
+          4,
+          0
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "const0.02"
+        ],
+        "wires": [
+          4
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot224"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot237"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot238"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot245"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RX",
+        "params": [
+          "slot253"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RY",
+        "params": [
+          "slot254"
+        ],
+        "wires": [
+          0
+        ]
+      },
+      {
+        "name": "RZ",
+        "params": [
+          "slot268"
+        ],
+        "wires": [
+          0
+        ]
+      }
+    ]
+  }
+}

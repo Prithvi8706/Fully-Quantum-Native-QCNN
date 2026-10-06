@@ -6,10 +6,27 @@ This guide explains how to run the Fully Quantum-Native QCNN for various tasks, 
 
 ## Environment Setup
 
-Ensure you have the required packages installed:
+Training remains pinned to Python 3.9.13 and the frozen lock:
+
 ```bash
-pip install pennylane pennylane-lightning numpy matplotlib scikit-learn seaborn pillow
+python -m pip install -r requirements-lock.txt
 ```
+
+Keep the Qiskit tooling (resource and noise simulations) in a separate Python 3.11
+environment:
+
+```bash
+py -3.11 -m venv .venv-qiskit
+.venv-qiskit\Scripts\python.exe -m pip install --upgrade pip
+.venv-qiskit\Scripts\python.exe -m pip install -r requirements-qiskit-lock.txt
+.venv-qiskit\Scripts\python.exe scripts/check_qiskit_environment.py
+```
+
+These checks run locally and need no credentials or network access;
+nothing in this repository runs on quantum hardware.
+Never add the Qiskit packages to the training `requirements-lock.txt`.
+
+To reproduce the paper's tables and figures, see the README or run `./reproduce.sh`.
 
 ---
 

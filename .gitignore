@@ -1,6 +1,7 @@
 #Venv 
 .venv
 venv/
+.venv-q1-training/
 
 #pycache
 QCNN/__pycache__
@@ -14,7 +15,13 @@ implementationTests/*
 #Results
 # Results/*
 Results/Cache/
+# Rewritten by main.py on every run. The immutable headline identity lives in
+# Results/headline_manifest.json, which IS tracked.
 Results/metadata.json
+# Per-run outputs (UPGRADE_PLAN.md M0.5): isolated, regenerable, not evidence
+# until a phase promotes them.
+Results/runs/
+Results/Weights/run_seed*.npz
 training_log.txt
 training_summary.txt
 
@@ -23,4 +30,39 @@ training_summary.txt
 datasets/images/*
 datasets/*.*
 datasets/MNIST/
+datasets/FashionMNIST/
+datasets/KMNIST/
 graphify-out/
+# Per-run trainer transcripts from the experiment grid: chatty, large, and
+# regenerable. The per-seed metric JSONs and split manifests beside them ARE
+# evidence and stay tracked.
+Results/experiments/**/*.log
+# Temporary Q1 command transcripts are reproducible and are not evidence.
+Results/evidence/*.log
+# Per-run artifacts: the per-seed predictions, weights, and run status are
+# committed so the paired tests and the noise table can be recomputed.
+Results/q1_comparison/runs/**
+!Results/q1_comparison/runs/**/
+!Results/q1_comparison/runs/**/predictions.npz
+!Results/q1_comparison/runs/**/weights.npz
+!Results/q1_comparison/runs/**/status.json
+# Q1 campaign transcripts are regenerable and may include host-specific paths.
+Results/q1_comparison/experiments/**/*.log
+Results/q1_pooling_transfer/runs/**
+!Results/q1_pooling_transfer/runs/**/
+!Results/q1_pooling_transfer/runs/**/predictions.npz
+!Results/q1_pooling_transfer/runs/**/weights.npz
+!Results/q1_pooling_transfer/runs/**/status.json
+# Q1 transfer transcripts are reproducible and are not evidence.
+Results/q1_pooling_transfer/experiments/**/*.log
+Results/smoke/
+
+# Final submission archives are deterministic release outputs built from a
+# clean commit. Keep them local (or attach them to a release) rather than
+# storing generated ZIP files in Git.
+submission_dist/
+
+# LaTeX intermediates from building the paper.
+paper/*.aux
+paper/*.log
+paper/*.out

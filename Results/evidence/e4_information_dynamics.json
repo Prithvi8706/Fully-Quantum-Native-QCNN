@@ -1,0 +1,715 @@
+{
+  "claim": "per-stage information dynamics of the frozen circuit",
+  "device": "default.qubit",
+  "experiment": "E4",
+  "image_size": 28,
+  "n_inputs": 8,
+  "n_qubits": 10,
+  "per_input": [
+    {
+      "after_classifier": {
+        "l1_coherence": 0.2660089796193279,
+        "n_kept": 1,
+        "purity": 0.597926836937348,
+        "von_neumann_entropy": 0.8537052541664227
+      },
+      "after_pool_0": {
+        "l1_coherence": 6.789339942030412,
+        "mutual_information": 7.692077093818706,
+        "n_kept": 5,
+        "purity": 0.09863399405999289,
+        "von_neumann_entropy": 3.8460385469093534
+      },
+      "after_pool_1": {
+        "l1_coherence": 0.7609098672353389,
+        "mutual_information": 0.3451070715366562,
+        "n_kept": 2,
+        "purity": 0.3206323787825393,
+        "von_neumann_entropy": 1.8031411988157768
+      },
+      "after_pool_2": {
+        "l1_coherence": 0.3445858275813791,
+        "mutual_information": 0.009982934275379662,
+        "n_kept": 1,
+        "purity": 0.5979268369373478,
+        "von_neumann_entropy": 0.8537052541664225
+      },
+      "before_pool_0": {
+        "l1_coherence": 6.052609676021483,
+        "mutual_information": 7.778885497546103,
+        "n_kept": 5,
+        "purity": 0.093377684953789,
+        "von_neumann_entropy": 3.889442748773051
+      },
+      "before_pool_1": {
+        "l1_coherence": 0.7994744157182252,
+        "mutual_information": 0.1999377646418199,
+        "n_kept": 2,
+        "purity": 0.3380526641249857,
+        "von_neumann_entropy": 1.7521664939948778
+      },
+      "before_pool_2": {
+        "l1_coherence": 0.4107722801440128,
+        "mutual_information": 0.004885065147404166,
+        "n_kept": 1,
+        "purity": 0.6003438509376485,
+        "von_neumann_entropy": 0.8499557662802535
+      },
+      "encoded": {
+        "l1_coherence": 765.0230730808814,
+        "n_kept": 10,
+        "purity": 1.0000000000000004,
+        "von_neumann_entropy": 0.0
+      }
+    },
+    {
+      "after_classifier": {
+        "l1_coherence": 0.2597560559525107,
+        "n_kept": 1,
+        "purity": 0.5903151081763229,
+        "von_neumann_entropy": 0.865465879826282
+      },
+      "after_pool_0": {
+        "l1_coherence": 6.352031662563915,
+        "mutual_information": 7.859996129944486,
+        "n_kept": 5,
+        "purity": 0.08957218570531812,
+        "von_neumann_entropy": 3.929998064972243
+      },
+      "after_pool_1": {
+        "l1_coherence": 0.7066504839118875,
+        "mutual_information": 0.34719988594433016,
+        "n_kept": 2,
+        "purity": 0.3135618092388303,
+        "von_neumann_entropy": 1.8219854013993386
+      },
+      "after_pool_2": {
+        "l1_coherence": 0.3402158236935575,
+        "mutual_information": 0.020258115816340627,
+        "n_kept": 1,
+        "purity": 0.5903151081763225,
+        "von_neumann_entropy": 0.8654658798262824
+      },
+      "before_pool_0": {
+        "l1_coherence": 5.573997882062169,
+        "mutual_information": 7.892186354323224,
+        "n_kept": 5,
+        "purity": 0.0860892718680317,
+        "von_neumann_entropy": 3.946093177161612
+      },
+      "before_pool_1": {
+        "l1_coherence": 0.8076588107646607,
+        "mutual_information": 0.20545169746138914,
+        "n_kept": 2,
+        "purity": 0.3324678499896522,
+        "von_neumann_entropy": 1.7635738670175691
+      },
+      "before_pool_2": {
+        "l1_coherence": 0.41198845031538456,
+        "mutual_information": 0.007743622401714889,
+        "n_kept": 1,
+        "purity": 0.5947262856357659,
+        "von_neumann_entropy": 0.8586590306072189
+      },
+      "encoded": {
+        "l1_coherence": 771.1305940495488,
+        "n_kept": 10,
+        "purity": 0.9999999999999998,
+        "von_neumann_entropy": 8.008566259537292e-16
+      }
+    },
+    {
+      "after_classifier": {
+        "l1_coherence": 0.22840640907976884,
+        "n_kept": 1,
+        "purity": 0.5775756799420952,
+        "von_neumann_entropy": 0.8849917646994327
+      },
+      "after_pool_0": {
+        "l1_coherence": 6.453967854941028,
+        "mutual_information": 7.806621714113172,
+        "n_kept": 5,
+        "purity": 0.09213092300706666,
+        "von_neumann_entropy": 3.903310857056585
+      },
+      "after_pool_1": {
+        "l1_coherence": 0.7165047013403985,
+        "mutual_information": 0.36884068072831155,
+        "n_kept": 2,
+        "purity": 0.31376210907781343,
+        "von_neumann_entropy": 1.8229142458789716
+      },
+      "after_pool_2": {
+        "l1_coherence": 0.31769614598004714,
+        "mutual_information": 0.019576539156928474,
+        "n_kept": 1,
+        "purity": 0.5775756799420951,
+        "von_neumann_entropy": 0.8849917646994327
+      },
+      "before_pool_0": {
+        "l1_coherence": 5.821043662766709,
+        "mutual_information": 7.828839319418442,
+        "n_kept": 5,
+        "purity": 0.09040283776823649,
+        "von_neumann_entropy": 3.914419659709222
+      },
+      "before_pool_1": {
+        "l1_coherence": 0.8662095578725493,
+        "mutual_information": 0.21475305595876737,
+        "n_kept": 2,
+        "purity": 0.33760136700453214,
+        "von_neumann_entropy": 1.7561596368719772
+      },
+      "before_pool_2": {
+        "l1_coherence": 0.37890443661329365,
+        "mutual_information": 0.005673527206472295,
+        "n_kept": 1,
+        "purity": 0.5815429880544363,
+        "von_neumann_entropy": 0.8789318161316033
+      },
+      "encoded": {
+        "l1_coherence": 769.0977307454433,
+        "n_kept": 10,
+        "purity": 1.0000000000000004,
+        "von_neumann_entropy": 0.0
+      }
+    },
+    {
+      "after_classifier": {
+        "l1_coherence": 0.27463682540103385,
+        "n_kept": 1,
+        "purity": 0.5865542710028313,
+        "von_neumann_entropy": 0.8712504367333408
+      },
+      "after_pool_0": {
+        "l1_coherence": 6.396754045503831,
+        "mutual_information": 7.822422980216686,
+        "n_kept": 5,
+        "purity": 0.09213131782416101,
+        "von_neumann_entropy": 3.911211490108343
+      },
+      "after_pool_1": {
+        "l1_coherence": 0.6730445952977779,
+        "mutual_information": 0.3391305677087675,
+        "n_kept": 2,
+        "purity": 0.31000964923345137,
+        "von_neumann_entropy": 1.8317461554744021
+      },
+      "after_pool_2": {
+        "l1_coherence": 0.3039992480677869,
+        "mutual_information": 0.010195247578386413,
+        "n_kept": 1,
+        "purity": 0.5865542710028313,
+        "von_neumann_entropy": 0.8712504367333409
+      },
+      "before_pool_0": {
+        "l1_coherence": 5.758519302902677,
+        "mutual_information": 7.891701912861519,
+        "n_kept": 5,
+        "purity": 0.08815291890803281,
+        "von_neumann_entropy": 3.945850956430759
+      },
+      "before_pool_1": {
+        "l1_coherence": 0.7699923384561222,
+        "mutual_information": 0.2003929150560495,
+        "n_kept": 2,
+        "purity": 0.3289668347469903,
+        "von_neumann_entropy": 1.776158858076336
+      },
+      "before_pool_2": {
+        "l1_coherence": 0.3885302792740468,
+        "mutual_information": 0.004403595630148915,
+        "n_kept": 1,
+        "purity": 0.5903312165384791,
+        "von_neumann_entropy": 0.8654410665220063
+      },
+      "encoded": {
+        "l1_coherence": 758.0353522001151,
+        "n_kept": 10,
+        "purity": 1.0000000000000004,
+        "von_neumann_entropy": 4.805139755722375e-16
+      }
+    },
+    {
+      "after_classifier": {
+        "l1_coherence": 0.26539924993225794,
+        "n_kept": 1,
+        "purity": 0.5824616432599103,
+        "von_neumann_entropy": 0.8775259347548134
+      },
+      "after_pool_0": {
+        "l1_coherence": 6.4942663516909604,
+        "mutual_information": 7.846031518287445,
+        "n_kept": 5,
+        "purity": 0.09272387871268704,
+        "von_neumann_entropy": 3.923015759143722
+      },
+      "after_pool_1": {
+        "l1_coherence": 0.7285658068356247,
+        "mutual_information": 0.3594766285384514,
+        "n_kept": 2,
+        "purity": 0.3142330399247793,
+        "von_neumann_entropy": 1.8218693707581703
+      },
+      "after_pool_2": {
+        "l1_coherence": 0.30341852907829336,
+        "mutual_information": 0.018589026059957492,
+        "n_kept": 1,
+        "purity": 0.58246164325991,
+        "von_neumann_entropy": 0.8775259347548134
+      },
+      "before_pool_0": {
+        "l1_coherence": 5.698440355318897,
+        "mutual_information": 7.876021531554057,
+        "n_kept": 5,
+        "purity": 0.09022574591609053,
+        "von_neumann_entropy": 3.938010765777029
+      },
+      "before_pool_1": {
+        "l1_coherence": 0.8793373101715964,
+        "mutual_information": 0.1978234985038254,
+        "n_kept": 2,
+        "purity": 0.34301661507160597,
+        "von_neumann_entropy": 1.7403081764094535
+      },
+      "before_pool_2": {
+        "l1_coherence": 0.38891223360776506,
+        "mutual_information": 0.002787677907817976,
+        "n_kept": 1,
+        "purity": 0.5875396568773795,
+        "von_neumann_entropy": 0.8697364689171263
+      },
+      "encoded": {
+        "l1_coherence": 759.7894271100017,
+        "n_kept": 10,
+        "purity": 1.0,
+        "von_neumann_entropy": 9.61027951144475e-16
+      }
+    },
+    {
+      "after_classifier": {
+        "l1_coherence": 0.2304506485987854,
+        "n_kept": 1,
+        "purity": 0.5809337113136015,
+        "von_neumann_entropy": 0.8798636804450166
+      },
+      "after_pool_0": {
+        "l1_coherence": 6.514211640134585,
+        "mutual_information": 7.778138490973136,
+        "n_kept": 5,
+        "purity": 0.09409587871783957,
+        "von_neumann_entropy": 3.889069245486568
+      },
+      "after_pool_1": {
+        "l1_coherence": 0.628774427323701,
+        "mutual_information": 0.3725582654434443,
+        "n_kept": 2,
+        "purity": 0.30461773514393314,
+        "von_neumann_entropy": 1.841442821846466
+      },
+      "after_pool_2": {
+        "l1_coherence": 0.3303396311515001,
+        "mutual_information": 0.017135191615910372,
+        "n_kept": 1,
+        "purity": 0.5809337113136014,
+        "von_neumann_entropy": 0.8798636804450164
+      },
+      "before_pool_0": {
+        "l1_coherence": 6.06095933465683,
+        "mutual_information": 7.783156790722855,
+        "n_kept": 5,
+        "purity": 0.09357573084331441,
+        "von_neumann_entropy": 3.891578395361428
+      },
+      "before_pool_1": {
+        "l1_coherence": 0.7215258848421866,
+        "mutual_information": 0.21471162388061327,
+        "n_kept": 2,
+        "purity": 0.3273467845860267,
+        "von_neumann_entropy": 1.7714499721414168
+      },
+      "before_pool_2": {
+        "l1_coherence": 0.3917686534409608,
+        "mutual_information": 0.005889049785165135,
+        "n_kept": 1,
+        "purity": 0.5854449471136394,
+        "von_neumann_entropy": 0.8729534236711767
+      },
+      "encoded": {
+        "l1_coherence": 769.6528453417835,
+        "n_kept": 10,
+        "purity": 0.9999999999999998,
+        "von_neumann_entropy": 0.0
+      }
+    },
+    {
+      "after_classifier": {
+        "l1_coherence": 0.25379777296497297,
+        "n_kept": 1,
+        "purity": 0.6001006101764293,
+        "von_neumann_entropy": 0.8503334343177644
+      },
+      "after_pool_0": {
+        "l1_coherence": 6.709869135192677,
+        "mutual_information": 7.749121056088367,
+        "n_kept": 5,
+        "purity": 0.09740614542500035,
+        "von_neumann_entropy": 3.8745605280441833
+      },
+      "after_pool_1": {
+        "l1_coherence": 0.6924840514673527,
+        "mutual_information": 0.35218072482479057,
+        "n_kept": 2,
+        "purity": 0.31730503336419336,
+        "von_neumann_entropy": 1.8103003434706033
+      },
+      "after_pool_2": {
+        "l1_coherence": 0.37188520240355594,
+        "mutual_information": 0.013780618554460666,
+        "n_kept": 1,
+        "purity": 0.6001006101764288,
+        "von_neumann_entropy": 0.8503334343177649
+      },
+      "before_pool_0": {
+        "l1_coherence": 6.130643882178658,
+        "mutual_information": 7.746684422232168,
+        "n_kept": 5,
+        "purity": 0.09717155395913715,
+        "von_neumann_entropy": 3.873342211116084
+      },
+      "before_pool_1": {
+        "l1_coherence": 0.8419112264193145,
+        "mutual_information": 0.1891190003113845,
+        "n_kept": 2,
+        "purity": 0.3389243861341804,
+        "von_neumann_entropy": 1.7454830120170537
+      },
+      "before_pool_2": {
+        "l1_coherence": 0.4353458073766421,
+        "mutual_information": 0.003543553655700249,
+        "n_kept": 1,
+        "purity": 0.6047080452107279,
+        "von_neumann_entropy": 0.8431670131662659
+      },
+      "encoded": {
+        "l1_coherence": 782.4203020849245,
+        "n_kept": 10,
+        "purity": 1.0000000000000004,
+        "von_neumann_entropy": 0.0
+      }
+    },
+    {
+      "after_classifier": {
+        "l1_coherence": 0.24695251316875133,
+        "n_kept": 1,
+        "purity": 0.5875765823918152,
+        "von_neumann_entropy": 0.8696797129508913
+      },
+      "after_pool_0": {
+        "l1_coherence": 6.824684513150906,
+        "mutual_information": 7.687578549551342,
+        "n_kept": 5,
+        "purity": 0.09716772093083259,
+        "von_neumann_entropy": 3.8437892747756712
+      },
+      "after_pool_1": {
+        "l1_coherence": 0.6667442208859902,
+        "mutual_information": 0.37657833833343934,
+        "n_kept": 2,
+        "purity": 0.3132923000935274,
+        "von_neumann_entropy": 1.8181605075526468
+      },
+      "after_pool_2": {
+        "l1_coherence": 0.3445965581751258,
+        "mutual_information": 0.018293570725647745,
+        "n_kept": 1,
+        "purity": 0.5875765823918149,
+        "von_neumann_entropy": 0.8696797129508911
+      },
+      "before_pool_0": {
+        "l1_coherence": 6.1552930633087515,
+        "mutual_information": 7.714066447141661,
+        "n_kept": 5,
+        "purity": 0.0964952550622814,
+        "von_neumann_entropy": 3.8570332235708307
+      },
+      "before_pool_1": {
+        "l1_coherence": 0.8621649759551389,
+        "mutual_information": 0.2131189019563453,
+        "n_kept": 2,
+        "purity": 0.33829587148337126,
+        "von_neumann_entropy": 1.7467073454856914
+      },
+      "before_pool_2": {
+        "l1_coherence": 0.41446146646610527,
+        "mutual_information": 0.003336755601196728,
+        "n_kept": 1,
+        "purity": 0.5936173288205516,
+        "von_neumann_entropy": 0.8603725025171329
+      },
+      "encoded": {
+        "l1_coherence": 762.9506091403529,
+        "n_kept": 10,
+        "purity": 1.0000000000000004,
+        "von_neumann_entropy": 0.0
+      }
+    }
+  ],
+  "schedule": [
+    {
+      "discard": [],
+      "keep": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "stage": "encoded"
+    },
+    {
+      "discard": [
+        1,
+        3,
+        5,
+        7,
+        9
+      ],
+      "keep": [
+        0,
+        2,
+        4,
+        6,
+        8
+      ],
+      "stage": "before_pool_0"
+    },
+    {
+      "discard": [
+        1,
+        3,
+        5,
+        7,
+        9
+      ],
+      "keep": [
+        0,
+        2,
+        4,
+        6,
+        8
+      ],
+      "stage": "after_pool_0"
+    },
+    {
+      "discard": [
+        2,
+        6
+      ],
+      "keep": [
+        0,
+        4
+      ],
+      "stage": "before_pool_1"
+    },
+    {
+      "discard": [
+        2,
+        6
+      ],
+      "keep": [
+        0,
+        4
+      ],
+      "stage": "after_pool_1"
+    },
+    {
+      "discard": [
+        4
+      ],
+      "keep": [
+        0
+      ],
+      "stage": "before_pool_2"
+    },
+    {
+      "discard": [
+        4
+      ],
+      "keep": [
+        0
+      ],
+      "stage": "after_pool_2"
+    },
+    {
+      "discard": [],
+      "keep": [
+        0
+      ],
+      "stage": "after_classifier"
+    }
+  ],
+  "stage_order": [
+    "encoded",
+    "before_pool_0",
+    "after_pool_0",
+    "before_pool_1",
+    "after_pool_1",
+    "before_pool_2",
+    "after_pool_2",
+    "after_classifier"
+  ],
+  "summary": {
+    "after_classifier": {
+      "l1_coherence": {
+        "mean": 0.25317605683967614,
+        "std": 0.015760115754038326
+      },
+      "n_kept": 1,
+      "purity": {
+        "mean": 0.5879305554000442,
+        "std": 0.007431602269403341
+      },
+      "von_neumann_entropy": {
+        "mean": 0.8691020122367454,
+        "std": 0.011438699705150235
+      }
+    },
+    "after_pool_0": {
+      "l1_coherence": {
+        "mean": 6.566890643151039,
+        "std": 0.1704024588040944
+      },
+      "mutual_information": {
+        "mean": 7.780248441624168,
+        "std": 0.0617420133171666
+      },
+      "n_kept": 5,
+      "purity": {
+        "mean": 0.09423275554786228,
+        "std": 0.00297710895660366
+      },
+      "von_neumann_entropy": {
+        "mean": 3.890124220812084,
+        "std": 0.030871006658583056
+      }
+    },
+    "after_pool_1": {
+      "l1_coherence": {
+        "mean": 0.6967097692872589,
+        "std": 0.03827231175537166
+      },
+      "mutual_information": {
+        "mean": 0.3576340203822739,
+        "std": 0.012983241680803122
+      },
+      "n_kept": 2,
+      "purity": {
+        "mean": 0.31342675685738347,
+        "std": 0.004430524451415598
+      },
+      "von_neumann_entropy": {
+        "mean": 1.8214450056495468,
+        "std": 0.011060503424136763
+      }
+    },
+    "after_pool_2": {
+      "l1_coherence": {
+        "mean": 0.3320921207664057,
+        "std": 0.021747520625849056
+      },
+      "mutual_information": {
+        "mean": 0.01597640547287643,
+        "std": 0.003856760237908332
+      },
+      "n_kept": 1,
+      "purity": {
+        "mean": 0.587930555400044,
+        "std": 0.007431602269403237
+      },
+      "von_neumann_entropy": {
+        "mean": 0.8691020122367455,
+        "std": 0.01143869970515014
+      }
+    },
+    "before_pool_0": {
+      "l1_coherence": {
+        "mean": 5.906438394902022,
+        "std": 0.20627400098582793
+      },
+      "mutual_information": {
+        "mean": 7.813942784475003,
+        "std": 0.06414824304987321
+      },
+      "n_kept": 5,
+      "purity": {
+        "mean": 0.09193637490986419,
+        "std": 0.0036526786653769336
+      },
+      "von_neumann_entropy": {
+        "mean": 3.906971392237502,
+        "std": 0.032074121524936626
+      }
+    },
+    "before_pool_1": {
+      "l1_coherence": {
+        "mean": 0.8185343150249742,
+        "std": 0.05082883400339382
+      },
+      "mutual_information": {
+        "mean": 0.2044135572212743,
+        "std": 0.008684517839104167
+      },
+      "n_kept": 2,
+      "purity": {
+        "mean": 0.33558404664266805,
+        "std": 0.005065437420583769
+      },
+      "von_neumann_entropy": {
+        "mean": 1.756500920251797,
+        "std": 0.012033039593644443
+      }
+    },
+    "before_pool_2": {
+      "l1_coherence": {
+        "mean": 0.4025854509047764,
+        "std": 0.017435665813040107
+      },
+      "mutual_information": {
+        "mean": 0.004782855916952544,
+        "std": 0.0015225470023689774
+      },
+      "n_kept": 1,
+      "purity": {
+        "mean": 0.5922817898985786,
+        "std": 0.007206982024738627
+      },
+      "von_neumann_entropy": {
+        "mean": 0.8624021359765979,
+        "std": 0.011127779734270754
+      }
+    },
+    "encoded": {
+      "l1_coherence": {
+        "mean": 767.2624917191314,
+        "std": 7.231851846303651
+      },
+      "n_kept": 10,
+      "purity": {
+        "mean": 1.0000000000000002,
+        "std": 2.9373740229761033e-16
+      },
+      "von_neumann_entropy": {
+        "mean": 2.802998190838052e-16,
+        "std": 3.8198426510588497e-16
+      }
+    }
+  },
+  "units": "entropy and mutual information in bits",
+  "weights": "archived headline weights"
+}

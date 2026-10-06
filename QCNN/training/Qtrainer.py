@@ -4,6 +4,7 @@ import numpy as np
 import time
 import sys
 import os
+from QCNN.encoding import PureQuantumEncoder
 from QCNN.models import PureQuantumNativeCNN
 
 
@@ -34,15 +35,23 @@ class QuantumNativeTrainer:
 
     def train_pure_quantum_cnn(self, model: PureQuantumNativeCNN,
                                X_train: np.ndarray, y_train: np.ndarray,
-                               X_test: np.ndarray, y_test: np.ndarray,
+                               X_val: np.ndarray, y_val: np.ndarray,
                                log_filepath='quantum_training_log.txt',
                                summary_filepath='training_summary.txt',
                                validate_data: bool = True,
-                               save_weights: bool = True) -> PureQuantumNativeCNN:
+                               weights_path: str = None) -> PureQuantumNativeCNN:
+        """Train on X_train, select on X_val. The test set is never passed here.
+
+        UPGRADE_PLAN.md 0.3 / F3: checkpointing, LR plateau, and early stopping
+        read validation only; the caller evaluates test exactly once afterwards.
+
+        ``weights_path=None`` writes no weights, so the archived headline file
+        cannot be clobbered by a training run.
+        """
 
         if validate_data:
             self._validate_dataset(X_train, y_train, model)
-            self._validate_dataset(X_test, y_test, model)
+            self._validate_dataset(X_val, y_val, model)
 
         print(f"DEBUG: Qtrainer enters train_pure_quantum_cnn. Encoding: {model.config.encoding_type}")
         if model.config.encoding_type == 'patch' and model.quanv_layer is not None:
@@ -55,7 +64,7 @@ class QuantumNativeTrainer:
                 f"{model.quanv_layer.n_filters}"
             )
             data_signature = np.ascontiguousarray(X_train[:100]).tobytes() + \
-                             np.ascontiguousarray(X_test[:100]).tobytes()
+                             np.ascontiguousarray(X_val[:100]).tobytes()
             data_hash = hashlib.md5(data_signature).hexdigest()[:12]
             cache_key = hashlib.md5((hash_input + data_hash).encode()).hexdigest()[:16]
             cache_path = os.path.join(cache_dir, f"quanv_cache_{cache_key}.npz")
@@ -64,23 +73,36 @@ class QuantumNativeTrainer:
                 print(f"\n[CACHE HIT] Loading pre-calculated Quanvolutional Features from '{cache_path}'...")
                 cached = np.load(cache_path)
                 X_train = cached['X_train']
-                X_test = cached['X_test']
-                print(f"  Features loaded. Training set: {len(X_train)} samples, Test set: {len(X_test)} samples")
+                X_val = cached['X_val']
+                print(f"  Features loaded. Training set: {len(X_train)} samples, Validation set: {len(X_val)} samples")
             else:
                 n_train = len(X_train)
-                total_samples = n_train + len(X_test)
+                total_samples = n_train + len(X_val)
                 print(f"\n[CACHE MISS] Pre-calculating Quanvolutional Features for {total_samples} total samples...")
-                X_combined = np.concatenate([X_train, X_test], axis=0)
+                X_combined = np.concatenate([X_train, X_val], axis=0)
                 X_processed_all = model.quanv_layer.process_batch(X_combined)
                 X_train = X_processed_all[:n_train]
-                X_test = X_processed_all[n_train:]
-                np.savez(cache_path, X_train=X_train, X_test=X_test)
+                X_val = X_processed_all[n_train:]
+                np.savez(cache_path, X_train=X_train, X_val=X_val)
                 print(f"  Pre-calculation complete. Reduced shape: {X_train.shape[1:]}")
                 print(f"  Cached to '{cache_path}' for future runs.")
             model.config.encoding_type = 'amplitude'
 
+        # UPGRADE_PLAN.md 1.2: amplitude vectors are parameter-independent, so
+        # pad and L2-normalise once per split instead of once per batch per
+        # epoch. Equivalence to the uncached path is pinned by
+        # tests/test_encoded_cache.py; the state-prep op is unchanged.
+        self.encoded_cache_identity = None
+        if model.config.encoding_type == 'amplitude':
+            X_train = PureQuantumEncoder.precompute_amplitudes(X_train, model.num_qubits)
+            X_val = PureQuantumEncoder.precompute_amplitudes(X_val, model.num_qubits)
+            self.encoded_cache_identity = {
+                'train': PureQuantumEncoder.amplitude_identity(X_train),
+                'val': PureQuantumEncoder.amplitude_identity(X_val),
+            }
+
         model._quantum_preprocessed_train = X_train
-        model._quantum_preprocessed_test = X_test
+        model._quantum_preprocessed_val = X_val
 
         pos_count = np.sum(y_train == 1)
         neg_count = np.sum(y_train == -1)
@@ -96,7 +118,7 @@ class QuantumNativeTrainer:
         print("Starting Training")
         print("=" * 50)
 
-        best_accuracy = 0
+        best_val_accuracy = 0
         best_quantum_params = {k: v.copy() for k, v in model.quantum_params.items()}
         params_flat = model._flatten_params(model.quantum_params)
         ema_params_flat = params_flat.copy()
@@ -122,15 +144,11 @@ class QuantumNativeTrainer:
 
                 def quantum_cost(params):
                     model.quantum_params = model._unflatten_params(params)
-                    X_processed = model._preprocess_input(X_quantum_batch)
-                    if model.fast_backprop:
-                        # Single broadcasted pass over the whole batch (default.qubit + backprop).
-                        preds = model.quantum_circuit(pnp.array(X_processed), params)
-                    else:
-                        preds = pnp.array([
-                            model.quantum_circuit(pnp.array(X_processed[j]), params)
-                            for j in range(len(X_processed))
-                        ])
+                    # UPGRADE_PLAN.md 1.1: the whole batch is differentiated in
+                    # one statevector pass. Equivalence to the sequential path is
+                    # pinned by tests/test_batched_execution.py. The batch is
+                    # already encoded (1.2), so no per-batch preprocessing here.
+                    preds = model.batch_expectations(pnp.array(X_quantum_batch), params)
                     preds = pnp.atleast_1d(preds)
                     if self.use_bce:
                         loss = self._bce_loss(preds, y_quantum_batch)
@@ -148,17 +166,11 @@ class QuantumNativeTrainer:
                 epoch_quantum_loss += float(loss_val)
                 n_quantum_batches += 1
 
-                X_processed = model._preprocess_input(X_quantum_batch)
                 if i == 0:
-                    probe = X_processed[:min(5, len(X_processed))]  # only first 5 for speed
-                    if model.fast_backprop:
-                        quantum_outputs = pnp.atleast_1d(
-                            np.asarray(model.quantum_circuit(pnp.array(probe), params_flat)))
-                    else:
-                        quantum_outputs = pnp.array([
-                            float(model.quantum_circuit(pnp.array(probe[j]), params_flat))
-                            for j in range(len(probe))
-                        ])
+                    quantum_outputs = np.asarray(
+                        model.batch_expectations(
+                            pnp.array(X_quantum_batch[:5]), params_flat),
+                        dtype=float).reshape(-1)
                     print(
                         f"Epoch {epoch+1} Batch {i//model.config.batch_size+1} | "
                         f"Loss: {float(loss_val):.6f} | "
@@ -172,22 +184,22 @@ class QuantumNativeTrainer:
 
             train_preds = model.quantum_predict_batch(X_train[:200])
             train_accuracy = np.mean(train_preds == y_train[:200])
-            test_preds = model.quantum_predict_batch(X_test)
-            test_accuracy = np.mean(test_preds == y_test)
+            val_preds = model.quantum_predict_batch(X_val)
+            val_accuracy = np.mean(val_preds == y_val)
 
-            tp = np.sum((test_preds == 1) & (y_test == 1))
-            tn = np.sum((test_preds == -1) & (y_test == -1))
-            fp = np.sum((test_preds == 1) & (y_test == -1))
-            fn = np.sum((test_preds == -1) & (y_test == 1))
+            tp = np.sum((val_preds == 1) & (y_val == 1))
+            tn = np.sum((val_preds == -1) & (y_val == -1))
+            fp = np.sum((val_preds == 1) & (y_val == -1))
+            fn = np.sum((val_preds == -1) & (y_val == 1))
 
             model.training_history['loss'].append(float(avg_loss))
-            model.training_history['accuracy'].append(float(test_accuracy))
+            model.training_history['accuracy'].append(float(val_accuracy))
             elapsed = time.time() - epoch_start
             model.training_history['epoch_times'].append(float(elapsed))
 
-            if test_accuracy > best_accuracy:
-                print(f"  [STABILITY] Test accuracy improved: {best_accuracy:.2%} -> {test_accuracy:.2%} (via EMA). Saving best params.")
-                best_accuracy = test_accuracy
+            if val_accuracy > best_val_accuracy:
+                print(f"  [STABILITY] Validation accuracy improved: {best_val_accuracy:.2%} -> {val_accuracy:.2%} (via EMA). Saving best params.")
+                best_val_accuracy = val_accuracy
                 best_quantum_params = {k: v.copy() for k, v in model.quantum_params.items()}
                 patience_counter = 0
             else:
@@ -210,7 +222,7 @@ class QuantumNativeTrainer:
                 f"--- Epoch {epoch+1}/{n_epochs} | "
                 f"Loss: {avg_loss:.4f} | "
                 f"Train Acc: {train_accuracy:.1%} | "
-                f"Test Acc: {test_accuracy:.1%} | "
+                f"Val Acc: {val_accuracy:.1%} | "
                 f"CM: [TP:{tp}, TN:{tn}, FP:{fp}, FN:{fn}] | "
                 f"Progress: {progress_percent:.1f}% | "
                 f"ETA: {remaining:.1f}s ---"
@@ -224,22 +236,17 @@ class QuantumNativeTrainer:
                     print(f"Warning: could not write summary to {summary_filepath}: {e}")
 
         model.quantum_params = best_quantum_params
-        final_msg = f"\nFinal Best Test Accuracy: {best_accuracy:.2%}\n"
+        final_msg = f"\nFinal Best Validation Accuracy: {best_val_accuracy:.2%}\n"
         print(final_msg)
         if summary_filepath:
             with open(summary_filepath, 'a', encoding='utf-8') as sf:
                 sf.write(final_msg)
 
-        # save_weights=False for parallel ablation runs: they don't consume the saved
-        # weights (metrics come from the in-memory model) and share this single fixed path,
-        # so concurrent writers would corrupt it.
-        if save_weights:
-            weights_dir = os.path.join('Results', 'Weights')
-            os.makedirs(weights_dir, exist_ok=True)
-            weights_path = os.path.join(weights_dir, 'quantum_model_params.npz')
+        if weights_path:
+            os.makedirs(os.path.dirname(weights_path) or '.', exist_ok=True)
             self.save_params(model.quantum_params, weights_path)
             print(f"Saved trained quantum model parameters to '{weights_path}'")
-        print(f"\nBest Quantum Test Accuracy: {best_accuracy:.3f}")
+        print(f"\nBest Quantum Validation Accuracy: {best_val_accuracy:.3f}")
         return model
 
     def _compute_quantum_accuracy(self, model: PureQuantumNativeCNN,

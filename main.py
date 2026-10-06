@@ -6,8 +6,10 @@ import os
 import argparse
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve, auc, precision_recall_curve, precision_score, recall_score, f1_score
+from QCNN.utils import splits as split_service
+from QCNN.utils.run_artifacts import TestEvaluationGuard
+from QCNN.utils.seeding import seed_everything
 import cProfile
 import pstats
 import numpy as np, random
@@ -62,19 +64,6 @@ from QCNN.utils.metrics import (
 )
 
 
-def _seed_everything(seed: int):
-    """Set every RNG used in the pipeline for reproducible / multi-seed runs."""
-    np.random.seed(seed)
-    random.seed(seed)
-    try:
-        import pennylane as _qml
-        _qml.set_seed(seed)
-    except Exception:
-        pass
-
-    # Note: No top-level prints here to avoid clutter in multiprocess workers
-
-
 def main(train_sample_size=None, use_bce=True, dataset_path=None, dataset_type='synthetic', 
          encoding='feature_map', image_size=None, log_file="training_log.txt", summary_log_file="training_summary.txt",
          learning_rate=None, classes=None, epochs=None, batch_size=None, seed=42):
@@ -106,7 +95,7 @@ def main(train_sample_size=None, use_bce=True, dataset_path=None, dataset_type='
     
     config = QuantumNativeConfig.from_image_size(image_size, encoding)
     config.seed = seed
-    _seed_everything(seed)
+    seed_everything(seed)
     if learning_rate is not None:
         config.learning_rate = learning_rate
     
@@ -229,10 +218,23 @@ def main(train_sample_size=None, use_bce=True, dataset_path=None, dataset_type='
     print(f"Shape: {X_quantum.shape}")
     print(f"Class distribution: {dict(zip(*np.unique(y_quantum, return_counts=True)))}")
 
-    # Split data
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_quantum, y_quantum, test_size=0.3, random_state=config.seed, stratify=y_quantum
+    # Split data through a recorded manifest: 60/15/25, stratified, seeded.
+    # Validation drives model selection; test is touched exactly once, below.
+    manifest = split_service.make_split_manifest(
+        y_quantum,
+        seed=config.seed,
+        dataset_id=f"{dataset_type}_{config.classes[0]}v{config.classes[1]}_n{len(y_quantum)}",
+        # encode_labels maps sorted(unique)[0] -> -1 and sorted(unique)[1] -> +1,
+        # so the manifest must record sorted order, not CLI argument order.
+        class_mapping=split_service.class_mapping_for(config.classes),
     )
+    manifest_path = os.path.join(
+        "Results", "manifests", f"{manifest['dataset_id']}_seed{config.seed}.json")
+    split_service.save_manifest(manifest, manifest_path)
+    print(f" Split manifest: {manifest_path} (id {manifest['id'][:12]})")
+
+    X_train, y_train, X_val, y_val, X_test, y_test = split_service.apply_manifest(
+        manifest, X_quantum, y_quantum)
 
     # Limit training samples if train_sample_size parameter set
     if train_sample_size is not None and train_sample_size < len(X_train):
@@ -240,6 +242,7 @@ def main(train_sample_size=None, use_bce=True, dataset_path=None, dataset_type='
         y_train = y_train[:train_sample_size]
 
     print(f" Training samples used: {len(X_train)}")
+    print(f" Validation samples: {len(X_val)}")
     print(f" Test samples: {len(X_test)}")
     print(f" Class distribution (training): {dict(zip(*np.unique(y_train, return_counts=True)))}")
 
@@ -257,7 +260,9 @@ def main(train_sample_size=None, use_bce=True, dataset_path=None, dataset_type='
     
     start_time = time.time()
     trained_model = trainer.train_pure_quantum_cnn(
-        quantum_model, X_train, y_train, X_test, y_test, log_filepath=log_file, summary_filepath=summary_log_file
+        quantum_model, X_train, y_train, X_val, y_val,
+        log_filepath=log_file, summary_filepath=summary_log_file,
+        weights_path=os.path.join("Results", "Weights", f"run_seed{config.seed}.npz"),
     )
     training_time = time.time() - start_time
     print(f" Total Training Time: {training_time:.2f} seconds")
@@ -265,25 +270,13 @@ def main(train_sample_size=None, use_bce=True, dataset_path=None, dataset_type='
     # Step 5: Evaluation
     print("\n Step 5: Evaluating Quantum Model...")
 
-    # Use the exact test representation that was used during training, if available.
-    X_eval = X_test
+    # The single permitted test evaluation for this run (UPGRADE_PLAN.md 0.3).
+    # The old _quantum_preprocessed_test fallback died with the leakage: the
+    # trainer never sees test data now, so there is no cached representation.
+    guard = TestEvaluationGuard()
     y_eval = y_test
-    if hasattr(trained_model, "_quantum_preprocessed_test"):
-        try:
-            cached_X, cached_y = trained_model._quantum_preprocessed_test, y_test
-            # In case future extensions also cache labels, handle tuple form.
-            if isinstance(trained_model._quantum_preprocessed_test, tuple):
-                cached_X, cached_y = trained_model._quantum_preprocessed_test
-            if len(cached_X) == len(y_test):
-                X_eval = cached_X
-                y_eval = cached_y
-        except Exception:
-            # Fallback gracefully to original test set on any mismatch
-            X_eval = X_test
-            y_eval = y_test
-
-    # Continuous circuit outputs → full metric suite (shared with the experiment runner).
-    raw_outputs = predict_raw_outputs(trained_model, X_eval, already_preprocessed=False)
+    raw_outputs = guard.evaluate(
+        predict_raw_outputs, trained_model, X_test, already_preprocessed=False)
     metrics = compute_classification_metrics(y_eval, raw_outputs)
 
     accuracy = metrics['accuracy']
@@ -444,7 +437,7 @@ def main(train_sample_size=None, use_bce=True, dataset_path=None, dataset_type='
 
         plt.subplot(1, 2, 2)
         plt.plot(trained_model.training_history['accuracy'])
-        plt.title('Pure Quantum Test Accuracy')
+        plt.title('Pure Quantum Validation Accuracy')
         plt.xlabel('Epoch')
         plt.ylabel('Quantum Accuracy')
         plt.grid(True)

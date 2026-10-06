@@ -1,0 +1,30 @@
+{
+  "config": {
+    "artifact_schema_version": 1
+  },
+  "environment": {
+    "pennylane": "0.38.0",
+    "python": "3.9.13"
+  },
+  "metrics": {
+    "accuracy": 0.9759036144578314,
+    "balanced_accuracy": 0.9759036144578312,
+    "f1": 0.9764705882352941,
+    "fn": 0,
+    "fp": 4,
+    "hidden_layer_sizes": [
+      2
+    ],
+    "pr_auc": 0.9994262358739403,
+    "precision": 0.9540229885057471,
+    "prediction_bias": -0.05660605821783793,
+    "prediction_variance": 0.19174953042984152,
+    "recall": 1.0,
+    "roc_auc": 0.9994193642038032,
+    "tn": 79,
+    "tp": 83
+  },
+  "seed": 3,
+  "split_id": "889bd38251f2ae1a8be76023c599ee0e0e44d7d81f3a18468d611e26a3a3847b",
+  "state": "complete"
+}

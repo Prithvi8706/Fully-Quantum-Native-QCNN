@@ -1,0 +1,89 @@
+{
+  "credentials_accessed": false,
+  "fake_backend": {
+    "available": true,
+    "backend_v2": true,
+    "class": "FakePeekskill",
+    "coupling_edges": 28,
+    "name": "fake_peekskill",
+    "num_qubits": 27,
+    "target_operations": [
+      "delay",
+      "ecr",
+      "for_loop",
+      "id",
+      "if_else",
+      "measure",
+      "reset",
+      "rz",
+      "switch_case",
+      "sx",
+      "x"
+    ]
+  },
+  "git": {
+    "dirty": true,
+    "dirty_paths": [
+      "M Results/evidence/qiskit_environment.json",
+      " M Results/evidence/qiskit_transpile_smoke.json",
+      " M scripts/check_qiskit_environment.py",
+      " M tests/test_qiskit_environment_contract.py",
+      "?? .claude/settings.local.json",
+      "?? Results/headline_retrain_log.txt",
+      "?? Results/headline_retrain_stdout.txt",
+      "?? Results/phase3_expr_stdout.txt",
+      "?? Results/phase3_gradvar_stdout.txt",
+      "?? fqcnn.aux",
+      "?? fqcnn.log",
+      "?? fqcnn.pdf",
+      "?? kk.pdf"
+    ],
+    "head": "17a867e734409dd7322f8b7bb44a0299a248715c",
+    "provenance": "generated from the current checkout; dirty_paths records uncommitted Task 6 changes"
+  },
+  "hardware_environment": {
+    "environment": ".venv-qiskit",
+    "executable": "C:\\Users\\prith\\Fully-Quantum-Native-QCNN\\.venv-qiskit\\Scripts\\python.exe",
+    "python_version": "3.11.9"
+  },
+  "imports": {
+    "qiskit": {
+      "exception": null,
+      "status": "pass"
+    },
+    "qiskit_aer": {
+      "exception": null,
+      "status": "pass"
+    },
+    "qiskit_ibm_runtime": {
+      "exception": null,
+      "status": "pass"
+    }
+  },
+  "installed_versions": {
+    "qiskit": "1.4.6",
+    "qiskit-aer": "0.17.2",
+    "qiskit-ibm-runtime": "0.40.1"
+  },
+  "lock": {
+    "path": "requirements-qiskit-lock.txt",
+    "sha256": "97ea5292428d071769f500866f06f32d408f1720731b6a2e5751f14bbe9bd6a8"
+  },
+  "network_accessed": false,
+  "platform": {
+    "machine": "AMD64",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "release": "10",
+    "system": "Windows"
+  },
+  "schema_version": 1,
+  "status": "pass",
+  "training_environment": {
+    "executable": "C:\\Program Files\\Python39\\python.exe",
+    "lock_path": "requirements-lock.txt",
+    "observed": true,
+    "observed_version": "3.9.13",
+    "probe_exception": null,
+    "required_python_version": "3.9.13"
+  }
+}

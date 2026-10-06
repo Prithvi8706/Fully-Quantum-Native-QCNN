@@ -1,0 +1,874 @@
+{
+  "canonical_source": {
+    "function": "build_circuit",
+    "path": "QCNN/circuits.py",
+    "sha256": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09"
+  },
+  "environment": {
+    "credentials_accessed": false,
+    "executable": "python.exe",
+    "git": {
+      "dirty": true,
+      "dirty_entries": 39,
+      "head": "5f60758d95247c4b1ab01bbabea0fd00bfce5cb2"
+    },
+    "network_accessed": false,
+    "python": "3.11.9",
+    "qiskit_lock": {
+      "path": "requirements-qiskit-lock.txt",
+      "sha256": "97ea5292428d071769f500866f06f32d408f1720731b6a2e5751f14bbe9bd6a8"
+    }
+  },
+  "limitations": "This artifact reports local transpilation/resource estimates only. State preparation and model-body counts are intentionally separated; no QPU execution is implied.",
+  "payload_sha256": "2e6f5251d617a246eb7bb3cc34306a0299f2401f148d84cd78bd2b137f29569c",
+  "protocol": {
+    "arm": "frozen unitary pooling",
+    "backend": {
+      "backend_v2": true,
+      "class": "FakePeekskill",
+      "coupling_edges": 28,
+      "name": "fake_peekskill",
+      "num_qubits": 27,
+      "source": "local qiskit_ibm_runtime.fake_provider; no provider query",
+      "target_operations": [
+        "delay",
+        "ecr",
+        "for_loop",
+        "id",
+        "if_else",
+        "measure",
+        "reset",
+        "rz",
+        "switch_case",
+        "sx",
+        "x"
+      ]
+    },
+    "components": [
+      "state_preparation",
+      "model_body",
+      "readout",
+      "total"
+    ],
+    "layout_policy": "transpiler-selected layout; no initial_layout supplied",
+    "optimization_level": 1,
+    "qubits": [
+      4,
+      6,
+      8,
+      10
+    ],
+    "seed_transpiler": 42
+  },
+  "records": [
+    {
+      "backend": {
+        "backend_v2": true,
+        "class": "FakePeekskill",
+        "coupling_edges": 28,
+        "name": "fake_peekskill",
+        "num_qubits": 27,
+        "source": "local qiskit_ibm_runtime.fake_provider; no provider query",
+        "target_operations": [
+          "delay",
+          "ecr",
+          "for_loop",
+          "id",
+          "if_else",
+          "measure",
+          "reset",
+          "rz",
+          "switch_case",
+          "sx",
+          "x"
+        ]
+      },
+      "components": {
+        "model_body": {
+          "decomposed": {
+            "depth": 48,
+            "operation_counts": {
+              "cx": 36,
+              "u": 72
+            },
+            "size": 108,
+            "width": 8
+          },
+          "logical": {
+            "depth": 36,
+            "operation_counts": {
+              "cry": 3,
+              "crz": 3,
+              "cx": 24,
+              "rx": 18,
+              "ry": 24,
+              "rz": 18
+            },
+            "size": 90,
+            "width": 8
+          },
+          "target_validation": {
+            "checked_instructions": 457,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 280,
+            "operation_counts": {
+              "ecr": 75,
+              "rz": 212,
+              "sx": 151,
+              "x": 19
+            },
+            "size": 457,
+            "width": 31
+          },
+          "unsupported_operations": []
+        },
+        "readout": {
+          "decomposed": {
+            "depth": 1,
+            "operation_counts": {
+              "measure": 1
+            },
+            "size": 1,
+            "width": 8
+          },
+          "logical": {
+            "depth": 1,
+            "operation_counts": {
+              "measure": 1
+            },
+            "size": 1,
+            "width": 8
+          },
+          "target_validation": {
+            "checked_instructions": 1,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 1,
+            "operation_counts": {
+              "measure": 1
+            },
+            "size": 1,
+            "width": 31
+          },
+          "unsupported_operations": []
+        },
+        "state_preparation": {
+          "decomposed": {
+            "depth": 24,
+            "operation_counts": {
+              "cx": 11,
+              "reset": 4,
+              "u": 15
+            },
+            "size": 30,
+            "width": 4
+          },
+          "logical": {
+            "depth": 1,
+            "operation_counts": {
+              "initialize": 1
+            },
+            "size": 1,
+            "width": 4
+          },
+          "target_validation": {
+            "checked_instructions": 115,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 70,
+            "operation_counts": {
+              "ecr": 17,
+              "reset": 4,
+              "rz": 51,
+              "sx": 37,
+              "x": 6
+            },
+            "size": 115,
+            "width": 27
+          },
+          "unsupported_operations": []
+        },
+        "total": {
+          "decomposed": {
+            "depth": 73,
+            "operation_counts": {
+              "cx": 47,
+              "measure": 1,
+              "reset": 4,
+              "u": 87
+            },
+            "size": 139,
+            "width": 8
+          },
+          "logical": {
+            "depth": 38,
+            "operation_counts": {
+              "cry": 3,
+              "crz": 3,
+              "cx": 24,
+              "initialize": 1,
+              "measure": 1,
+              "rx": 18,
+              "ry": 24,
+              "rz": 18
+            },
+            "size": 92,
+            "width": 8
+          },
+          "target_validation": {
+            "checked_instructions": 567,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 343,
+            "operation_counts": {
+              "ecr": 92,
+              "measure": 1,
+              "reset": 4,
+              "rz": 263,
+              "sx": 194,
+              "x": 13
+            },
+            "size": 567,
+            "width": 31
+          },
+          "unsupported_operations": []
+        }
+      },
+      "limitations": "Counts are local logical/decomposed/transpiled estimates. They are not a hardware run; measurement-style dynamic control may be unsupported by the fake target.",
+      "payload_sha256": "f01ba2e87c2542f7f91bb0bd263a8972cabceeb548e270e0c929afac4d9564ed",
+      "pooling_mode": "unitary",
+      "qubits": 4,
+      "status": "pass",
+      "transpilation": {
+        "layout_policy": "transpiler-selected layout against the declared fake BackendV2 target; no initial_layout",
+        "optimization_level": 1,
+        "seed_transpiler": 42
+      }
+    },
+    {
+      "backend": {
+        "backend_v2": true,
+        "class": "FakePeekskill",
+        "coupling_edges": 28,
+        "name": "fake_peekskill",
+        "num_qubits": 27,
+        "source": "local qiskit_ibm_runtime.fake_provider; no provider query",
+        "target_operations": [
+          "delay",
+          "ecr",
+          "for_loop",
+          "id",
+          "if_else",
+          "measure",
+          "reset",
+          "rz",
+          "switch_case",
+          "sx",
+          "x"
+        ]
+      },
+      "components": {
+        "model_body": {
+          "decomposed": {
+            "depth": 71,
+            "operation_counts": {
+              "cx": 64,
+              "u": 126
+            },
+            "size": 190,
+            "width": 12
+          },
+          "logical": {
+            "depth": 60,
+            "operation_counts": {
+              "cry": 4,
+              "crz": 4,
+              "cx": 48,
+              "rx": 34,
+              "ry": 42,
+              "rz": 34
+            },
+            "size": 166,
+            "width": 12
+          },
+          "target_validation": {
+            "checked_instructions": 937,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 465,
+            "operation_counts": {
+              "ecr": 154,
+              "rz": 435,
+              "sx": 324,
+              "x": 24
+            },
+            "size": 937,
+            "width": 33
+          },
+          "unsupported_operations": []
+        },
+        "readout": {
+          "decomposed": {
+            "depth": 1,
+            "operation_counts": {
+              "measure": 1
+            },
+            "size": 1,
+            "width": 12
+          },
+          "logical": {
+            "depth": 1,
+            "operation_counts": {
+              "measure": 1
+            },
+            "size": 1,
+            "width": 12
+          },
+          "target_validation": {
+            "checked_instructions": 1,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 1,
+            "operation_counts": {
+              "measure": 1
+            },
+            "size": 1,
+            "width": 33
+          },
+          "unsupported_operations": []
+        },
+        "state_preparation": {
+          "decomposed": {
+            "depth": 116,
+            "operation_counts": {
+              "cx": 57,
+              "reset": 6,
+              "u": 63
+            },
+            "size": 126,
+            "width": 6
+          },
+          "logical": {
+            "depth": 1,
+            "operation_counts": {
+              "initialize": 1
+            },
+            "size": 1,
+            "width": 6
+          },
+          "target_validation": {
+            "checked_instructions": 609,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 344,
+            "operation_counts": {
+              "ecr": 105,
+              "reset": 6,
+              "rz": 271,
+              "sx": 200,
+              "x": 27
+            },
+            "size": 609,
+            "width": 27
+          },
+          "unsupported_operations": []
+        },
+        "total": {
+          "decomposed": {
+            "depth": 188,
+            "operation_counts": {
+              "cx": 121,
+              "measure": 1,
+              "reset": 6,
+              "u": 189
+            },
+            "size": 317,
+            "width": 12
+          },
+          "logical": {
+            "depth": 62,
+            "operation_counts": {
+              "cry": 4,
+              "crz": 4,
+              "cx": 48,
+              "initialize": 1,
+              "measure": 1,
+              "rx": 34,
+              "ry": 42,
+              "rz": 34
+            },
+            "size": 168,
+            "width": 12
+          },
+          "target_validation": {
+            "checked_instructions": 1655,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 908,
+            "operation_counts": {
+              "ecr": 277,
+              "measure": 1,
+              "reset": 6,
+              "rz": 781,
+              "sx": 544,
+              "x": 46
+            },
+            "size": 1655,
+            "width": 33
+          },
+          "unsupported_operations": []
+        }
+      },
+      "limitations": "Counts are local logical/decomposed/transpiled estimates. They are not a hardware run; measurement-style dynamic control may be unsupported by the fake target.",
+      "payload_sha256": "6bbc6b567a8dad064467717c5857d754a20d83ca2382e291c5107728f6857ee0",
+      "pooling_mode": "unitary",
+      "qubits": 6,
+      "status": "pass",
+      "transpilation": {
+        "layout_policy": "transpiler-selected layout against the declared fake BackendV2 target; no initial_layout",
+        "optimization_level": 1,
+        "seed_transpiler": 42
+      }
+    },
+    {
+      "backend": {
+        "backend_v2": true,
+        "class": "FakePeekskill",
+        "coupling_edges": 28,
+        "name": "fake_peekskill",
+        "num_qubits": 27,
+        "source": "local qiskit_ibm_runtime.fake_provider; no provider query",
+        "target_operations": [
+          "delay",
+          "ecr",
+          "for_loop",
+          "id",
+          "if_else",
+          "measure",
+          "reset",
+          "rz",
+          "switch_case",
+          "sx",
+          "x"
+        ]
+      },
+      "components": {
+        "model_body": {
+          "decomposed": {
+            "depth": 129,
+            "operation_counts": {
+              "cx": 124,
+              "u": 240
+            },
+            "size": 364,
+            "width": 16
+          },
+          "logical": {
+            "depth": 111,
+            "operation_counts": {
+              "cry": 7,
+              "crz": 7,
+              "cx": 96,
+              "rx": 66,
+              "ry": 80,
+              "rz": 66
+            },
+            "size": 322,
+            "width": 16
+          },
+          "target_validation": {
+            "checked_instructions": 1952,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 939,
+            "operation_counts": {
+              "ecr": 325,
+              "rz": 898,
+              "sx": 671,
+              "x": 58
+            },
+            "size": 1952,
+            "width": 35
+          },
+          "unsupported_operations": []
+        },
+        "readout": {
+          "decomposed": {
+            "depth": 1,
+            "operation_counts": {
+              "measure": 1
+            },
+            "size": 1,
+            "width": 16
+          },
+          "logical": {
+            "depth": 1,
+            "operation_counts": {
+              "measure": 1
+            },
+            "size": 1,
+            "width": 16
+          },
+          "target_validation": {
+            "checked_instructions": 1,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 1,
+            "operation_counts": {
+              "measure": 1
+            },
+            "size": 1,
+            "width": 35
+          },
+          "unsupported_operations": []
+        },
+        "state_preparation": {
+          "decomposed": {
+            "depth": 496,
+            "operation_counts": {
+              "cx": 247,
+              "reset": 8,
+              "u": 255
+            },
+            "size": 510,
+            "width": 8
+          },
+          "logical": {
+            "depth": 1,
+            "operation_counts": {
+              "initialize": 1
+            },
+            "size": 1,
+            "width": 8
+          },
+          "target_validation": {
+            "checked_instructions": 3241,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 1646,
+            "operation_counts": {
+              "ecr": 574,
+              "reset": 8,
+              "rz": 1480,
+              "sx": 1076,
+              "x": 103
+            },
+            "size": 3241,
+            "width": 27
+          },
+          "unsupported_operations": []
+        },
+        "total": {
+          "decomposed": {
+            "depth": 626,
+            "operation_counts": {
+              "cx": 371,
+              "measure": 1,
+              "reset": 8,
+              "u": 495
+            },
+            "size": 875,
+            "width": 16
+          },
+          "logical": {
+            "depth": 113,
+            "operation_counts": {
+              "cry": 7,
+              "crz": 7,
+              "cx": 96,
+              "initialize": 1,
+              "measure": 1,
+              "rx": 66,
+              "ry": 80,
+              "rz": 66
+            },
+            "size": 324,
+            "width": 16
+          },
+          "target_validation": {
+            "checked_instructions": 5151,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 2549,
+            "operation_counts": {
+              "ecr": 902,
+              "measure": 1,
+              "reset": 8,
+              "rz": 2325,
+              "sx": 1773,
+              "x": 142
+            },
+            "size": 5151,
+            "width": 35
+          },
+          "unsupported_operations": []
+        }
+      },
+      "limitations": "Counts are local logical/decomposed/transpiled estimates. They are not a hardware run; measurement-style dynamic control may be unsupported by the fake target.",
+      "payload_sha256": "9a8e8c329853e942e1575ca7c08258f146a6564efb1afe8ed3090b162ab472cb",
+      "pooling_mode": "unitary",
+      "qubits": 8,
+      "status": "pass",
+      "transpilation": {
+        "layout_policy": "transpiler-selected layout against the declared fake BackendV2 target; no initial_layout",
+        "optimization_level": 1,
+        "seed_transpiler": 42
+      }
+    },
+    {
+      "backend": {
+        "backend_v2": true,
+        "class": "FakePeekskill",
+        "coupling_edges": 28,
+        "name": "fake_peekskill",
+        "num_qubits": 27,
+        "source": "local qiskit_ibm_runtime.fake_provider; no provider query",
+        "target_operations": [
+          "delay",
+          "ecr",
+          "for_loop",
+          "id",
+          "if_else",
+          "measure",
+          "reset",
+          "rz",
+          "switch_case",
+          "sx",
+          "x"
+        ]
+      },
+      "components": {
+        "model_body": {
+          "decomposed": {
+            "depth": 128,
+            "operation_counts": {
+              "cx": 128,
+              "u": 246
+            },
+            "size": 374,
+            "width": 20
+          },
+          "logical": {
+            "depth": 111,
+            "operation_counts": {
+              "cry": 8,
+              "crz": 8,
+              "cx": 96,
+              "rx": 66,
+              "ry": 82,
+              "rz": 66
+            },
+            "size": 326,
+            "width": 20
+          },
+          "target_validation": {
+            "checked_instructions": 1963,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 973,
+            "operation_counts": {
+              "ecr": 326,
+              "rz": 910,
+              "sx": 664,
+              "x": 63
+            },
+            "size": 1963,
+            "width": 37
+          },
+          "unsupported_operations": []
+        },
+        "readout": {
+          "decomposed": {
+            "depth": 1,
+            "operation_counts": {
+              "measure": 1
+            },
+            "size": 1,
+            "width": 20
+          },
+          "logical": {
+            "depth": 1,
+            "operation_counts": {
+              "measure": 1
+            },
+            "size": 1,
+            "width": 20
+          },
+          "target_validation": {
+            "checked_instructions": 1,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 1,
+            "operation_counts": {
+              "measure": 1
+            },
+            "size": 1,
+            "width": 37
+          },
+          "unsupported_operations": []
+        },
+        "state_preparation": {
+          "decomposed": {
+            "depth": 2028,
+            "operation_counts": {
+              "cx": 1013,
+              "reset": 10,
+              "u": 1023
+            },
+            "size": 2046,
+            "width": 10
+          },
+          "logical": {
+            "depth": 1,
+            "operation_counts": {
+              "initialize": 1
+            },
+            "size": 1,
+            "width": 10
+          },
+          "target_validation": {
+            "checked_instructions": 13399,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 6871,
+            "operation_counts": {
+              "ecr": 2402,
+              "reset": 10,
+              "rz": 6087,
+              "sx": 4549,
+              "x": 351
+            },
+            "size": 13399,
+            "width": 27
+          },
+          "unsupported_operations": []
+        },
+        "total": {
+          "decomposed": {
+            "depth": 2157,
+            "operation_counts": {
+              "cx": 1141,
+              "measure": 1,
+              "reset": 10,
+              "u": 1269
+            },
+            "size": 2421,
+            "width": 20
+          },
+          "logical": {
+            "depth": 113,
+            "operation_counts": {
+              "cry": 8,
+              "crz": 8,
+              "cx": 96,
+              "initialize": 1,
+              "measure": 1,
+              "rx": 66,
+              "ry": 82,
+              "rz": 66
+            },
+            "size": 328,
+            "width": 20
+          },
+          "target_validation": {
+            "checked_instructions": 13733,
+            "invalid": [],
+            "uses_actual_target": true
+          },
+          "transpilation_error": null,
+          "transpilation_status": "pass",
+          "transpiled": {
+            "depth": 7384,
+            "operation_counts": {
+              "ecr": 2449,
+              "measure": 1,
+              "reset": 10,
+              "rz": 6267,
+              "sx": 4525,
+              "x": 481
+            },
+            "size": 13733,
+            "width": 37
+          },
+          "unsupported_operations": []
+        }
+      },
+      "limitations": "Counts are local logical/decomposed/transpiled estimates. They are not a hardware run; measurement-style dynamic control may be unsupported by the fake target.",
+      "payload_sha256": "2f9c3b78f03e4305353ada2b1457910e33c58866c136e4d9353a9855f5cded30",
+      "pooling_mode": "unitary",
+      "qubits": 10,
+      "status": "pass",
+      "transpilation": {
+        "layout_policy": "transpiler-selected layout against the declared fake BackendV2 target; no initial_layout",
+        "optimization_level": 1,
+        "seed_transpiler": 42
+      }
+    }
+  ],
+  "schema": {
+    "name": "fqcnn_q1_resources",
+    "version": 1
+  },
+  "status": "pass"
+}

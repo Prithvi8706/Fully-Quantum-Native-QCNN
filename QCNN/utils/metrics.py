@@ -44,18 +44,13 @@ def predict_raw_outputs(model, X_eval: np.ndarray, already_preprocessed: bool = 
     Returns:
         1D array of continuous outputs, one per sample.
     """
-    flat_params = model._flatten_params(model.quantum_params)
-
-    if already_preprocessed:
-        X_processed = np.asarray(X_eval)
-    else:
-        X_processed = model._preprocess_input(np.asarray(X_eval))
-
-    outputs = np.array([
-        float(np.squeeze(model.quantum_circuit(X_processed[i], flat_params)))
-        for i in range(len(X_processed))
-    ])
-    return outputs
+    # UPGRADE_PLAN.md 1.1: batched execution, chunked to bound memory. This is
+    # the single final test evaluation, so it is off the training hot path --
+    # but at n=10 the per-sample path costs ~1.3 s/sample, which is ~68 minutes
+    # on a 3,166-sample test set against ~18 s batched. Equivalence to the
+    # sequential oracle is pinned by tests/test_batched_execution.py.
+    return model.raw_expectations(np.asarray(X_eval),
+                                  already_preprocessed=already_preprocessed)
 
 
 def compute_classification_metrics(y_true: np.ndarray, raw_outputs: np.ndarray,
@@ -92,6 +87,9 @@ def compute_classification_metrics(y_true: np.ndarray, raw_outputs: np.ndarray,
     fn = int(np.sum((predictions == -1) & (y_true == 1)))
 
     accuracy = float(np.mean(predictions == y_true))
+    positive_recall = tp / (tp + fn) if tp + fn else 0.0
+    negative_recall = tn / (tn + fp) if tn + fp else 0.0
+    balanced_accuracy = float((positive_recall + negative_recall) / 2.0)
     precision = float(precision_score(y_bin, pred_bin, zero_division=0))
     recall = float(recall_score(y_bin, pred_bin, zero_division=0))
     f1 = float(f1_score(y_bin, pred_bin, zero_division=0))
@@ -106,6 +104,7 @@ def compute_classification_metrics(y_true: np.ndarray, raw_outputs: np.ndarray,
 
     return {
         "accuracy": accuracy,
+        "balanced_accuracy": balanced_accuracy,
         "precision": precision,
         "recall": recall,
         "f1": f1,
@@ -121,7 +120,7 @@ def compute_classification_metrics(y_true: np.ndarray, raw_outputs: np.ndarray,
 
 # Keys worth aggregating across seeds (scalars only — drop arrays/counts handled separately).
 _SCALAR_METRIC_KEYS = (
-    "accuracy", "precision", "recall", "f1", "roc_auc", "pr_auc",
+    "accuracy", "balanced_accuracy", "precision", "recall", "f1", "roc_auc", "pr_auc",
     "prediction_bias", "prediction_variance",
 )
 
@@ -134,37 +133,22 @@ def aggregate_metrics(metric_dicts: list[dict]) -> dict:
         metric_dicts: list of dicts as returned by ``compute_classification_metrics``.
 
     Returns:
-        dict mapping ``<metric>`` -> {"mean", "std", "n", "values", "ci_low", "ci_high"}.
-        ``std`` is the sample standard deviation (ddof=1). ``ci_low``/``ci_high`` are the
-        95% confidence interval for the mean via the Student-t interval
-        (mean ± t_{0.975, n-1} * s/sqrt(n)). NaNs (e.g. degenerate ROC-AUC) are ignored.
+        dict mapping ``<metric>`` -> {"mean": float, "std": float, "n": int,
+        "values": [..]}. NaNs (e.g. degenerate ROC-AUC) are ignored in the stats.
     """
-    from scipy import stats  # scipy is already a project dependency
-
     out = {"n_runs": len(metric_dicts)}
     for key in _SCALAR_METRIC_KEYS:
         vals = np.array([d[key] for d in metric_dicts if key in d], dtype=float)
         finite = vals[np.isfinite(vals)]
         if finite.size:
-            mean = float(np.mean(finite))
-            n = int(finite.size)
-            # sample std (ddof=1) for an unbiased spread; 0 when n==1
-            std = float(np.std(finite, ddof=1)) if n > 1 else 0.0
-            if n > 1 and std > 0:
-                half = float(stats.t.ppf(0.975, n - 1) * std / np.sqrt(n))
-            else:
-                half = 0.0
             out[key] = {
-                "mean": mean,
-                "std": std,
-                "n": n,
+                "mean": float(np.mean(finite)),
+                "std": float(np.std(finite)),
+                "n": int(finite.size),
                 "values": finite.tolist(),
-                "ci_low": mean - half,
-                "ci_high": mean + half,
             }
         else:
-            out[key] = {"mean": float("nan"), "std": float("nan"), "n": 0,
-                        "values": [], "ci_low": float("nan"), "ci_high": float("nan")}
+            out[key] = {"mean": float("nan"), "std": float("nan"), "n": 0, "values": []}
     return out
 
 

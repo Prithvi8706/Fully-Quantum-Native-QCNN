@@ -1,0 +1,288 @@
+{
+  "arms": {
+    "pool_coherent": {
+      "decomposed": {
+        "depth": 54,
+        "operation_counts": {
+          "cx": 42,
+          "u": 75
+        },
+        "size": 117,
+        "width": 8
+      },
+      "limitations": "Counts are local logical/decomposed/transpiled estimates. They are not a hardware run; measurement-style dynamic control may be unsupported by the fake target.",
+      "logical": {
+        "depth": 38,
+        "operation_counts": {
+          "cry": 6,
+          "crz": 3,
+          "cx": 24,
+          "rx": 18,
+          "ry": 21,
+          "rz": 18
+        },
+        "size": 90,
+        "width": 8
+      },
+      "mode": "coherent",
+      "target_validation": {
+        "checked_instructions": 493,
+        "invalid": [],
+        "uses_actual_target": true
+      },
+      "transpilation_status": "pass",
+      "transpiled": {
+        "depth": 309,
+        "operation_counts": {
+          "ecr": 81,
+          "rz": 229,
+          "sx": 163,
+          "x": 20
+        },
+        "size": 493,
+        "width": 31
+      },
+      "unsupported_operations": []
+    },
+    "pool_measurement": {
+      "decomposed": {
+        "depth": 36,
+        "operation_counts": {
+          "cx": 24,
+          "if_else": 3,
+          "measure": 3,
+          "u": 57
+        },
+        "size": 87,
+        "width": 8
+      },
+      "limitations": "Counts are local logical/decomposed/transpiled estimates. They are not a hardware run; measurement-style dynamic control may be unsupported by the fake target.",
+      "logical": {
+        "depth": 36,
+        "operation_counts": {
+          "cx": 24,
+          "if_else": 3,
+          "measure": 3,
+          "rx": 18,
+          "ry": 21,
+          "rz": 18
+        },
+        "size": 87,
+        "width": 8
+      },
+      "mode": "measurement",
+      "target_validation": {
+        "checked_instructions": 401,
+        "invalid": [],
+        "uses_actual_target": true
+      },
+      "transpilation_status": "pass",
+      "transpiled": {
+        "depth": 240,
+        "operation_counts": {
+          "ecr": 60,
+          "if_else": 3,
+          "measure": 3,
+          "rz": 195,
+          "sx": 132,
+          "x": 8
+        },
+        "size": 401,
+        "width": 31
+      },
+      "unsupported_operations": []
+    },
+    "pool_none": {
+      "decomposed": {
+        "depth": 30,
+        "operation_counts": {
+          "cx": 24,
+          "u": 54
+        },
+        "size": 78,
+        "width": 8
+      },
+      "limitations": "Counts are local logical/decomposed/transpiled estimates. They are not a hardware run; measurement-style dynamic control may be unsupported by the fake target.",
+      "logical": {
+        "depth": 30,
+        "operation_counts": {
+          "cx": 24,
+          "rx": 18,
+          "ry": 18,
+          "rz": 18
+        },
+        "size": 78,
+        "width": 8
+      },
+      "mode": "none",
+      "target_validation": {
+        "checked_instructions": 381,
+        "invalid": [],
+        "uses_actual_target": true
+      },
+      "transpilation_status": "pass",
+      "transpiled": {
+        "depth": 225,
+        "operation_counts": {
+          "ecr": 60,
+          "rz": 187,
+          "sx": 125,
+          "x": 9
+        },
+        "size": 381,
+        "width": 31
+      },
+      "unsupported_operations": []
+    },
+    "pool_su4": {
+      "decomposed": {
+        "depth": 44,
+        "operation_counts": {
+          "cx": 33,
+          "u": 78
+        },
+        "size": 111,
+        "width": 8
+      },
+      "limitations": "Counts are local logical/decomposed/transpiled estimates. They are not a hardware run; measurement-style dynamic control may be unsupported by the fake target.",
+      "logical": {
+        "depth": 32,
+        "operation_counts": {
+          "cx": 24,
+          "rx": 18,
+          "ry": 18,
+          "rz": 18,
+          "unitary": 3
+        },
+        "size": 81,
+        "width": 8
+      },
+      "mode": "su4",
+      "target_validation": {
+        "checked_instructions": 475,
+        "invalid": [],
+        "uses_actual_target": true
+      },
+      "transpilation_status": "pass",
+      "transpiled": {
+        "depth": 278,
+        "operation_counts": {
+          "ecr": 72,
+          "rz": 227,
+          "sx": 163,
+          "x": 13
+        },
+        "size": 475,
+        "width": 31
+      },
+      "unsupported_operations": []
+    },
+    "pool_unitary": {
+      "decomposed": {
+        "depth": 48,
+        "operation_counts": {
+          "cx": 36,
+          "u": 72
+        },
+        "size": 108,
+        "width": 8
+      },
+      "limitations": "Counts are local logical/decomposed/transpiled estimates. They are not a hardware run; measurement-style dynamic control may be unsupported by the fake target.",
+      "logical": {
+        "depth": 36,
+        "operation_counts": {
+          "cry": 3,
+          "crz": 3,
+          "cx": 24,
+          "rx": 18,
+          "ry": 24,
+          "rz": 18
+        },
+        "size": 90,
+        "width": 8
+      },
+      "mode": "unitary",
+      "target_validation": {
+        "checked_instructions": 457,
+        "invalid": [],
+        "uses_actual_target": true
+      },
+      "transpilation_status": "pass",
+      "transpiled": {
+        "depth": 280,
+        "operation_counts": {
+          "ecr": 75,
+          "rz": 212,
+          "sx": 151,
+          "x": 19
+        },
+        "size": 457,
+        "width": 31
+      },
+      "unsupported_operations": []
+    }
+  },
+  "canonical_source": {
+    "function": "build_circuit",
+    "path": "QCNN/circuits.py",
+    "sha256": "54cfa93d05313e95b358d7553cc00a29cba5a7729914bc459bd22f70f8bfef09"
+  },
+  "dynamic_behavior": {
+    "measurement_arm_statement": "The measurement-style arm is reported as dynamic control and is not treated as a fully unitary hardware path; unsupported target operations remain visible.",
+    "measurement_arm_target_unsupported": false
+  },
+  "environment": {
+    "credentials_accessed": false,
+    "git": {
+      "dirty": true,
+      "dirty_entries": 40,
+      "head": "5f60758d95247c4b1ab01bbabea0fd00bfce5cb2"
+    },
+    "network_accessed": false,
+    "qiskit_lock": {
+      "path": "requirements-qiskit-lock.txt",
+      "sha256": "97ea5292428d071769f500866f06f32d408f1720731b6a2e5751f14bbe9bd6a8"
+    }
+  },
+  "limitations": "Fake-backend transpilation is a local practicality comparison, not device execution. SU(4) is an expressivity/resource ceiling arm; it is not promoted to the headline model.",
+  "payload_sha256": "b2740d259274453b3350c5953a65d2212df717f236c7ad764918e9db53a9aab7",
+  "protocol": {
+    "arms": [
+      "pool_none",
+      "pool_measurement",
+      "pool_unitary",
+      "pool_coherent",
+      "pool_su4"
+    ],
+    "backend": {
+      "backend_v2": true,
+      "class": "FakePeekskill",
+      "coupling_edges": 28,
+      "name": "fake_peekskill",
+      "num_qubits": 27,
+      "source": "local qiskit_ibm_runtime.fake_provider; no provider query",
+      "target_operations": [
+        "delay",
+        "ecr",
+        "for_loop",
+        "id",
+        "if_else",
+        "measure",
+        "reset",
+        "rz",
+        "switch_case",
+        "sx",
+        "x"
+      ]
+    },
+    "n_qubits": 4,
+    "optimization_level": 1,
+    "same_backend_settings": true,
+    "seed_transpiler": 42
+  },
+  "schema": {
+    "name": "fqcnn_q1_pooling_practicality",
+    "version": 1
+  },
+  "status": "pass"
+}

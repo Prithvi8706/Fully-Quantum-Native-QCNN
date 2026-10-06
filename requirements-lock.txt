@@ -1,13 +1,23 @@
 # Exact environment used to produce the reported FQCNN results.
+# Regenerated from the live training environment with `pip freeze`
+# (UPGRADE_PLAN.md 0.6 / F9). The previous contents claimed a Python 3.14.5 /
+# PennyLane 0.44.0 / NumPy 2.4.2 / scikit-learn 1.8.0 stack that never produced
+# any result in this repository; a reviewer following it got a different
+# simulator than the one behind the numbers.
+#
 # Reproduce with:  pip install -r requirements-lock.txt
-# Python 3.14.5
-PennyLane==0.44.0
-PennyLane-Lightning==0.44.0
-numpy==2.4.2
-scikit-learn==1.8.0
-matplotlib==3.10.8
+# Python 3.9.13
+PennyLane==0.38.0
+PennyLane_Lightning==0.38.0
+numpy==1.26.4
+scikit-learn==1.6.1
+matplotlib==3.9.4
 seaborn==0.13.2
-scipy==1.17.0
-autoray==0.8.2
-pandas==3.0.1
-Pillow==12.1.1
+scipy==1.13.1
+# PennyLane 0.38.0 declares autoray>=0.6.11; pin a compatible patch release
+# so a clean reproduction environment passes dependency validation.
+autoray==0.6.12
+pandas==2.3.1
+pillow==11.2.1
+# Test dependency: the freeze and protocol guards in tests/ gate every run.
+pytest==7.4.4

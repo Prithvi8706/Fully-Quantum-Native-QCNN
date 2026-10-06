@@ -25,14 +25,13 @@
 
 from __future__ import annotations
 
-import math
-
 import numpy as np
 import pennylane as qml
 import pennylane.numpy as pnp
 
 from QCNN.encoding.QEncoder import PureQuantumEncoder
 from QCNN.utils.metrics import compute_classification_metrics
+from QCNN.utils.run_artifacts import TestEvaluationGuard
 
 
 # ---------------------------------------------------------------------------
@@ -69,80 +68,99 @@ def _pool_block(p, keep: int, discard: int) -> None:
 # ---- convolution blocks (shared params per layer => translational invariance) ----
 def _conv_block_cong(p, a: int, b: int) -> None:
     """Cong-style two-qubit conv unitary. 6 params."""
-    qml.RX(p[0], wires=a); qml.RY(p[1], wires=a); qml.RZ(p[2], wires=a)
-    qml.RX(p[3], wires=b); qml.RY(p[4], wires=b); qml.RZ(p[5], wires=b)
+    qml.RX(p[0], wires=a)
+    qml.RY(p[1], wires=a)
+    qml.RZ(p[2], wires=a)
+    qml.RX(p[3], wires=b)
+    qml.RY(p[4], wires=b)
+    qml.RZ(p[5], wires=b)
     qml.CNOT(wires=[a, b])
 
 
 def _conv_block_hur(p, a: int, b: int) -> None:
     """Hur-style two-qubit conv unitary (more expressive, both CNOT directions). 8 params."""
-    qml.RY(p[0], wires=a); qml.RZ(p[1], wires=a)
-    qml.RY(p[2], wires=b); qml.RZ(p[3], wires=b)
+    qml.RY(p[0], wires=a)
+    qml.RZ(p[1], wires=a)
+    qml.RY(p[2], wires=b)
+    qml.RZ(p[3], wires=b)
     qml.CNOT(wires=[a, b])
-    qml.RY(p[4], wires=a); qml.RY(p[5], wires=b)
+    qml.RY(p[4], wires=a)
+    qml.RY(p[5], wires=b)
     qml.CNOT(wires=[b, a])
-    qml.RZ(p[6], wires=a); qml.RZ(p[7], wires=b)
+    qml.RZ(p[6], wires=a)
+    qml.RZ(p[7], wires=b)
 
 
 def _ttn_node(p, keep: int, discard: int) -> None:
     """TTN two-qubit node; information consolidated onto `keep`. 6 params."""
-    qml.RY(p[0], wires=keep); qml.RY(p[1], wires=discard)
+    qml.RY(p[0], wires=keep)
+    qml.RY(p[1], wires=discard)
     qml.CNOT(wires=[keep, discard])
-    qml.RY(p[2], wires=keep); qml.RY(p[3], wires=discard)
+    qml.RY(p[2], wires=keep)
+    qml.RY(p[3], wires=discard)
     qml.CNOT(wires=[discard, keep])
-    qml.RY(p[4], wires=keep); qml.RZ(p[5], wires=keep)
+    qml.RY(p[4], wires=keep)
+    qml.RZ(p[5], wires=keep)
 
 
-def _check_pow2(n_qubits: int) -> int:
-    """These hierarchical architectures assume a power-of-two qubit count."""
-    if n_qubits < 2 or (n_qubits & (n_qubits - 1)) != 0:
-        raise ValueError(
-            f"Quantum baselines require a power-of-two qubit count, got {n_qubits}. "
-            "(The proposed amplitude/feature_map configs always yield one.)")
-    return int(round(math.log2(n_qubits)))
+def active_wire_schedule(n_qubits: int) -> list[dict]:
+    """Return the deterministic pair-and-retire reduction schedule."""
+    if n_qubits < 2:
+        raise ValueError(f"Quantum baselines require at least 2 qubits, got {n_qubits}.")
+
+    active = list(range(n_qubits))
+    schedule = []
+    while len(active) > 1:
+        pairs = [
+            {"keep": active[i], "discard": active[i + 1]}
+            for i in range(0, len(active) - 1, 2)
+        ]
+        unpaired = (
+            [{"wire": active[-1], "treatment": "retired_without_operation"}]
+            if len(active) % 2 else []
+        )
+        output_wires = [pair["keep"] for pair in pairs]
+        schedule.append({
+            "input_wires": active,
+            "pairs": pairs,
+            "unpaired": unpaired,
+            "output_wires": output_wires,
+        })
+        active = output_wires
+    return schedule
 
 
 # ---------------------------------------------------------------------------
 # Architectures. Each exposes param_count(n) and body(cursor, n) -> readout wire.
 # ---------------------------------------------------------------------------
 def _qcnn_body(cursor: _Cursor, n_qubits: int, conv_block, conv_size: int) -> int:
-    """Shared QCNN skeleton: per layer, a shared conv over all neighbour pairs
-    then a shared pool that halves the active wires. Returns the readout wire."""
-    active = list(range(n_qubits))
-    while len(active) > 1:
-        conv_p = cursor.take(conv_size)          # shared across the layer
-        for i in range(len(active) - 1):
-            conv_block(conv_p, active[i], active[i + 1])
-        pool_p = cursor.take(3)                  # shared across the layer
-        kept = []
-        for j in range(0, len(active) - 1, 2):
-            keep, discard = active[j], active[j + 1]
-            _pool_block(pool_p, keep, discard)
-            kept.append(keep)
-        active = kept
-    return active[0]
+    """Shared QCNN skeleton using the common active-wire schedule."""
+    schedule = active_wire_schedule(n_qubits)
+    for stage in schedule:
+        conv_p = cursor.take(conv_size)
+        for pair in stage["pairs"]:
+            conv_block(conv_p, pair["keep"], pair["discard"])
+        pool_p = cursor.take(3)
+        for pair in stage["pairs"]:
+            _pool_block(pool_p, pair["keep"], pair["discard"])
+    return schedule[-1]["output_wires"][0]
 
 
 def _qcnn_param_count(n_qubits: int, conv_size: int) -> int:
-    return _check_pow2(n_qubits) * (conv_size + 3)
+    return len(active_wire_schedule(n_qubits)) * (conv_size + 3)
 
 
 def _ttn_body(cursor: _Cursor, n_qubits: int) -> int:
-    """Balanced tree: pair survivors, apply a node block, keep one per pair."""
-    active = list(range(n_qubits))
-    while len(active) > 1:
-        kept = []
-        for j in range(0, len(active) - 1, 2):
-            keep, discard = active[j], active[j + 1]
-            _ttn_node(cursor.take(6), keep, discard)
-            kept.append(keep)
-        active = kept
-    return active[0]
+    """Balanced tree using the common active-wire schedule."""
+    schedule = active_wire_schedule(n_qubits)
+    for stage in schedule:
+        for pair in stage["pairs"]:
+            _ttn_node(cursor.take(6), pair["keep"], pair["discard"])
+    return schedule[-1]["output_wires"][0]
 
 
 def _ttn_param_count(n_qubits: int) -> int:
-    _check_pow2(n_qubits)
-    return (n_qubits - 1) * 6
+    return sum(len(stage["pairs"]) for stage in active_wire_schedule(n_qubits)) * 6
 
 
 _ARCHITECTURES = {
@@ -179,66 +197,89 @@ def _bce(raw, y_pm1):
     return -pnp.mean(y01 * pnp.log(p) + (1.0 - y01) * pnp.log(1.0 - p))
 
 
-def _train_architecture(arch_name: str, X_train, y_train, X_test, y_test,
-                        seed: int, n_qubits: int, n_epochs: int,
+def _initial_params(*, n_params, seed):
+    np.random.seed(seed)
+    pnp.random.seed(seed)
+    return pnp.array(np.random.uniform(-np.pi / 4, np.pi / 4, size=n_params),
+                     requires_grad=True)
+
+
+def _train_epoch(*, opt, cost, params):
+    return opt.step(cost, params)
+
+
+def _validation_loss(*, circuit, X_val, y_val, params, use_bce):
+    raw = circuit(pnp.asarray(np.asarray(X_val, dtype=float)), params)
+    labels = pnp.asarray(np.asarray(y_val, dtype=float))
+    return float(_bce(raw, labels) if use_bce else pnp.mean((raw - labels) ** 2))
+
+
+def _raw_outputs(*, circuit, X_test, params):
+    return np.asarray(circuit(np.asarray(X_test, dtype=float), params), dtype=float).reshape(-1)
+
+
+def _train_architecture(*, arch_name: str, X_train, y_train, X_val, y_val,
+                        X_test, y_test, seed: int, n_qubits: int, n_epochs: int,
                         learning_rate: float, use_bce: bool) -> dict:
-    """Train one architecture on the shared split and return its metric dict."""
+    """Select one architecture checkpoint on validation and evaluate test once."""
     arch = _ARCHITECTURES[arch_name]
     n_params = arch["param_count"](n_qubits)
-
     dev = _make_device(n_qubits)
 
-    # Input `x` is broadcast over the leading (batch) dimension: a 2D batch of
-    # samples is encoded at once and the qnode returns one <Z> per sample.
     @qml.qnode(dev, interface="autograd", diff_method="backprop")
     def circuit(x, params):
         _amp_encode(x, n_qubits)
-        readout = arch["body"](_Cursor(params), n_qubits)
-        return qml.expval(qml.PauliZ(readout))
+        return qml.expval(qml.PauliZ(arch["body"](_Cursor(params), n_qubits)))
 
-    np.random.seed(seed)
-    pnp.random.seed(seed)
-    params = pnp.array(
-        np.random.uniform(-np.pi / 4, np.pi / 4, size=n_params), requires_grad=True)
-
+    params = _initial_params(n_params=n_params, seed=seed)
     X_tr = pnp.asarray(np.asarray(X_train, dtype=float))
     y_tr = pnp.asarray(np.asarray(y_train, dtype=float))
 
     def cost(p):
-        raw = circuit(X_tr, p)  # batched → vector of <Z>, one per training sample
-        if use_bce:
-            return _bce(raw, y_tr)
-        return pnp.mean((raw - y_tr) ** 2)
+        raw = circuit(X_tr, p)
+        return _bce(raw, y_tr) if use_bce else pnp.mean((raw - y_tr) ** 2)
 
     opt = qml.AdamOptimizer(stepsize=learning_rate)
-    for _ in range(max(1, n_epochs)):
-        params = opt.step(cost, params)
+    best = None
+    for epoch in range(1, max(1, n_epochs) + 1):
+        params = _train_epoch(opt=opt, cost=cost, params=params)
+        value = _validation_loss(circuit=circuit, X_val=X_val, y_val=y_val,
+                                 params=params, use_bce=use_bce)
+        if best is None or value < best[0]:
+            best = (value, epoch, pnp.array(np.asarray(params), requires_grad=True))
 
-    # Evaluate on the held-out split using the same <Z>-threshold-0 convention.
-    raw_test = np.asarray(circuit(np.asarray(X_test, dtype=float), params), dtype=float).reshape(-1)
+    best_value, best_epoch, selected = best
+    guard = TestEvaluationGuard()
+    raw_test = guard.evaluate(_raw_outputs, circuit=circuit, X_test=X_test,
+                              params=selected)
     metrics = compute_classification_metrics(np.asarray(y_test), raw_test)
-    metrics["n_params"] = int(n_params)
-    metrics["architecture"] = arch_name
-    return metrics
+    metrics.update({"n_params": int(n_params), "architecture": arch_name})
+    return {
+        "metrics": metrics,
+        "selection": {
+            "criterion": "validation_loss", "best_epoch": best_epoch,
+            "best_value": best_value, "hyperparameters": {},
+            "n_validation_evaluations": max(1, n_epochs),
+        },
+        "test_evaluations": guard.count,
+        "raw_outputs": raw_test,
+        "selected_parameters": np.asarray(selected, dtype=float).copy(),
+    }
 
 
-def run_quantum_baselines(X_train, y_train, X_test, y_test, seed: int = 42,
-                          n_qubits: int = 8, n_epochs: int = 30,
-                          learning_rate: float = 0.02, use_bce: bool = True) -> dict:
-    """Train all quantum-architecture baselines on one shared split.
-
-    Returns {arch_name: metrics_dict}. Called by the experiment runner with the
-    proposed config's qubit count / epochs / learning rate so the comparison is
-    fair. Each metrics dict is computed by the shared metric suite and carries
-    an ``n_params`` field for a like-for-like parameter-scale comparison.
-    """
-    results = {}
-    for name in _ARCHITECTURES:
-        results[name] = _train_architecture(
-            name, X_train, y_train, X_test, y_test,
-            seed=seed, n_qubits=n_qubits, n_epochs=n_epochs,
-            learning_rate=learning_rate, use_bce=use_bce)
-    return results
+def run_quantum_baselines(*, X_train, y_train, X_val, y_val, X_test, y_test,
+                          seed: int = 42, n_qubits: int = 8, n_epochs: int = 30,
+                          learning_rate: float = 0.02, use_bce: bool = True,
+                          baselines=None) -> dict:
+    common = dict(X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val,
+                  X_test=X_test, y_test=y_test, seed=seed, n_qubits=n_qubits,
+                  n_epochs=n_epochs, learning_rate=learning_rate, use_bce=use_bce)
+    selected = tuple(_ARCHITECTURES) if baselines is None else tuple(baselines)
+    if len(set(selected)) != len(selected) or any(
+            name not in _ARCHITECTURES for name in selected):
+        raise ValueError("quantum baselines must be unique choices from cong, hur, ttn")
+    return {name: _train_architecture(arch_name=name, **common)
+            for name in selected}
 
 
 # ---------------------------------------------------------------------------
@@ -272,14 +313,19 @@ def _main():
     if total < len(X):
         idx = np.random.choice(len(X), total, replace=False)
         X, y = X[idx], y[idx]
-    X_tr, X_te, y_tr, y_te = train_test_split(
-        X, y, test_size=0.3, random_state=args.seed, stratify=y)
+    X_dev, X_te, y_dev, y_te = train_test_split(
+        X, y, test_size=0.2, random_state=args.seed, stratify=y)
+    X_tr, X_val, y_tr, y_val = train_test_split(
+        X_dev, y_dev, test_size=0.125, random_state=args.seed, stratify=y_dev)
     X_tr, y_tr = X_tr[:args.samples], y_tr[:args.samples]
 
-    res = run_quantum_baselines(X_tr, y_tr, X_te, y_te, seed=args.seed,
-                                n_qubits=cfg.n_qubits, n_epochs=args.epochs,
-                                learning_rate=cfg.learning_rate, use_bce=not args.use_mse)
-    for name, m in res.items():
+    res = run_quantum_baselines(
+        X_train=X_tr, y_train=y_tr, X_val=X_val, y_val=y_val,
+        X_test=X_te, y_test=y_te, seed=args.seed, n_qubits=cfg.n_qubits,
+        n_epochs=args.epochs, learning_rate=cfg.learning_rate,
+        use_bce=not args.use_mse)
+    for name, result in res.items():
+        m = result["metrics"]
         print(f"{name:5s} | n_params={m['n_params']:3d} acc={m['accuracy']:.3f} "
               f"f1={m['f1']:.3f} roc_auc={m['roc_auc']:.3f}")
 

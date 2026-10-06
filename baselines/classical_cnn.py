@@ -1,142 +1,159 @@
-# Classical baselines for fair comparison with the QCNN (suggestions #1, #10).
-#
-# Two dependency-free (sklearn-only) baselines that train and evaluate on the
-# EXACT same preprocessed representation and train/test split as the QCNN:
-#   - LogisticRegression : a linear floor.
-#   - MLPClassifier      : a small non-linear net whose hidden width can be set
-#                          to roughly match the QCNN's trainable-parameter count.
-# Both return the same metric dict as the QCNN via the shared metrics module, so
-# every row of the comparison table is computed identically.
-#
-# The original TensorFlow CNN is kept as an OPTIONAL path; its import is now lazy
-# so this module loads even when TensorFlow is not installed.
+"""Leakage-free classical baselines for comparison with the QCNN."""
+from __future__ import annotations
+
+import copy
+import warnings
 
 import numpy as np
 
 from QCNN.utils.metrics import compute_classification_metrics
+from QCNN.utils.run_artifacts import TestEvaluationGuard
 
 
 def _flatten(X: np.ndarray) -> np.ndarray:
-    """Flatten any (N, ...) array to (N, features) for classical models."""
     X = np.asarray(X)
     return X.reshape(X.shape[0], -1)
 
 
-def _metrics_from_proba(y_true_pm1: np.ndarray, proba_pos: np.ndarray) -> dict:
-    """
-    Convert a positive-class probability in [0, 1] to a centred continuous score
-    (raw = 2p - 1, so the threshold at 0 matches the QCNN convention) and run it
-    through the shared metric suite.
-    """
-    raw = 2.0 * np.asarray(proba_pos, dtype=float) - 1.0
-    return compute_classification_metrics(np.asarray(y_true_pm1), raw)
+def _raw_from_proba(proba_pos: np.ndarray) -> np.ndarray:
+    return 2.0 * np.asarray(proba_pos, dtype=float) - 1.0
 
 
-def run_logistic_baseline(X_train, y_train, X_test, y_test, seed: int = 42) -> dict:
-    """Logistic-regression baseline on the shared representation."""
-    from sklearn.linear_model import LogisticRegression
-
-    Xtr, Xte = _flatten(X_train), _flatten(X_test)
-    ytr01 = np.where(np.asarray(y_train) == 1, 1, 0)
-
-    clf = LogisticRegression(max_iter=2000, random_state=seed)
-    clf.fit(Xtr, ytr01)
-    proba = clf.predict_proba(Xte)[:, 1]
-    return _metrics_from_proba(y_test, proba)
+def _positive_proba(clf, X):
+    positive = int(np.flatnonzero(np.asarray(clf.classes_) == 1)[0])
+    return clf.predict_proba(X)[:, positive]
 
 
-def _mlp_hidden_layers(target_params: int | None = None) -> tuple:
-    """
-    Hidden-layer sizes for the MLP baseline.
-
-    NOTE: matching a classical net's parameter count to the QCNN's (~260) is
-    meaningless here — on a ~256-dim input the first-layer weights alone dwarf that
-    budget, so param-matching forces a ~2-neuron net that cannot learn (collapses to
-    ~0.5). Instead we use a fixed, sensible non-linear capacity and report BOTH models'
-    parameter counts in the results for an honest comparison (a classical net having
-    more parameters than a quantum circuit is an expected, disclosed tradeoff).
-    ``target_params`` is accepted for backwards-compatibility but no longer caps width.
-    """
-    return (128, 64)
-
-
-def run_mlp_baseline(X_train, y_train, X_test, y_test, seed: int = 42,
-                     target_params: int | None = None) -> dict:
-    """Non-linear MLP baseline on the shared representation (standardized input)."""
-    from sklearn.neural_network import MLPClassifier
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.pipeline import make_pipeline
-
-    Xtr, Xte = _flatten(X_train), _flatten(X_test)
-    ytr01 = np.where(np.asarray(y_train) == 1, 1, 0)
-
-    hidden = _mlp_hidden_layers(target_params)
-    # StandardScaler + a real 2-layer net, trained to convergence (no early_stopping,
-    # which on a hold-out split was stopping the collapsed net at its constant init).
-    clf = make_pipeline(
-        StandardScaler(),
-        MLPClassifier(hidden_layer_sizes=hidden, max_iter=1000, alpha=1e-4,
-                      random_state=seed, early_stopping=False),
-    )
-    clf.fit(Xtr, ytr01)
-    proba = clf.predict_proba(Xte)[:, 1]
-    metrics = _metrics_from_proba(y_test, proba)
-    metrics["hidden_layer_sizes"] = list(hidden)
-    # Report the MLP's own parameter count for transparency in the comparison table.
-    mlp = clf.named_steps["mlpclassifier"]
-    metrics["n_params"] = int(sum(c.size for c in mlp.coefs_)
-                              + sum(b.size for b in mlp.intercepts_))
-    return metrics
-
-
-def run_classical_baselines(X_train, y_train, X_test, y_test, seed: int = 42,
-                            target_params: int | None = None) -> dict:
-    """
-    Run all classical baselines on one shared split and return
-    {baseline_name: metrics_dict}. This is what the experiment runner calls so
-    classical and quantum numbers come from identical data (fair benchmarking).
-    """
+def _result(y_test, raw, selection, selected_parameters, extra_metrics=None, test_count=1):
+    metrics = compute_classification_metrics(np.asarray(y_test), raw)
+    if extra_metrics:
+        metrics.update(extra_metrics)
     return {
-        "logistic": run_logistic_baseline(X_train, y_train, X_test, y_test, seed),
-        "mlp": run_mlp_baseline(X_train, y_train, X_test, y_test, seed, target_params),
+        "metrics": metrics,
+        "selection": selection,
+        "test_evaluations": int(test_count),
+        "raw_outputs": np.asarray(raw),
+        "selected_parameters": np.asarray(selected_parameters, dtype=float),
     }
 
 
-# ----------------------------------------------------------------------------
-# Optional TensorFlow CNN baseline (lazy import — only needed if explicitly used)
-# ----------------------------------------------------------------------------
+def run_logistic_baseline(*, X_train, y_train, X_val, y_val, X_test, y_test,
+                          seed: int = 42, c_grid=None) -> dict:
+    """Fit on training data, select C on validation loss, and test once."""
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import log_loss
+
+    Xtr, Xv, Xte = _flatten(X_train), _flatten(X_val), _flatten(X_test)
+    ytr = np.where(np.asarray(y_train) == 1, 1, 0)
+    yv = np.where(np.asarray(y_val) == 1, 1, 0)
+    candidates = tuple(c_grid) if c_grid is not None else (1.0,)
+    best = None
+    for c in candidates:
+        clf = LogisticRegression(C=float(c), max_iter=2000, random_state=seed)
+        clf.fit(Xtr, ytr)
+        value = float(log_loss(yv, _positive_proba(clf, Xv), labels=[0, 1]))
+        if best is None or value < best[0]:
+            best = (value, float(c), clf)
+    value, selected_c, clf = best
+    guard = TestEvaluationGuard()
+    raw = guard.evaluate(lambda: _raw_from_proba(_positive_proba(clf, Xte)))
+    params = np.concatenate([clf.coef_.reshape(-1), clf.intercept_.reshape(-1)])
+    return _result(y_test, raw, {
+        "criterion": "validation_loss", "best_epoch": None, "best_value": value,
+        "hyperparameters": {"C": selected_c},
+        "n_validation_evaluations": len(candidates),
+    }, params, test_count=guard.count)
+
+
+def _hidden_for_param_budget(n_features: int, target_params: int | None) -> tuple:
+    if not target_params or target_params <= 0:
+        return (16,)
+    h = max(2, int(round((target_params - 1) / (n_features + 2))))
+    return (min(h, 256),)
+
+
+def run_mlp_baseline(*, X_train, y_train, X_val, y_val, X_test, y_test,
+                     seed: int = 42, target_params: int | None = None,
+                     n_epochs: int = 30) -> dict:
+    """Train one epoch at a time and restore the best validation checkpoint."""
+    from sklearn.exceptions import ConvergenceWarning
+    from sklearn.metrics import log_loss
+    from sklearn.neural_network import MLPClassifier
+
+    Xtr, Xv, Xte = _flatten(X_train), _flatten(X_val), _flatten(X_test)
+    ytr = np.where(np.asarray(y_train) == 1, 1, 0)
+    yv = np.where(np.asarray(y_val) == 1, 1, 0)
+    hidden = _hidden_for_param_budget(Xtr.shape[1], target_params)
+    clf = MLPClassifier(hidden_layer_sizes=hidden, max_iter=1, warm_start=True,
+                        early_stopping=False, random_state=seed)
+    best = None
+    for epoch in range(1, max(1, n_epochs) + 1):
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=ConvergenceWarning)
+            clf.fit(Xtr, ytr)
+        value = float(log_loss(yv, _positive_proba(clf, Xv), labels=[0, 1]))
+        if best is None or value < best[0]:
+            best = (value, epoch, copy.deepcopy(clf.coefs_), copy.deepcopy(clf.intercepts_))
+    value, best_epoch, coefs, intercepts = best
+    clf.coefs_ = copy.deepcopy(coefs)
+    clf.intercepts_ = copy.deepcopy(intercepts)
+    guard = TestEvaluationGuard()
+    raw = guard.evaluate(lambda: _raw_from_proba(_positive_proba(clf, Xte)))
+    params = np.concatenate([p.reshape(-1) for p in coefs + intercepts])
+    return _result(y_test, raw, {
+        "criterion": "validation_loss", "best_epoch": best_epoch, "best_value": value,
+        "hyperparameters": {"hidden_layer_sizes": list(hidden)},
+        "n_validation_evaluations": max(1, n_epochs),
+    }, params, {"hidden_layer_sizes": list(hidden)}, guard.count)
+
+
+def run_classical_baselines(*, X_train, y_train, X_val, y_val, X_test, y_test,
+                            seed: int = 42, target_params: int | None = None,
+                            baselines=None) -> dict:
+    common = dict(X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val,
+                  X_test=X_test, y_test=y_test, seed=seed)
+    runners = {
+        "logistic": lambda: run_logistic_baseline(**common),
+        "mlp": lambda: run_mlp_baseline(**common, target_params=target_params),
+    }
+    selected = tuple(runners) if baselines is None else tuple(baselines)
+    if len(set(selected)) != len(selected) or any(name not in runners for name in selected):
+        raise ValueError("classical baselines must be unique choices from logistic, mlp")
+    return {name: runners[name]() for name in selected}
+
+
 def build_baseline_cnn(input_shape=(4, 4, 1)):
-    """Builds a small CNN for image-shaped inputs. Requires TensorFlow."""
     try:
         from tensorflow.keras import layers, models
-    except ImportError as e:
-        raise ImportError("TensorFlow not installed. Install via: pip install tensorflow") from e
-
-    model = models.Sequential()
-    model.add(layers.Input(shape=input_shape))
-    model.add(layers.Conv2D(4, kernel_size=2, activation='relu'))
-    model.add(layers.Flatten())
-    model.add(layers.Dense(4, activation='relu'))
-    model.add(layers.Dense(1, activation='tanh'))  # match QCNN output range
-    model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+    except ImportError as exc:
+        raise ImportError("TensorFlow not installed. Install via: pip install tensorflow") from exc
+    model = models.Sequential([
+        layers.Input(shape=input_shape), layers.Conv2D(4, 2, activation="relu"),
+        layers.Flatten(), layers.Dense(4, activation="relu"), layers.Dense(1, activation="tanh")])
+    model.compile(optimizer="adam", loss="mse", metrics=["accuracy"])
     return model
 
 
-def train_baseline_cnn(X_train, y_train, X_test, y_test, epochs=40, image_size=None):
-    """Trains the optional TensorFlow CNN baseline on image-shaped inputs."""
-    X_train = np.asarray(X_train)
-    X_test = np.asarray(X_test)
+def train_baseline_cnn(*, X_train, y_train, X_val, y_val, X_test, y_test,
+                       epochs=40, image_size=None, seed=42):
+    """Train with validation only, restore best weights, and predict test once."""
+    import tensorflow as tf
+    tf.random.set_seed(seed)
+    arrays = [np.asarray(x) for x in (X_train, X_val, X_test)]
     if image_size is None:
-        # Infer square side from feature count if inputs are flat.
-        feats = X_train.reshape(X_train.shape[0], -1).shape[1]
-        image_size = int(round(feats ** 0.5))
-    X_train_cnn = X_train.reshape(-1, image_size, image_size, 1)
-    X_test_cnn = X_test.reshape(-1, image_size, image_size, 1)
-
-    model = build_baseline_cnn(input_shape=(image_size, image_size, 1))
-    history = model.fit(
-        X_train_cnn, y_train,
-        validation_data=(X_test_cnn, y_test),
-        epochs=epochs, batch_size=16, verbose=0,
-    )
-    return model, history
+        image_size = int(round(arrays[0].reshape(arrays[0].shape[0], -1).shape[1] ** 0.5))
+    Xtr, Xv, Xte = [x.reshape(-1, image_size, image_size, 1) for x in arrays]
+    model = build_baseline_cnn((image_size, image_size, 1))
+    callback = tf.keras.callbacks.EarlyStopping(
+        monitor="val_loss", patience=epochs, restore_best_weights=True)
+    history = model.fit(Xtr, y_train, validation_data=(Xv, y_val), epochs=epochs,
+                        batch_size=16, verbose=0, callbacks=[callback])
+    losses = history.history["val_loss"]
+    best_epoch = int(np.argmin(losses)) + 1
+    guard = TestEvaluationGuard()
+    raw = guard.evaluate(lambda: np.asarray(model.predict(Xte, verbose=0)).reshape(-1))
+    return _result(y_test, raw, {
+        "criterion": "validation_loss", "best_epoch": best_epoch,
+        "best_value": float(losses[best_epoch - 1]), "hyperparameters": {},
+        "n_validation_evaluations": len(losses),
+    }, np.concatenate([w.reshape(-1) for w in model.get_weights()]), test_count=guard.count)

@@ -1,12 +1,26 @@
-import math
 import numpy as np
 import pennylane as qml
 import pennylane.numpy as pnp
+from QCNN import circuits
 from QCNN.config import QuantumNativeConfig
 from QCNN.layers import QuantumNativeConvolution
 from QCNN.layers import QuantumNativePooling
 from QCNN.layers import QuanvolutionalLayer
-from QCNN.encoding import PureQuantumEncoder
+
+
+# Device for the batched training path (UPGRADE_PLAN.md 1.1). default.qubit
+# broadcasts AmplitudeEmbedding over a leading batch axis and supports backprop,
+# so one statevector pass differentiates a whole batch. lightning.qubit does
+# neither, which is why the sequential path below remains the correctness oracle
+# (tests/test_batched_execution.py pins the two together).
+BATCHED_DEVICE = 'default.qubit'
+
+# Backprop retains every intermediate statevector, so peak memory scales with
+# batch_size x 2**n_qubits. Measured: the n=16 enc_feature_map ablation at batch
+# 32 (2.1M amplitudes per block) exhausts memory, while the n=10 headline at
+# batch 32 (32k) is comfortable. Blocks above this cap use the sequential path
+# instead -- slower, but it is the same circuit and it completes.
+MAX_BATCHED_AMPLITUDES = 1 << 18
 
 
 class PureQuantumNativeCNN:
@@ -20,20 +34,7 @@ class PureQuantumNativeCNN:
     #constructor
     def __init__(self, config: QuantumNativeConfig):
         self.config = config
-        # Fast path: default.qubit + backprop natively broadcasts a whole batch through a
-        # single statevector pass. Fallback: the configured device (lightning.qubit) with
-        # adjoint, evaluated one sample at a time.
-        # Batched backprop OOMs at high qubit counts (memory ~ batch × 2^n_qubits × depth),
-        # so gate the fast path by qubit count; larger circuits use the memory-light
-        # lightning+adjoint per-sample path instead.
-        _want_fast = getattr(config, 'fast_backprop', False)
-        _max_q = getattr(config, 'fast_backprop_max_qubits', 12)
-        self.fast_backprop = _want_fast and config.n_qubits <= _max_q
-        if _want_fast and not self.fast_backprop:
-            print(f"[QCNNModel] {config.n_qubits} qubits > {_max_q}: using memory-safe "
-                  f"lightning+adjoint per-sample path (batched backprop would OOM).")
-        device_name = 'default.qubit' if self.fast_backprop else config.device
-        self.device = qml.device(device_name, wires=config.n_qubits)
+        self.device = qml.device(config.device, wires=config.n_qubits)
         self.num_qubits = config.n_qubits
 
         self.quanv_layer = None
@@ -48,16 +49,25 @@ class PureQuantumNativeCNN:
 
         self.quantum_params = self._initialize_quantum_parameters()
 
-        # default.qubit supports backprop + input broadcasting, so a batched x (shape
-        # (batch, features)) returns one <Z> per sample in a single pass. lightning.qubit
-        # uses adjoint ('best') and is driven one sample at a time by the callers.
-        diff_method = 'backprop' if self.fast_backprop else 'best'
-        @qml.qnode(self.device, interface='autograd', diff_method=diff_method)
+        # FIX: removed @qml.transforms.broadcast_expand — not compatible with
+        # AmplitudeEmbedding / MottonenStatePreparation in PennyLane 0.38
+        @qml.qnode(self.device, interface='autograd', diff_method='best')
         def quantum_circuit(x, flat_params):
             params = self._unflatten_params(flat_params)
             return self._pure_quantum_forward(x, params)
 
         self.quantum_circuit = quantum_circuit
+
+        # Same circuit, batched execution strategy. Accepts a (batch, features)
+        # input and returns one <Z> per sample; also accepts a single 1D input.
+        self.batched_device = qml.device(BATCHED_DEVICE, wires=config.n_qubits)
+
+        @qml.qnode(self.batched_device, interface='autograd', diff_method='backprop')
+        def batched_circuit(x, flat_params):
+            params = self._unflatten_params(flat_params)
+            return self._pure_quantum_forward(x, params)
+
+        self.batched_circuit = batched_circuit
         self.training_history = {'loss': [], 'accuracy': [], 'epoch_times': []}
 
     def _initialize_quantum_parameters(self) -> dict[str, pnp.ndarray]:
@@ -79,7 +89,11 @@ class PureQuantumNativeCNN:
             params[f'quantum_conv_kernel_{layer}'] = kernel_tensor
 
         max_pairs = self.num_qubits // 2
-        pool_angles_per_layer = 3 * max_pairs
+        # Per-arm width: the frozen 'unitary' arm keeps 3/pair, so its layout and
+        # its position in the seeded RNG stream are unchanged (the freeze tests
+        # prove it). su4 needs 15/pair and 'none' needs none.
+        pool_angles_per_layer = max_pairs * QuantumNativePooling.angles_per_pair(
+            getattr(self.config, 'pooling_mode', 'unitary'))
         n_pool_layers = max(1, self.config.n_conv_layers - 1)
         for pl in range(n_pool_layers):
             params[f'quantum_pooling_{pl}'] = pnp.array(
@@ -109,7 +123,8 @@ class PureQuantumNativeCNN:
             idx += kernel_size
 
         max_pairs = self.num_qubits // 2
-        pool_angles_per_layer = 3 * max_pairs
+        pool_angles_per_layer = max_pairs * QuantumNativePooling.angles_per_pair(
+            getattr(self.config, 'pooling_mode', 'unitary'))
         n_pool_layers = max(1, self.config.n_conv_layers - 1)
         for pl in range(n_pool_layers):
             params[f'quantum_pooling_{pl}'] = flat_params[idx:idx + pool_angles_per_layer]
@@ -120,78 +135,7 @@ class PureQuantumNativeCNN:
         return params
 
     def _pure_quantum_forward(self, x: np.ndarray, params: dict) -> float:
-        all_qubits = list(range(self.config.n_qubits))
-
-        if self.config.encoding_type in ('amplitude', 'patch'):
-            PureQuantumEncoder.amplitude_encoding(x, all_qubits)
-        else:
-            PureQuantumEncoder.quantum_feature_map(x, all_qubits)
-
-        active_qubits = all_qubits.copy()
-        current_image_size = self.config.image_size
-
-        for layer in range(self.config.n_conv_layers):
-            n_current = len(active_qubits)
-            if n_current >= 4:
-                width = int(math.sqrt(n_current))
-                while n_current % width != 0:
-                    width -= 1
-                height = n_current // width
-                w, h = max(width, height), min(width, height)
-                base_windows = QuantumNativeConvolution.get_conv_windows(w, h)
-                kernel = params[f'quantum_conv_kernel_{layer}']
-                rotations = getattr(self.config, 'kernel_rotations', 'su2')
-                entanglement = getattr(self.config, 'conv_entanglement', 'full')
-                for rel_window in base_windows:
-                    if max(rel_window) < n_current:
-                        window_qubits = [active_qubits[i] for i in rel_window]
-                        QuantumNativeConvolution.quantum_conv2d_kernel(
-                            kernel, window_qubits,
-                            rotations=rotations, entanglement=entanglement)
-
-            if layer < self.config.n_conv_layers - 1:
-                n_qubits_current = len(active_qubits)
-                if n_qubits_current < 2:
-                    break
-                pairs = QuantumNativePooling.make_pairing(active_qubits)
-                if len(pairs) == 0:
-                    break
-                keep = [k for (k, _) in pairs]
-                discard = [d for (_, d) in pairs]
-                pool_key = f'quantum_pooling_{layer}'
-                QuantumNativePooling.apply_pooling(
-                    getattr(self.config, 'pooling_mode', 'unitary'),
-                    params[pool_key],
-                    input_qubits=keep,
-                    output_qubits=discard
-                )
-                active_qubits = keep
-                if current_image_size > 2:
-                    current_image_size = max(2, current_image_size // 2)
-
-        classifier_params = params['quantum_classifier']
-        n_active = len(active_qubits)
-        readout = active_qubits[0]
-
-        for i, q in enumerate(active_qubits[:min(n_active, 4)]):
-            qml.RX(classifier_params[i * 2 % 32], wires=q)
-            qml.RY(classifier_params[(i * 2 + 1) % 32], wires=q)
-            qml.RZ(classifier_params[(i * 2 + 8) % 32], wires=q)
-
-        for i in range(n_active - 1):
-            qml.CNOT(wires=[active_qubits[i], active_qubits[i+1]])
-        if n_active >= 2:
-            qml.CNOT(wires=[active_qubits[n_active-1], active_qubits[0]])
-
-        for i, q in enumerate(active_qubits[:min(n_active, 4)]):
-            qml.RX(classifier_params[(i * 2 + 16) % 32], wires=q)
-            qml.RY(classifier_params[(i * 2 + 17) % 32], wires=q)
-
-        if n_active >= 2:
-            qml.CNOT(wires=[active_qubits[0], active_qubits[min(n_active-1, 1)]])
-        qml.RZ(classifier_params[31], wires=readout)
-
-        return qml.expval(qml.PauliZ(readout))
+        return circuits.build_circuit(x, params, self.config)
 
     def _preprocess_input(self, x: np.ndarray) -> np.ndarray:
         if self.config.encoding_type == 'patch' and self.quanv_layer is not None:
@@ -230,28 +174,39 @@ class PureQuantumNativeCNN:
         flat_params = self._flatten_params(self.quantum_params)
         return float(self.quantum_circuit(x_processed, flat_params))
 
-    def quantum_predict_batch(self, X: np.ndarray) -> np.ndarray:
-        X_processed = self._preprocess_input(X)
-        flat_params = self._flatten_params(self.quantum_params)
-        if self.fast_backprop:
-            # Single broadcasted pass → vector of <Z>, one per sample.
-            outputs = np.asarray(self.quantum_circuit(pnp.array(X_processed), flat_params))
-        else:
-            outputs = np.array([
-                float(self.quantum_circuit(X_processed[i], flat_params))
-                for i in range(len(X_processed))
-            ])
-        return np.where(outputs > 0, 1, -1)
+    def max_batch(self) -> int:
+        """Largest batch whose statevector block fits the memory cap."""
+        return max(1, MAX_BATCHED_AMPLITUDES // (2 ** self.num_qubits))
 
-    def quantum_loss_function(self, X_batch: np.ndarray, y_batch: np.ndarray) -> float:
-        X_processed = self._preprocess_input(X_batch)
+    def supports_batched(self, batch_size: int) -> bool:
+        return batch_size <= self.max_batch()
+
+    def batch_expectations(self, X, flat_params):
+        """Differentiable ``<Z>`` for a batch, batched where it fits in memory.
+
+        Falls back to the sequential path rather than chunking: under backprop
+        every chunk's tape is retained until the backward pass, so chunking
+        would not lower peak memory for a gradient.
+        """
+        if self.supports_batched(len(X)):
+            return self.batched_circuit(X, flat_params)
+        return pnp.array([self.quantum_circuit(X[i], flat_params) for i in range(len(X))])
+
+    def raw_expectations(self, X: np.ndarray, already_preprocessed: bool = False) -> np.ndarray:
+        """``<Z_readout>`` per sample, batched and chunked. Not differentiable.
+
+        Inference is not differentiated, so unlike the gradient path chunking
+        really does bound peak memory here: no tape is retained between chunks.
+        """
+        X_processed = np.asarray(X if already_preprocessed else self._preprocess_input(X))
         flat_params = self._flatten_params(self.quantum_params)
-        if self.fast_backprop:
-            preds = self.quantum_circuit(pnp.array(X_processed), flat_params)
-        else:
-            preds = pnp.array([
-                self.quantum_circuit(pnp.array(X_processed[i]), flat_params)
-                for i in range(len(X_processed))
-            ])
-        y_batch = pnp.array(y_batch)
-        return pnp.mean((preds - y_batch) ** 2)
+        step = self.max_batch()
+        chunks = [
+            np.asarray(self.batched_circuit(X_processed[i:i + step], flat_params),
+                       dtype=float).reshape(-1)
+            for i in range(0, len(X_processed), step)
+        ]
+        return np.concatenate(chunks) if chunks else np.empty(0)
+
+    def quantum_predict_batch(self, X: np.ndarray) -> np.ndarray:
+        return np.where(self.raw_expectations(X) > 0, 1, -1)

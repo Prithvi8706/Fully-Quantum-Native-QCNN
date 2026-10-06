@@ -1,0 +1,17 @@
+{
+  "accuracy": 0.9819277108433735,
+  "balanced_accuracy": 0.9819277108433735,
+  "precision": 1.0,
+  "recall": 0.963855421686747,
+  "f1": 0.9815950920245399,
+  "roc_auc": 1.0,
+  "pr_auc": 1.0000000000000002,
+  "tp": 80,
+  "tn": 83,
+  "fp": 0,
+  "fn": 3,
+  "prediction_bias": 0.02786104502196962,
+  "prediction_variance": 0.088329292026822,
+  "n_params": 48,
+  "architecture": "ttn"
+}

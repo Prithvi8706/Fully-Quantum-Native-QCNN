@@ -22,23 +22,19 @@ Write-Host "Activating .venv..." -ForegroundColor Yellow
 Write-Host "Upgrading pip..." -ForegroundColor Yellow
 python -m pip install --upgrade pip
 
-# --- CORE PYTHON LIBRARIES ---
-Write-Host "Installing core libraries..." -ForegroundColor Yellow
-pip install numpy scipy matplotlib scikit-learn
-
-# --- PENNYLANE AND FAST SIMULATORS ---
-Write-Host "Installing PennyLane..." -ForegroundColor Yellow
-pip install pennylane
-pip install pennylane-lightning
-pip install "autoray<0.8.0"
-
-# --- OTHER DEPENDENCIES ---
-# (Add more as needed for your project)
-# pip install jupyter
+# --- PINNED DEPENDENCIES ---
+# Install from the lock, not from unpinned latest: the reported results were
+# produced on PennyLane 0.38 / NumPy 1.26, and installing whatever is current
+# gives a different simulator (UPGRADE_PLAN.md 0.6 / F9).
+Write-Host "Installing pinned dependencies from requirements-lock.txt..." -ForegroundColor Yellow
+pip install -r requirements-lock.txt
 
 # --- VERIFY INSTALLATION ---
 Write-Host "--- Installed PennyLane devices ---" -ForegroundColor Green
 python -c "import pennylane as qml; print(qml.list_available_devices())"
+
+Write-Host "--- Verifying the pinned stack ---" -ForegroundColor Green
+python -c "import platform, pennylane, numpy, sklearn; print('python', platform.python_version()); print('pennylane', pennylane.__version__); print('numpy', numpy.__version__); print('scikit-learn', sklearn.__version__)"
 
 Write-Host "=== QCNN Setup Complete! ===" -ForegroundColor Cyan
 Write-Host "To activate the environment next time, run: .\.venv\Scripts\Activate.ps1"

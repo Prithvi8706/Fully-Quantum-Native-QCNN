@@ -1,0 +1,639 @@
+{
+  "alpha": 0.05,
+  "arms": {
+    "e3_pool_coherent": {
+      "accuracy": {
+        "mean": 0.8798122065727702,
+        "n": 15,
+        "std": 0.06949942719660641
+      },
+      "ci95": {
+        "confidence": 0.95,
+        "high": 0.9154929577464788,
+        "low": 0.8464788732394365,
+        "n_resamples": 10000
+      },
+      "vs_reference": {
+        "delta_accuracy": 0.001877934272300652,
+        "mcnemar": {
+          "b01": 107,
+          "b10": 111,
+          "exact": true,
+          "n_discordant": 218,
+          "p_holm": 1.0,
+          "p_value": 0.8390485361819616,
+          "significant": false
+        },
+        "reference": "e3_pool_unitary",
+        "wilcoxon": {
+          "all_tied": false,
+          "n_pairs": 15,
+          "p_holm": 1.0,
+          "p_value": 1.0,
+          "significant": false,
+          "statistic": 52.5
+        }
+      }
+    },
+    "e3_pool_measurement": {
+      "accuracy": {
+        "mean": 0.8779342723004695,
+        "n": 15,
+        "std": 0.07226082688570863
+      },
+      "ci95": {
+        "confidence": 0.95,
+        "high": 0.9145539906103288,
+        "low": 0.8427230046948356,
+        "n_resamples": 10000
+      },
+      "vs_reference": {
+        "delta_accuracy": 0.0,
+        "mcnemar": {
+          "b01": 0,
+          "b10": 0,
+          "exact": true,
+          "n_discordant": 0,
+          "p_holm": 1.0,
+          "p_value": 1.0,
+          "significant": false
+        },
+        "reference": "e3_pool_unitary",
+        "wilcoxon": {
+          "all_tied": true,
+          "n_pairs": 15,
+          "p_holm": 1.0,
+          "p_value": 1.0,
+          "significant": false,
+          "statistic": 0.0
+        }
+      }
+    },
+    "e3_pool_none": {
+      "accuracy": {
+        "mean": 0.8507042253521127,
+        "n": 15,
+        "std": 0.08108077726548875
+      },
+      "ci95": {
+        "confidence": 0.95,
+        "high": 0.8920187793427229,
+        "low": 0.8107981220657278,
+        "n_resamples": 10000
+      },
+      "vs_reference": {
+        "delta_accuracy": -0.027230046948356845,
+        "mcnemar": {
+          "b01": 143,
+          "b10": 85,
+          "exact": true,
+          "n_discordant": 228,
+          "p_holm": 0.0005938587105310436,
+          "p_value": 0.0001484646776327609,
+          "significant": true
+        },
+        "reference": "e3_pool_unitary",
+        "wilcoxon": {
+          "all_tied": false,
+          "n_pairs": 15,
+          "p_holm": 0.00244140625,
+          "p_value": 0.0006103515625,
+          "significant": true,
+          "statistic": 5.0
+        }
+      }
+    },
+    "e3_pool_su4": {
+      "accuracy": {
+        "mean": 0.9018779342723006,
+        "n": 15,
+        "std": 0.06588512334904555
+      },
+      "ci95": {
+        "confidence": 0.95,
+        "high": 0.9352112676056339,
+        "low": 0.8685446009389672,
+        "n_resamples": 10000
+      },
+      "vs_reference": {
+        "delta_accuracy": 0.023943661971831065,
+        "mcnemar": {
+          "b01": 83,
+          "b10": 134,
+          "exact": true,
+          "n_discordant": 217,
+          "p_holm": 0.001961769078611378,
+          "p_value": 0.0006539230262037927,
+          "significant": true
+        },
+        "reference": "e3_pool_unitary",
+        "wilcoxon": {
+          "all_tied": false,
+          "n_pairs": 15,
+          "p_holm": 0.5001909320044897,
+          "p_value": 0.16673031066816324,
+          "significant": false,
+          "statistic": 30.5
+        }
+      }
+    },
+    "e3_pool_unitary": {
+      "accuracy": {
+        "mean": 0.8779342723004695,
+        "n": 15,
+        "std": 0.07226082688570863
+      },
+      "ci95": {
+        "confidence": 0.95,
+        "high": 0.9145539906103288,
+        "low": 0.8427230046948356,
+        "n_resamples": 10000
+      }
+    }
+  },
+  "cells": {
+    "e3_pool_coherent": [
+      {
+        "accuracy": 0.9507042253521126,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.9647887323943662,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.9788732394366197,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.971830985915493,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.9507042253521126,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 4
+      },
+      {
+        "accuracy": 0.8098591549295775,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.823943661971831,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.8028169014084507,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.823943661971831,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.7887323943661971,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 4
+      },
+      {
+        "accuracy": 0.8309859154929577,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.8380281690140845,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.9436619718309859,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.8943661971830986,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.823943661971831,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 4
+      }
+    ],
+    "e3_pool_measurement": [
+      {
+        "accuracy": 0.9577464788732394,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.9647887323943662,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.9577464788732394,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.9788732394366197,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.971830985915493,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 4
+      },
+      {
+        "accuracy": 0.7605633802816901,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.7605633802816901,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.8732394366197183,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.8380281690140845,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.8028169014084507,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 4
+      },
+      {
+        "accuracy": 0.8661971830985915,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.8802816901408451,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.8802816901408451,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.8169014084507042,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.8591549295774648,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 4
+      }
+    ],
+    "e3_pool_none": [
+      {
+        "accuracy": 0.9507042253521126,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.9295774647887324,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.9507042253521126,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.971830985915493,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.9507042253521126,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 4
+      },
+      {
+        "accuracy": 0.704225352112676,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.7535211267605634,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.8098591549295775,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.795774647887324,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.7464788732394366,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 4
+      },
+      {
+        "accuracy": 0.8309859154929577,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.8450704225352113,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.8591549295774648,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.8309859154929577,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.8309859154929577,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 4
+      }
+    ],
+    "e3_pool_su4": [
+      {
+        "accuracy": 0.9507042253521126,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.9577464788732394,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.971830985915493,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.9859154929577465,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.9929577464788732,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 4
+      },
+      {
+        "accuracy": 0.9014084507042254,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.8380281690140845,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.8591549295774648,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.9225352112676056,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.795774647887324,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 4
+      },
+      {
+        "accuracy": 0.8661971830985915,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.9084507042253521,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.9577464788732394,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.795774647887324,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.823943661971831,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 4
+      }
+    ],
+    "e3_pool_unitary": [
+      {
+        "accuracy": 0.9577464788732394,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.9647887323943662,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.9577464788732394,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.9788732394366197,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.971830985915493,
+        "dataset": "0v1",
+        "n_test": 142,
+        "seed": 4
+      },
+      {
+        "accuracy": 0.7605633802816901,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.7605633802816901,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.8732394366197183,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.8380281690140845,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.8028169014084507,
+        "dataset": "3v5",
+        "n_test": 142,
+        "seed": 4
+      },
+      {
+        "accuracy": 0.8661971830985915,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 0
+      },
+      {
+        "accuracy": 0.8802816901408451,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 1
+      },
+      {
+        "accuracy": 0.8802816901408451,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 2
+      },
+      {
+        "accuracy": 0.8169014084507042,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 3
+      },
+      {
+        "accuracy": 0.8591549295774648,
+        "dataset": "4v9",
+        "n_test": 142,
+        "seed": 4
+      }
+    ]
+  },
+  "claim": "retrained head-to-head comparison of the pooling arms",
+  "datasets": [
+    "0v1",
+    "3v5",
+    "4v9"
+  ],
+  "experiment": "E3",
+  "missing_cells": [],
+  "n_cells_per_arm": {
+    "e3_pool_coherent": 15,
+    "e3_pool_measurement": 15,
+    "e3_pool_none": 15,
+    "e3_pool_su4": 15,
+    "e3_pool_unitary": 15
+  },
+  "reference": "e3_pool_unitary",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "artifact": "T6",
+  "claim": "the frozen ansatz's coverage of state space and mean entanglement",
+  "controls": {
+    "degenerate_ensemble_kl": 25.80901384276681,
+    "haar_mass_in_first_bin": 0.9999989126312814,
+    "haar_reference_kl": 1.0873693098232162e-06,
+    "haar_reference_mean_fidelity": 0.0009936308308428922,
+    "inflated_fidelity_10x_kl": 3.822875240525768,
+    "note": "a KL near the Haar-reference value means indistinguishable from Haar at this sample size; the inflated and degenerate arms show the measure still separates gross deviations at this n, so the null is not an artefact of the binning"
+  },
+  "device": "default.qubit",
+  "experiment": "3.4 expressibility and entangling capability",
+  "expressibility": {
+    "haar_mean_fidelity": 0.0009765625,
+    "kl_divergence": 1.0873693098232162e-06,
+    "mean_fidelity": 0.0009742320100776099,
+    "n_bins": 75,
+    "n_samples": 3000
+  },
+  "expressibility_kl_by_bin_count": {
+    "100": 3.426190552028683e-05,
+    "150": 0.0005624699803909662,
+    "25": 0.0,
+    "50": 1.0574880965301358e-09,
+    "75": 1.0873693098232162e-06
+  },
+  "image_size": 28,
+  "input": "one fixed amplitude-encoded input (ansatz expressibility, not data spread)",
+  "meyer_wallach": {
+    "max": 0.9953307723192713,
+    "mean": 0.9744521378562931,
+    "min": 0.894556694179268,
+    "n_states": 3000,
+    "std": 0.013455804940364652
+  },
+  "n_pairs": 3000,
+  "n_qubits": 10,
+  "n_slots": 269,
+  "seconds": 343.4090757369995,
+  "seed": 20260727,
+  "weights": "random parameters, uniform [0, 2pi)"
+}
