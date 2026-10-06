@@ -181,7 +181,7 @@ What limits practical interpretation? & Audit effective capacity, finite-size gr
 The first two questions are principally mathematical. The statement that the
 main path is unitary follows from the operation types in the executed tape, and
 the pooling statement follows from the controlled-unitary factorisation proved
-in Section~\ref{sec:pooling-theory}. Their numerical checks are evaluated at the trained ten-qubit configuration
+in Section~\ref{sec:pooling-theory}. Their numerical checks are evaluated at the reference checkpoint (Section~\ref{sec:reference})
 rather than as estimates of a population.
 
 
@@ -423,7 +423,7 @@ Theorem~\ref{thm:exact} gives a direct deferred-measurement construction for the
 \begin{enumerate}
 \item Coherent pooling \emph{loses nothing} relative to measurement-based pooling for the retained-register channel; it simulates that class without mid-circuit control.
 \item It does so while eliminating mid-circuit measurement, qubit reset, and classical feed-forward --- capabilities that may require additional control support on a target device. 
-\item The global state remains pure from state preparation to the single terminal measurement, and the circuit is differentiable by the adjoint method end to end.
+\item The global state remains pure from state preparation to the single terminal measurement, and the circuit is differentiable end to end (here by backpropagation).
 \end{enumerate}
 
 It also follows immediately that $R_Y^{(b)}(\epsilon)$ in~\eqref{eq:poolblock} is inert: it acts only on $b$, and the partial trace over $b$ absorbs it. This is an analytic invariant of the stated retained-register channel, independent of the fixed angle's numerical value.
@@ -454,7 +454,7 @@ By Theorem~\ref{thm:exact} the output of $W_{ab}$ depends on $\rho$ only through
 \end{proof}
 
 \subsubsection{Numerical confirmation}
-The analytic statements are also checked on the executed circuit. Evaluating the $n=10$ model with its trained parameters on a density-matrix simulator, the coherent block and the explicit measure-and-condition channel of~\eqref{eq:mcchannel} produce terminal expectation values agreeing to a maximum deviation of $2.2 \times 10^{-16}$ --- floating-point round-off, against a tolerance of $10^{-12}$. Independently, inserting complete dephasing on every compressed wire immediately before pooling, at unchanged parameters, changes the readout by at most $5.86 \times 10^{-14}$ and leaves the predicted class unchanged for all eight evaluated inputs, so the observed accuracy difference on this check is zero. The retained-wire dephasing control changes the readout by $0.4094$, confirming that the null effect is specific to the compressed subsystem and its partial trace.
+The analytic statements are also checked on the executed circuit. Evaluating the $n=10$ reference checkpoint (Section~\ref{sec:reference}) on a density-matrix simulator, the coherent block and the explicit measure-and-condition channel of~\eqref{eq:mcchannel} produce terminal expectation values agreeing to a maximum deviation of $2.2 \times 10^{-16}$ --- floating-point round-off, against a tolerance of $10^{-12}$. Independently, inserting complete dephasing on every compressed wire immediately before pooling, at unchanged parameters, changes the readout by at most $5.86 \times 10^{-14}$ and leaves the predicted class unchanged for all eight evaluated inputs, so the observed accuracy difference on this check is zero. The retained-wire dephasing control changes the readout by $0.4094$, confirming that the null effect is specific to the compressed subsystem and its partial trace.
 
 \subsubsection{Scope of the result}
 Theorem~\ref{thm:exact} does not imply that the coherent block preserves
@@ -462,7 +462,7 @@ retained-register information that the measurement-based block destroys: for
 observables of this circuit, the two channels are identical. It establishes
 exact simulation of the measurement-based class without mid-circuit
 measurement, reset, or feed-forward, a globally pure state throughout the
-pipeline, and end-to-end adjoint differentiability. Whether the strict
+pipeline, and end-to-end differentiability. Whether the strict
 extension of Proposition~\ref{prop:containment} yields an accuracy benefit is
 tested by the pooling ablation in Section~\ref{sec:results}.
 
@@ -475,6 +475,7 @@ A final $R_Z(\theta_{31})$ is syntactically applied to the readout wire immediat
 Parameter sharing prevents the number of allocated slots from scaling with the number of windows, but the executed topology determines which slots are used. We therefore report allocated, tape-reaching, and effective counts separately rather than applying a closed-form count that assumes every module is independently instantiated.
 
 \subsection{Capacity accounting and executed-tape audit}
+\label{sec:capacity}
 The parameter vector is intentionally larger than the set of values that
 influence the terminal observable. Each of the four convolutional arrays is
 allocated as a $4\times4\times3$ tensor, giving 48 slots per layer. Three
@@ -508,7 +509,7 @@ The gate count used in the capacity
 scaling diagnostic is 222, not 74: 48 effective slots are reused across more
 than one gate occurrence, with up to four occurrences driven by one slot. The
 two counts thus differ in opposite directions. The audit was performed both on
-the trained ten-qubit weights over 20 fixed inputs and in the
+the reference checkpoint over 20 fixed inputs and in the
 independent random-initialisation gradient sweep described in
 Section~\ref{sec:diagnostics}; the two audits give the same effective count.
 
@@ -556,7 +557,18 @@ The reported statevector training uses backpropagation on PennyLane's \texttt{de
 where, for one eligible gate occurrence $j$, $\partial f/\partial\theta_j = \tfrac{1}{2}(f_{j,+}-f_{j,-})$ with shifts $\pm\pi/2$. If one trainable slot is reused in $r$ gate occurrences, the chain rule sums those occurrence-level derivatives, requiring up to $2r$ shifted circuit evaluations absent a specialised grouped rule. 
 
 \subsection{Optimization Procedure}
-The optimisation loop uses the Adam optimiser with mini-batches of $M = 32$, gradient clipping, an Exponential Moving Average (EMA) of the parameters, and validation-based early stopping. The full settings are listed in Table~\ref{tab:training}.
+The optimisation loop uses the Adam optimiser with mini-batches of $M = 32$, gradient clipping to norm 5, and an Exponential Moving Average (EMA) of the parameters with decay 0.99. After every epoch the EMA parameters are scored on the validation partition, and the checkpoint with the highest validation accuracy is kept. After three epochs without improvement the learning rate is halved; training stops when it would fall below $10^{-4}$ or when the epoch limit is reached. The full settings are listed in Table~\ref{tab:training}.
+
+\subsection{Reference checkpoint for circuit diagnostics}
+\label{sec:reference}
+The circuit-level diagnostics in Sections~\ref{sec:pooling-theory},
+\ref{sec:capacity}, and~\ref{sec:infodyn} use one reference checkpoint of the
+ten-qubit model. It was
+trained with the procedure above on the full stratified MNIST 0-vs-1 split
+(7,599 training and 1,900 validation images; seed 42; learning rate 0.005; at
+most 50 epochs) and reached 98.2\% validation accuracy. It is used only to fix
+concrete parameter values for these diagnostics; the accuracy comparison uses
+the per-seed checkpoints of Section~\ref{sec:results}.
 
 \subsection{Reproducible training protocol}
 The comparison campaign treats data identity, split identity, model selection,
@@ -573,7 +585,7 @@ Algorithm~\ref{alg:protocol}.
 \STATE Apply the fixed preprocessing and amplitude encoding.
 \FOR{each arm and seed}
   \STATE Initialise the arm with the given seed and fixed configuration.
-  \STATE Train on the training partition only; monitor validation loss.
+  \STATE Train on the training partition only; score the EMA parameters on the validation partition after each epoch.
   \STATE Restore the validation-selected checkpoint.
   \STATE Evaluate the test partition once and record the predictions and metrics.
 \ENDFOR
@@ -599,7 +611,7 @@ hyperparameter choice.
 \midrule
 Task definition & Four binary tasks are fixed in advance: MNIST 0-vs-1, MNIST 3-vs-5, Fashion-MNIST 0-vs-6, and KMNIST 2-vs-3. & Covers an easy calibration task, a harder in-domain pair, and two further dataset families, and avoids post hoc task selection. \\
 Split identity & Each seed uses a stored stratified split with stable sample IDs. & Ensures that every arm is trained and tested on the same partition. \\
-Model selection & Validation loss controls checkpoint restoration and early stopping; the test partition is read once at the end. & Prevents test-driven selection and keeps the final metric attached to the selected checkpoint. \\
+Model selection & Validation accuracy selects the checkpoint and drives the learning-rate schedule; the test partition is read once at the end. & Prevents test-driven selection and keeps the final metric attached to the selected checkpoint. \\
 Capacity disclosure & FQCNN allocation, tape usage, effective slots, logistic coefficients, and MLP parameters are reported separately. & Avoids calling the two-unit MLP parameter-matched when its dense parameter count is larger. \\
 Seed aggregation & Five seeds are paired by task and split; population standard deviation and seeded bootstrap intervals are reported. & Displays training variability and avoids treating individual test examples as independent repetitions of training. \\
 \bottomrule
@@ -619,7 +631,7 @@ then performs the per-state $\ell_2$ normalisation required by state preparation
  This is a fixed preprocessing step, not a learned feature-extraction stage.
 
 \subsection{Computational Complexity}
-For the simulator path, adjoint/backpropagation cost is determined by the retained state and circuit evaluation rather than by parameter-shift executions. If parameter-shift is used on hardware, its leading evaluation count is two shifted circuits per eligible gate occurrence and datapoint, with additional accounting for reused slots and shot cost set by the measurement budget. Statevector simulation scales as $\mathcal{O}(2^n)$ in memory. 
+For the simulator path, backpropagation cost is determined by the retained state and circuit evaluation rather than by parameter-shift executions. If parameter-shift is used on hardware, its leading evaluation count is two shifted circuits per eligible gate occurrence and datapoint, with additional accounting for reused slots and shot cost set by the measurement budget. Statevector simulation scales as $\mathcal{O}(2^n)$ in memory. 
 
 \subsection{Noise and Gradient Stability}
 \subsubsection{Statistical measurement noise}
@@ -667,7 +679,10 @@ All experiments use numerical quantum simulation on a register of $n = 10$ qubit
 \toprule
 \textbf{Parameter} & \textbf{Value} \\
 \midrule
-Epochs & 30 maximum; patience 3 \\
+Epochs & 30 maximum \\
+LR schedule & halve after 3 epochs without improvement \\
+Gradient clipping & norm 5 \\
+EMA decay & 0.99 \\
 Batch size & 32 \\
 Learning rate & 0.02 \\
 Optimizer & Adam \\
@@ -847,9 +862,7 @@ The transfer experiment in Table~\ref{tab:pooling-transfer} uses the same 166-ex
 
 \subsection{Secondary pooling-family evidence}
 A separate pooling-arm experiment provides a complementary, smaller-budget
-view of the pooling family. It used the ten-qubit geometry, 400 training
-examples, 30 epochs, five seeds, and three binary MNIST tasks, with 142 test
-examples per task and split. Because its task set and split sizes differ from
+view of the pooling family. It used the ten-qubit geometry, a 571-example pool per task split 343/86/142 (train/validation/test), 30 epochs, five seeds, and three binary MNIST tasks. Because its task set and split sizes differ from
 the four-task comparison, it is reported separately and is not merged into the
 primary results.
 
@@ -880,11 +893,12 @@ MNIST 3-vs-5; the seed-level Wilcoxon result does not confirm that advantage
 after Holm correction. This suggests headroom within the wider pooling family; the three-angle block is not necessarily optimal.
 
 \subsection{Information dynamics across the pooling cascade}
+\label{sec:infodyn}
 The word ``coherent'' can refer either to the purity of the complete state or to
 the coherence of a reduced subsystem. These are not interchangeable. To make
 the distinction observable, we recorded reduced-state diagnostics at the
 encoded state, immediately before and after each pooling stage, and after the
-classifier for eight inputs using the trained weights. For a reduced density matrix
+classifier for eight inputs using the reference checkpoint. For a reduced density matrix
 $\rho_A$, the reported $\ell_1$ coherence is
 \begin{equation}
 C_{\ell_1}(\rho_A)=\sum_{i\ne j}|(\rho_A)_{ij}|,
@@ -901,7 +915,7 @@ Table~\ref{tab:information} are in bits; entries are mean $\pm$ standard
 deviation over the eight inputs.
 
 \begin{table*}[!t]
-\caption{Per-stage information diagnostics for the trained ten-qubit circuit. The reduced state is taken on the active/kept wires; mutual information is reported only at pooling boundaries. }
+\caption{Per-stage information diagnostics for the ten-qubit reference checkpoint. The reduced state is taken on the active/kept wires; mutual information is reported only at pooling boundaries. }
 \label{tab:information}
 \centering
 \small
@@ -1061,7 +1075,7 @@ less suitable for extrapolation because the number and composition of live
 slots are non-monotone; its best power-law fit reaches only $R^2=0.663$. Gradients therefore remain measurable in the tested range, and no barren plateau is observed through $n=14$; the data do not determine the asymptotic behaviour.
 
 The $n=10$ row independently reproduces the 74-slot effective count obtained
-from the trained-weight, fixed-input audit, despite using random parameters,
+from the reference-checkpoint, fixed-input audit, despite using random parameters,
 random inputs, and a variance criterion. This agreement strengthens the
 interpretation that the distinction between allocated and effective slots is a
 property of the executed topology. 
@@ -1150,8 +1164,7 @@ of a shallow, structured parameterisation.
 
 \subsubsection{Capacity-scaling diagnostic}
 Finally, we evaluated the finite gate-count expression
-$g(T,N)=\sqrt{T\log(T)/N}$ at a training-set size of $N=7,599$, the 60\%
-stratified training share of all 12,665 MNIST digit-0/1 images. The result is shown in Table~\ref{tab:generalization}. Here
+$g(T,N)=\sqrt{T\log(T)/N}$ at $N=7,599$, the training-set size of the reference checkpoint. The result is shown in Table~\ref{tab:generalization}. Here
 $T$ must count trainable gate occurrences rather than parameter slots. The expression omits a theorem-dependent constant, so it serves as a scaling diagnostic rather than a numerical bound.
 
 \begin{table}[!t]
@@ -1248,7 +1261,7 @@ The canonical QCNN construction relies on mid-circuit measurement and classical 
 \subsection{Coherent unitary pooling}
 Instead of a mid-circuit projection, which incurs latency and reset overheads on physical devices and requires dynamic-circuit support, the architecture uses the measurement-free pooling block of~\eqref{eq:poolblock}: features are routed from the compressed sub-register into the retained register by controlled rotations, with the compressed qubit as control. After pooling, the compressed sub-register is excluded from the remainder of the circuit, which is equivalent to a partial trace over those subsystems.
 
-The contribution is precisely delimited by Section~\ref{sec:pooling-theory}. Theorem~\ref{thm:exact} establishes that this block reproduces the corresponding measure-and-condition channel exactly, so it is not more expressive than measurement-based pooling; Proposition~\ref{prop:containment} establishes that the wider unitary family strictly contains that class, so the proposed block is one explicitly simulated member of that family. What the block delivers is the same channel without mid-circuit measurement, reset, or classical feed-forward, with the global register pure up to the single terminal measurement and the whole circuit differentiable by the adjoint method. The discard step is accounted for as a partial trace rather than as a unitary on the full register.
+The contribution is precisely delimited by Section~\ref{sec:pooling-theory}. Theorem~\ref{thm:exact} establishes that this block reproduces the corresponding measure-and-condition channel exactly, so it is not more expressive than measurement-based pooling; Proposition~\ref{prop:containment} establishes that the wider unitary family strictly contains that class, so the proposed block is one explicitly simulated member of that family. What the block delivers is the same channel without mid-circuit measurement, reset, or classical feed-forward, with the global register pure up to the single terminal measurement and the whole circuit differentiable end to end. The discard step is accounted for as a partial trace rather than as a unitary on the full register.
 
 \subsection{Register-index all-to-all convolutional kernel}
 The kernel applies a fixed six-CNOT pattern in each 2 $\times$ 2 register-index window and couples every pair within that window. The gate support is bounded and the per-window depth is fixed. Parameter sharing reduces allocation growth, and trainability is assessed through the diagnostics of Section~\ref{sec:diagnostics}.
