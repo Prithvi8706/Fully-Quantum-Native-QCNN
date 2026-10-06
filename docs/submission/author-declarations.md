@@ -6,9 +6,10 @@ publication facts that are not inferable from the code. Every listed author
 should review the final PDF and the answers below before a journal portal is
 used.
 
-**Listed authors in the current draft:** Aasa Singh Bhui and Prithvi Raghu.
-Names, affiliations, student status, and email addresses were transcribed from
-the historical conference PDF; the authors must confirm that they remain current.
+**Listed authors in the current draft:** Aasa Singh Bhui, Prithvi Raghu,
+J Jayashree (marked `*`), and J Vijayashree, all with the School of Computer
+Science and Engineering, Vellore Institute of Technology. The authors must
+confirm that names, affiliations, and email addresses remain current.
 
 ## What must be confirmed
 
@@ -18,8 +19,7 @@ the historical conference PDF; the authors must confirm that they remain current
   software, experiments, analysis, writing, and supervision) using the venue's
   required CRediT format if requested.
 - **Originality and prior version:** the work is not under review elsewhere, and
-  the earlier conference draft is disclosed as described in
-  `conference-extension.md`.
+  any earlier conference draft is disclosed to the editor in the cover letter.
 - **Funding:** list grants, institutional support, and donated computing, or state
   that the authors confirmed that no specific funding applies.
 - **Competing interests:** each author has supplied a current conflict statement.

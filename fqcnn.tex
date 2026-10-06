@@ -1,8 +1,7 @@
-% Canonical full IEEE journal draft (venue-neutral IEEEtran format).
-% The earlier conference draft is retained as
-% ``FQCNN conference version (historical).pdf`` for disclosure/comparison.
+% Canonical manuscript source: two-column IEEEtran layout with the abstract in
+% the first column and IEEE author blocks.
 % Build with three passes of pdflatex; the generated PDF is fqcnn.pdf.
-\documentclass[journal]{IEEEtran}
+\documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
@@ -16,14 +15,64 @@
 \usepackage{booktabs}
 \usepackage{bm}
 \usepackage{algorithm}
+\definecolor{ieeelink}{RGB}{0,68,153}
+\usepackage[colorlinks=true,allcolors=ieeelink,breaklinks=true]{hyperref}
+% Make each reference number [n] in the bibliography an external link to the
+% article DOI. In-text \cite numbers remain internal links to the entry.
+\makeatletter
+\@namedef{fqcnndoi@1}{https://doi.org/10.1103/PRXQuantum.3.010313}
+\@namedef{fqcnndoi@2}{https://doi.org/10.1038/s41534-022-00592-6}
+\@namedef{fqcnndoi@3}{https://doi.org/10.1038/s41534-025-00960-y}
+\@namedef{fqcnndoi@4}{https://doi.org/10.1103/PhysRevLett.128.080506}
+\@namedef{fqcnndoi@5}{https://doi.org/10.1103/PhysRevResearch.6.033029}
+\@namedef{fqcnndoi@6}{https://doi.org/10.1103/RevModPhys.95.045005}
+\@namedef{fqcnndoi@7}{https://doi.org/10.1038/s41534-024-00865-2}
+\@namedef{fqcnndoi@8}{https://doi.org/10.1088/2058-9565/aa8072}
+\@namedef{fqcnndoi@9}{https://doi.org/10.1016/j.automatica.2022.110659}
+\@namedef{fqcnndoi@10}{https://doi.org/10.1038/s41567-019-0648-8}
+\@namedef{fqcnndoi@11}{https://doi.org/10.1038/s41467-018-07090-4}
+\@namedef{fqcnndoi@12}{https://doi.org/10.1038/s42254-021-00348-9}
+\@namedef{fqcnndoi@13}{https://doi.org/10.1038/s41534-018-0116-9}
+\@namedef{fqcnndoi@14}{https://doi.org/10.1038/s41467-021-21728-w}
+\@namedef{fqcnndoi@15}{https://doi.org/10.1109/5.726791}
+\renewcommand{\@biblabel}[1]{%
+  \begingroup\edef\fqcnn@u{\csname fqcnndoi@#1\endcsname}%
+  \expandafter\href\expandafter{\fqcnn@u}{[#1]}\endgroup}
+\makeatother
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
 
 \title{FQCNN: A Fully Quantum-Native Convolutional Neural Network with Coherent Unitary Pooling}
 
-\author{Aasa Singh Bhui and Prithvi Raghu%
-\thanks{Aasa Singh Bhui and Prithvi Raghu are with the School of Computer Science and Engineering, Vellore Institute of Technology, Vellore, India (e-mail: aasasingh2005@gmail.com; prithviraghu080706@gmail.com). Aasa Singh Bhui is a fourth-year B.Tech student in Computer Science; Prithvi Raghu is a third-year B.Tech student in Computer Science.}}
+\author{\IEEEauthorblockN{Aasa Singh Bhui}
+\IEEEauthorblockA{School of Computer Science\\
+and Engineering\\
+Vellore Institute of Technology\\
+Vellore, India\\
+aasasingh.bhui2023@vitstudent.ac.in}
+\and
+\IEEEauthorblockN{Prithvi Raghu}
+\IEEEauthorblockA{School of Computer Science\\
+and Engineering\\
+Vellore Institute of Technology\\
+Vellore, India\\
+prithvi.raghu2024@vitstudent.ac.in}
+\and
+\IEEEauthorblockN{J Jayashree*}
+\IEEEauthorblockA{School of Computer Science\\
+and Engineering\\
+Vellore Institute of Technology\\
+Vellore, India\\
+jayashree.j@vit.ac.in}
+\and
+\IEEEauthorblockN{J Vijayashree}
+\IEEEauthorblockA{School of Computer Science\\
+and Engineering\\
+Vellore Institute of Technology\\
+Vellore, India\\
+vijayashree.j@vit.ac.in}
+}
 
 \maketitle
 
@@ -74,16 +123,6 @@ The main contributions of this work are as follows:
 \item We evaluate the frozen model with same-split classical and quantum baselines across four binary tasks from three dataset families, reporting uncertainty and negative results.
 \end{enumerate}
 
-An earlier conference version of this work is retained in the repository as a
-historical artifact.  This manuscript is a substantial journal extension rather
-than a reformatting: it fixes the frozen main path to global amplitude encoding
-and register-index gate support, formalises the exact channel-equivalence and
-strict-containment results, adds the predeclared multi-domain five-seed baseline
-campaign and pooling-transfer ablation, and adds bounded resource, local-noise,
-and reproducibility evidence.  The conference draft's single-task accuracy is
-therefore treated as historical provenance only; the numerical claims in this
-manuscript are taken from the validated Q1 evidence package.
-
 The rest of the paper is organised as follows. Section II reviews related work
 on quantum convolutional and variational quantum models. Section III defines
 the evaluation questions and evidence boundaries. Section IV describes the
@@ -115,7 +154,7 @@ Dimensionality reduction in quantum models is often expressed through quantum au
 Noise remains a primary obstacle to deploying quantum machine learning models on near-term hardware. Comprehensive reviews of quantum error mitigation cover strategies such as zero-noise extrapolation, data-driven correction, and probabilistic error cancellation~\cite{ref22}. Recent work also studies data-augmented learning for noise mitigation~\cite{ref16}. These methods operate at the error-mitigation or training layer; the present manuscript instead treats architectural noise behaviour as a specified finite-simulation question.
 
 \section{Evaluation Questions and Evidence Boundaries}
-The journal extension is organised around four questions that separate an
+The evaluation is organised around four questions that separate an
 architectural identity from an empirical performance claim. This separation is
 important for a fully coherent model: a circuit can remove a dynamic-control
 requirement without improving accuracy, and an accuracy result can be useful as
@@ -184,7 +223,7 @@ channel equivalence is not converted into a claim of better information
 retention. A non-significant paired test is not converted into equivalence with
 five pairs. A finite gradient sweep is not converted into an asymptotic
 trainability theorem. Similarly, local fake-backend transpilation is not called
-hardware validation. This hierarchy is also why the journal version retains
+hardware validation. This hierarchy is also why the paper retains
 the negative findings: the FQCNN is below the logistic and dense baselines on
 all four primary tasks, the wider coherent and SU(4) pooling families do not
 automatically improve the frozen construction, and the full dynamical Lie
@@ -596,8 +635,8 @@ Artifact validation & Complete status, expected configuration, weights, predicti
 \end{tabular}
 \end{table*}
 
-The main simulator path uses PennyLane's 	exttt{default.qubit} backpropagation
-device for batched training and retains 	exttt{lightning.qubit} as a sequential
+The main simulator path uses PennyLane's \texttt{default.qubit} backpropagation
+device for batched training and retains \texttt{lightning.qubit} as a sequential
 correctness oracle. A separate regression suite verifies agreement of outputs,
 losses, all 269 parameter gradients, and one Adam update between the two paths.
 This engineering check is relevant to reproducibility: the faster training path
@@ -631,7 +670,7 @@ If the noise channel is independent of $\theta$, differentiation moves inside th
 
 \section{Experimental Results and Analysis}
 \subsection{Dataset Description}
-The original headline experiment used the MNIST handwritten-digit dataset~\cite{ref49} in the standard IDX binary format, selecting digits 0 and 1 for a strict binary task. Its single seeded stratified 60/15/25 split and 12,665-image count are retained as historical provenance only and are summarised in Table~\ref{tab:dataset}. The Q1 evidence uses the frozen multi-domain registry and records source checksums, ordered sample identifiers, split hashes, validation-only model selection, and exactly one final test evaluation for every seed. Table~\ref{tab:q1data} gives the registered task definitions and split sizes; the complete source-file hashes and sample manifests remain in the machine-readable provenance artifact. The Fashion-MNIST and KMNIST snapshots are identified by upstream URLs and checksums in that artifact rather than by non-journal dataset preprints, consistent with the Q1-journal-only citation policy.
+The original headline experiment used the MNIST handwritten-digit dataset~\cite{ref49} in the standard IDX binary format, selecting digits 0 and 1 for a strict binary task. Its single seeded stratified 60/15/25 split and 12,665-image count are retained as historical provenance only and are summarised in Table~\ref{tab:dataset}. The Q1 evidence uses the frozen multi-domain registry and records source checksums, ordered sample identifiers, split hashes, validation-only model selection, and exactly one final test evaluation for every seed. Table~\ref{tab:q1data} gives the registered task definitions and split sizes; the complete source-file hashes and sample manifests remain in the machine-readable provenance artifact. The Fashion-MNIST and KMNIST snapshots are identified by upstream URLs and checksums in that artifact rather than by non-journal dataset preprints.
 
 \begin{table}[!t]
 \caption{Historical headline dataset configuration}
@@ -930,7 +969,7 @@ C_{\ell_1}(\rho_A)=\sum_{i\ne j}|(\rho_A)_{ij}|,
 and the entropy and mutual information are
 {\scriptsize
 \begin{equation}
-S(\rho_A)=-\operatorname{Tr}(\rho_A\log_2\rho_A),qquad
+S(\rho_A)=-\operatorname{Tr}(\rho_A\log_2\rho_A),\qquad
 I(A:B)=S(\rho_A)+S(\rho_B)-S(\rho_{AB}).
 \end{equation}
 }
@@ -1069,7 +1108,7 @@ The finite trainability audit samples 200 random parameter initialisations and f
 
 \subsection{Finite trainability, expressibility, and Lie-algebra diagnostics}
 \label{sec:diagnostics}
-The journal extension reports the model-analysis evidence in enough detail to
+We report the model-analysis evidence in enough detail to
 show both what was measured and what the measurements cannot establish. These
 diagnostics concern the frozen ansatz and its finite-size instances, not the
 four-task test scores. They are included because parameter count, state-space
@@ -1079,7 +1118,7 @@ coverage, and gradients answer different questions in a variational circuit.
 For each $n\in\{4,6,8,10,12,14\}$, we drew 200 parameter initialisations and
 four random encoded inputs, yielding 800 gradient draws per size. Angles were
 sampled uniformly from $[0,2\pi)$ and gradients were computed with backpropagation
-on 	exttt{default.qubit}. A designated convolution-slot index was kept fixed
+on \texttt{default.qubit}. A designated convolution-slot index was kept fixed
 across sizes, and a second summary took the median variance over slots that
 were live under the finite diagnostic. The designated slot is the more stable
 cross-size estimand; the live-slot population changes with the active-wire
@@ -1251,9 +1290,7 @@ architecture and sizes, with no universal trainability claim in either
 direction.
 
 \section{Discussion}
-The journal extension changes the evidentiary role of the paper. The conference
-draft established the architecture and a compact proof-of-concept result; the
-present version separates architectural identity, statistical behavior,
+This paper separates architectural identity, statistical behavior,
 information dynamics, and implementation cost. This separation is important
 because those questions can point in different directions. An exact channel
 equivalence does not imply an accuracy advantage, and a finite trainability
@@ -1368,21 +1405,21 @@ final submission record after the venue is selected.
 We proposed a fully quantum-native convolutional neural network (FQCNN) that performs state preparation, convolution, pooling, and classification through a single coherent unitary path before the terminal observable. The exact pooling result identifies removal of mid-circuit control as the architectural contribution; the Q1 aggregate and transfer experiments quantify empirical behavior against same-split baselines without presupposing an advantage. Resource, noise, and trainability statements are restricted to their finite local evidence and simulation scope. Future work may extend the evaluation to larger and multi-class tasks or optional real quantum hardware; neither extension is required for this release.
 
 \begin{thebibliography}{00}
-\bibitem{ref14} Z. Holmes, K. Sharma, M. Cerezo, and P. J. Coles, ``Connecting ansatz expressibility to gradient magnitudes and barren plateaus,'' PRX Quantum, vol. 3, no. 1, art. 010313, 2022, doi: 10.1103/PRXQuantum.3.010313.
-\bibitem{ref15} S. Tamiya and H. Yamasaki, ``Stochastic gradient line Bayesian optimization for efficient noise-robust optimization of parameterized quantum circuits,'' npj Quantum Information, vol. 8, art. 90, 2022, doi: 10.1038/s41534-022-00592-6.
-\bibitem{ref16} M. Liao, Y. Zhu, G. Chiribella, and Y. Yang, ``Noise-agnostic quantum error mitigation with data augmented neural models,'' npj Quantum Information, vol. 11, art. 8, 2025, doi: 10.1038/s41534-025-00960-y.
-\bibitem{ref19} Y. Du, Z. Tu, X. Yuan, and D. Tao, ``Efficient measure for the expressivity of variational quantum algorithms,'' Physical Review Letters, vol. 128, no. 8, art. 080506, 2022, doi: 10.1103/PhysRevLett.128.080506.
-\bibitem{ref21} Z. Ding, T. Ko, J. Yao, L. Lin, and X. Li, ``Random coordinate descent: a simple alternative for optimizing parameterized quantum circuits,'' Physical Review Research, vol. 6, no. 3, art. 033029, 2024, doi: 10.1103/PhysRevResearch.6.033029.
-\bibitem{ref22} Z. Cai, R. Babbush, S. C. Benjamin, S. Endo, W. J. Huggins, Y. Li, J. R. McClean, and T. E. O'Brien, ``Quantum error mitigation,'' Reviews of Modern Physics, vol. 95, no. 4, art. 045005, 2023, doi: 10.1103/RevModPhys.95.045005.
-\bibitem{ref23} F. Liu, K. Bian, F. Meng, W. Zhang, and O. Dahlsten, ``Information compression via hidden subgroup quantum autoencoders,'' npj Quantum Information, vol. 10, art. 74, 2024, doi: 10.1038/s41534-024-00865-2.
-\bibitem{ref25} J. Romero, J. P. Olson, and A. Aspuru-Guzik, ``Quantum autoencoders for efficient compression of quantum data,'' Quantum Sci. Technol., vol. 2, no. 4, art. 045001, 2017, doi: 10.1088/2058-9565/aa8072.
-\bibitem{ref26} H. Ma, C.-J. Huang, C. Chen, D. Dong, Y. Wang, R.-B. Wu, and G.-Y. Xiang, ``On compression rate of quantum autoencoders: Control design, numerical and experimental realization,'' Automatica, vol. 147, art. 110659, 2023, doi: 10.1016/j.automatica.2022.110659.
-\bibitem{ref37} I. Cong, S. Choi, and M. D. Lukin, ``Quantum convolutional neural networks,'' Nature Physics, vol. 15, no. 12, pp. 1273--1278, 2019, doi: 10.1038/s41567-019-0648-8.
-\bibitem{ref38} J. R. McClean, S. Boixo, V. N. Smelyanskiy, R. Babbush, and H. Neven, ``Barren plateaus in quantum neural network training landscapes,'' Nature Communications, vol. 9, art. 4812, 2018, doi: 10.1038/s41467-018-07090-4.
-\bibitem{ref40} M. Cerezo et al., ``Variational quantum algorithms,'' Nature Reviews Physics, vol. 3, no. 9, pp. 625--644, 2021, doi: 10.1038/s42254-021-00348-9.
-\bibitem{ref46} E. Grant, M. Benedetti, S. Cao, A. Hallam, J. Lockhart, V. Stojevic, A. G. Green, and S. Severini, ``Hierarchical quantum classifiers,'' npj Quantum Information, vol. 4, art. 65, 2018, doi: 10.1038/s41534-018-0116-9.
-\bibitem{ref47} M. Cerezo, A. Sone, T. Volkoff, L. Cincio, and P. J. Coles, ``Cost function dependent barren plateaus in shallow parametrized quantum circuits,'' Nature Communications, vol. 12, art. 1791, 2021, doi: 10.1038/s41467-021-21728-w.
-\bibitem{ref49} Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner, ``Gradient-based learning applied to document recognition,'' Proceedings of the IEEE, vol. 86, no. 11, pp. 2278--2324, 1998, doi: 10.1109/5.726791.
+\bibitem{ref14} Z. Holmes, K. Sharma, M. Cerezo, and P. J. Coles, ``Connecting ansatz expressibility to gradient magnitudes and barren plateaus,'' PRX Quantum, vol. 3, no. 1, art. 010313, 2022, doi: \href{https://doi.org/10.1103/PRXQuantum.3.010313}{10.1103/PRXQuantum.3.010313}.
+\bibitem{ref15} S. Tamiya and H. Yamasaki, ``Stochastic gradient line Bayesian optimization for efficient noise-robust optimization of parameterized quantum circuits,'' npj Quantum Information, vol. 8, art. 90, 2022, doi: \href{https://doi.org/10.1038/s41534-022-00592-6}{10.1038/s41534-022-00592-6}.
+\bibitem{ref16} M. Liao, Y. Zhu, G. Chiribella, and Y. Yang, ``Noise-agnostic quantum error mitigation with data augmented neural models,'' npj Quantum Information, vol. 11, art. 8, 2025, doi: \href{https://doi.org/10.1038/s41534-025-00960-y}{10.1038/s41534-025-00960-y}.
+\bibitem{ref19} Y. Du, Z. Tu, X. Yuan, and D. Tao, ``Efficient measure for the expressivity of variational quantum algorithms,'' Physical Review Letters, vol. 128, no. 8, art. 080506, 2022, doi: \href{https://doi.org/10.1103/PhysRevLett.128.080506}{10.1103/PhysRevLett.128.080506}.
+\bibitem{ref21} Z. Ding, T. Ko, J. Yao, L. Lin, and X. Li, ``Random coordinate descent: a simple alternative for optimizing parameterized quantum circuits,'' Physical Review Research, vol. 6, no. 3, art. 033029, 2024, doi: \href{https://doi.org/10.1103/PhysRevResearch.6.033029}{10.1103/PhysRevResearch.6.033029}.
+\bibitem{ref22} Z. Cai, R. Babbush, S. C. Benjamin, S. Endo, W. J. Huggins, Y. Li, J. R. McClean, and T. E. O'Brien, ``Quantum error mitigation,'' Reviews of Modern Physics, vol. 95, no. 4, art. 045005, 2023, doi: \href{https://doi.org/10.1103/RevModPhys.95.045005}{10.1103/RevModPhys.95.045005}.
+\bibitem{ref23} F. Liu, K. Bian, F. Meng, W. Zhang, and O. Dahlsten, ``Information compression via hidden subgroup quantum autoencoders,'' npj Quantum Information, vol. 10, art. 74, 2024, doi: \href{https://doi.org/10.1038/s41534-024-00865-2}{10.1038/s41534-024-00865-2}.
+\bibitem{ref25} J. Romero, J. P. Olson, and A. Aspuru-Guzik, ``Quantum autoencoders for efficient compression of quantum data,'' Quantum Sci. Technol., vol. 2, no. 4, art. 045001, 2017, doi: \href{https://doi.org/10.1088/2058-9565/aa8072}{10.1088/2058-9565/aa8072}.
+\bibitem{ref26} H. Ma, C.-J. Huang, C. Chen, D. Dong, Y. Wang, R.-B. Wu, and G.-Y. Xiang, ``On compression rate of quantum autoencoders: Control design, numerical and experimental realization,'' Automatica, vol. 147, art. 110659, 2023, doi: \href{https://doi.org/10.1016/j.automatica.2022.110659}{10.1016/j.automatica.2022.110659}.
+\bibitem{ref37} I. Cong, S. Choi, and M. D. Lukin, ``Quantum convolutional neural networks,'' Nature Physics, vol. 15, no. 12, pp. 1273--1278, 2019, doi: \href{https://doi.org/10.1038/s41567-019-0648-8}{10.1038/s41567-019-0648-8}.
+\bibitem{ref38} J. R. McClean, S. Boixo, V. N. Smelyanskiy, R. Babbush, and H. Neven, ``Barren plateaus in quantum neural network training landscapes,'' Nature Communications, vol. 9, art. 4812, 2018, doi: \href{https://doi.org/10.1038/s41467-018-07090-4}{10.1038/s41467-018-07090-4}.
+\bibitem{ref40} M. Cerezo et al., ``Variational quantum algorithms,'' Nature Reviews Physics, vol. 3, no. 9, pp. 625--644, 2021, doi: \href{https://doi.org/10.1038/s42254-021-00348-9}{10.1038/s42254-021-00348-9}.
+\bibitem{ref46} E. Grant, M. Benedetti, S. Cao, A. Hallam, J. Lockhart, V. Stojevic, A. G. Green, and S. Severini, ``Hierarchical quantum classifiers,'' npj Quantum Information, vol. 4, art. 65, 2018, doi: \href{https://doi.org/10.1038/s41534-018-0116-9}{10.1038/s41534-018-0116-9}.
+\bibitem{ref47} M. Cerezo, A. Sone, T. Volkoff, L. Cincio, and P. J. Coles, ``Cost function dependent barren plateaus in shallow parametrized quantum circuits,'' Nature Communications, vol. 12, art. 1791, 2021, doi: \href{https://doi.org/10.1038/s41467-021-21728-w}{10.1038/s41467-021-21728-w}.
+\bibitem{ref49} Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner, ``Gradient-based learning applied to document recognition,'' Proceedings of the IEEE, vol. 86, no. 11, pp. 2278--2324, 1998, doi: \href{https://doi.org/10.1109/5.726791}{10.1109/5.726791}.
 \end{thebibliography}
 
 \end{document}

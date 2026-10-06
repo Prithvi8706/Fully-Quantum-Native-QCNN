@@ -2,12 +2,9 @@
 ### A Fully Quantum-Native Convolutional Neural Network with Coherent Unitary Pooling
 
 The canonical full-paper source is [`fqcnn.tex`](fqcnn.tex), written in the
-venue-neutral IEEEtran journal format. Its generated PDF is `fqcnn.pdf`; build
+two-column IEEEtran format. Its generated PDF is `fqcnn.pdf`; build
 instructions and the verified release archive are documented in
-[`docs/submission/README.md`](docs/submission/README.md). The tracked
-[conference version (historical)](<FQCNN conference version (historical).pdf>) is
-retained only for prior-version disclosure and must not be confused with the
-current journal draft.
+[`docs/submission/README.md`](docs/submission/README.md).
 
 This repository implements **FQCNN**, a **fully quantum-native convolutional neural network (QCNN)** that performs state preparation, register-index convolution, coherence-preserving unitary pooling, and classification **entirely using unitary quantum operations before one terminal observable**. Unlike hybrid models, this architecture contains no classical convolutional layers at any stage.
 
