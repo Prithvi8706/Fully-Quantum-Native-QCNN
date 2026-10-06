@@ -129,6 +129,6 @@ def test_documentation_preserves_training_environment_and_gates_real_qpu_use():
         "requirements-qiskit-lock.txt",
         "scripts/check_qiskit_environment.py",
         "no credentials or network",
-        "explicit approval",
+        "nothing in this repository runs on quantum hardware",
     ):
         assert required.lower() in docs.lower()
