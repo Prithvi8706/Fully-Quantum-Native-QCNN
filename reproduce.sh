@@ -55,6 +55,7 @@ echo "=== Qiskit resources and noise (Tables XVI-XVIII) ==="
 echo "=== Figures and paper ==="
 "$PY" QCNN/utils/draw_fig1_architecture.py --output figs_final/fig1.png --dpi 600
 "$PY" QCNN/utils/draw_fig3_kernel.py
+"$PY" QCNN/utils/draw_fig4_pooling.py --dpi 600
 "$PY" QCNN/utils/draw_fig_comparison.py --dpi 300
 (cd paper && for pass in 1 2 3; do pdflatex -interaction=nonstopmode -halt-on-error fqcnn.tex >/dev/null; done)
 

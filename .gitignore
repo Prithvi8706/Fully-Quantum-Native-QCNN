@@ -39,16 +39,20 @@ graphify-out/
 Results/experiments/**/*.log
 # Temporary Q1 command transcripts are reproducible and are not evidence.
 Results/evidence/*.log
-# Per-run artifacts are regenerable; only the per-seed test predictions are
-# committed so the paired tests can be recomputed from the repository.
+# Per-run artifacts: the per-seed predictions, weights, and run status are
+# committed so the paired tests and the noise table can be recomputed.
 Results/q1_comparison/runs/**
 !Results/q1_comparison/runs/**/
 !Results/q1_comparison/runs/**/predictions.npz
+!Results/q1_comparison/runs/**/weights.npz
+!Results/q1_comparison/runs/**/status.json
 # Q1 campaign transcripts are regenerable and may include host-specific paths.
 Results/q1_comparison/experiments/**/*.log
 Results/q1_pooling_transfer/runs/**
 !Results/q1_pooling_transfer/runs/**/
 !Results/q1_pooling_transfer/runs/**/predictions.npz
+!Results/q1_pooling_transfer/runs/**/weights.npz
+!Results/q1_pooling_transfer/runs/**/status.json
 # Q1 transfer transcripts are reproducible and are not evidence.
 Results/q1_pooling_transfer/experiments/**/*.log
 Results/smoke/
