@@ -3,7 +3,7 @@
     "name": "fqcnn_q1_claim_ledger",
     "version": 2
   },
-  "generated_at_utc": "2026-10-06T11:48:49.727723Z",
+  "generated_at_utc": "2026-10-06T12:27:27.716830Z",
   "status": "ready_for_release",
   "purpose": "Machine-readable audit of numerical and scope-sensitive claims against the current manuscript and the evidence available at ledger generation time. A claim is not publication-ready unless its status is supported or supported_with_scope and every required action is closed.",
   "scope": {
@@ -26,7 +26,7 @@
     "ready_for_release": "No high-severity claim or release blocker remains; listed medium notes are bounded release-hygiene limitations."
   },
   "source_hashes_sha256": {
-    "paper/fqcnn.tex": "91ddc93bcd507cfd24e4851bfe881dcab254e54cc79e760ded0eedf015cdcecd",
+    "paper/fqcnn.tex": "22a21746dabd82ed1ca044852356d3fe5a97512f7fd27b1cd583261089888f80",
     "docs/paper_code_reconciliation.md": "6ed159d7ab5c1f2ea9fdb1eee3ec82e5f66f792fc03edbdfdcd377172897103b",
     "Results/evidence/q1_fast_track_inventory.json": "b2d82ed83eec6b097d098c56340290a53e18df7ccabfafe54a740f7b3070ef4b",
     "experiments/q1_fast_track_analysis.py": "9c6071f6d433022dafbf8b808f8177c51b5d9317c74f42c11ec0d103fe450573",
@@ -481,7 +481,7 @@
       "id": "A-014",
       "path": "figs_final/q1_comparison.png",
       "status": "pass",
-      "sha256": "f067f053b237efd42d6fa1af268ab3cdd33ee24584a35f3d43fec3babdd3f30e",
+      "sha256": "fa3d77bb2aad3d883b696437a4625fedc6ac8997fa147b5f04aa00bd338a9e53",
       "protocol": {
         "source_artifact": "Results/evidence/q1_comparison.json",
         "tasks": 4,
@@ -1313,7 +1313,7 @@
         {
           "path": "figs_final/q1_comparison.png",
           "pointer": "Q1 comparison figure generated from corrected aggregate",
-          "sha256": "f067f053b237efd42d6fa1af268ab3cdd33ee24584a35f3d43fec3babdd3f30e"
+          "sha256": "fa3d77bb2aad3d883b696437a4625fedc6ac8997fa147b5f04aa00bd338a9e53"
         },
         {
           "path": "Results/evidence/q1_comparison.json",
