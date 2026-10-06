@@ -22,6 +22,7 @@ The architecture overview is regenerated deterministically with:
 
 ```text
 python QCNN/utils/draw_fig1_architecture.py --output figs_final/fig1.png --dpi 600
+python QCNN/utils/draw_fig4_pooling.py --dpi 600
 python QCNN/utils/draw_fig_comparison.py --dpi 300
 ```
 
