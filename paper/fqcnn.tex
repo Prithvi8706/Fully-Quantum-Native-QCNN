@@ -268,7 +268,7 @@ window generator therefore operates on the current active-index arrangement,
 whereas the input itself remains a global amplitude state. We therefore use the term ``register-index window'' throughout.
 
 \subsection{Problem Formulation}
-Consider a labelled dataset $\mathcal{D} = \{(x^{(k)}, y^{(k)})\}$ for $k = 1, \ldots, N$ in a supervised setting, where $x \in \mathbb{R}^d$ is the input feature vector, $x_i \in [-1, 1]$, $y \in \{-1, 1\}$, and $d$ is the number of features after preprocessing. To scale efficiently, we use amplitude encoding, which maps the input vector into a quantum state. We consider a register of $n = 10$ qubits all initialised in the ground state
+Consider a labelled dataset $\mathcal{D} = \{(x^{(k)}, y^{(k)})\}$ for $k = 1, \ldots, N$ in a supervised setting, where $x \in \mathbb{R}^d$ is the input feature vector, $x_i \in [0, 1]$, $y \in \{-1, 1\}$, and $d$ is the number of features after preprocessing. To scale efficiently, we use amplitude encoding, which maps the input vector into a quantum state. We consider a register of $n = 10$ qubits all initialised in the ground state
 \begin{equation}
 |\psi_0\rangle = |0\rangle^{\otimes 10}.
 \end{equation}
@@ -288,7 +288,7 @@ All intermediate transformations are strictly unitary, with no mid-circuit measu
 
 \subsection{Quantum Data Encoding}
 \label{sec:encoding}
-The implementation uses one state-preparation operation: global amplitude encoding. It maps a normalised classical input vector into the amplitudes of a ten-qubit state, representing up to $2^{10}$ features without introducing a second data-dependent feature map. Prior to encoding, each input feature is min-max normalised to the bounded domain $[a, b] = [0, 1]$:
+The implementation uses one state-preparation operation: global amplitude encoding. It maps a normalised classical input vector into the amplitudes of a ten-qubit state, representing up to $2^{10}$ features without introducing a second data-dependent feature map. Prior to encoding, pixel values are min-max normalised to the bounded domain $[a, b] = [0, 1]$, with $x_{\min}$ and $x_{\max}$ taken over the whole dataset:
 \begin{equation}
 x_i' = \frac{x_i - x_{\min}}{x_{\max} - x_{\min}} \cdot (b - a) + a, \qquad [a, b] = [0, 1].
 \end{equation}
@@ -506,10 +506,10 @@ Total tape operations & 327 & Trainable and fixed operations \\
 \end{tabular}
 \end{table*}
 
-The gate count used in the capacity
-scaling diagnostic is 222, not 74: 48 effective slots are reused across more
-than one gate occurrence, with up to four occurrences driven by one slot. The
-two counts thus differ in opposite directions. The audit was performed both on
+The capacity-scaling diagnostic instead counts trainable gate occurrences:
+222 rather than 74, because 48 effective slots are reused across more than one
+gate occurrence, with up to four occurrences driven by one slot. The audit was
+performed both on
 the reference checkpoint over 20 fixed inputs and in the
 independent random-initialisation gradient sweep described in
 Section~\ref{sec:diagnostics}; the two audits give the same effective count.
@@ -661,7 +661,7 @@ We evaluate four binary tasks drawn from three $28\times28$ grayscale dataset fa
 \midrule
 MNIST 0-vs-1 & MNIST (0, 1) & calibration & 400/100/166 & 0--4 \\
 MNIST 3-vs-5 & MNIST (3, 5) & harder in-domain & 400/100/166 & 0--4 \\
-Fashion 0-vs-6 & Fashion-MNIST (T-shirt/top, Shirt) & cross-domain clothing & 400/100/166 & 0--4 \\
+Fashion-MNIST 0-vs-6 & Fashion-MNIST (T-shirt/top, Shirt) & cross-domain clothing & 400/100/166 & 0--4 \\
 KMNIST 2-vs-3 & Kuzushiji-MNIST (2, 3) & distinct script domain & 400/100/166 & 0--4 \\
 \bottomrule
 \end{tabular}
@@ -738,10 +738,10 @@ TTN & U & Yes & 48 \\
 \toprule
 \textbf{Task} & \textbf{FQCNN} & \textbf{Logistic} & \textbf{MLP} & \textbf{TTN} \\
 \midrule
-Fashion 0-vs-6 &  0.789 $\pm$ 0.019 & 0.842 $\pm$ 0.014 & 0.824 $\pm$ 0.015 & 0.787 $\pm$ 0.073 \\
-KMNIST 2-vs-3 &  0.884 $\pm$ 0.023 & 0.947 $\pm$ 0.024 & 0.933 $\pm$ 0.016 & 0.867 $\pm$ 0.062 \\
 MNIST 0-vs-1 &  0.975 $\pm$ 0.013 & 0.995 $\pm$ 0.005 & 0.988 $\pm$ 0.009 & 0.961 $\pm$ 0.016 \\
 MNIST 3-vs-5 &  0.800 $\pm$ 0.030 & 0.948 $\pm$ 0.012 & 0.877 $\pm$ 0.044 & 0.730 $\pm$ 0.047 \\
+Fashion-MNIST 0-vs-6 &  0.789 $\pm$ 0.019 & 0.842 $\pm$ 0.014 & 0.824 $\pm$ 0.015 & 0.787 $\pm$ 0.073 \\
+KMNIST 2-vs-3 &  0.884 $\pm$ 0.023 & 0.947 $\pm$ 0.024 & 0.933 $\pm$ 0.016 & 0.867 $\pm$ 0.062 \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -754,10 +754,10 @@ MNIST 3-vs-5 &  0.800 $\pm$ 0.030 & 0.948 $\pm$ 0.012 & 0.877 $\pm$ 0.044 & 0.73
 \toprule
 \textbf{Task} & \textbf{Accuracy} & \textbf{Balanced acc.} & \textbf{F1} & \textbf{ROC-AUC} & \textbf{PR-AUC} \\
 \midrule
-Fashion 0-vs-6 &  0.789 $\pm$ 0.019 & 0.789 $\pm$ 0.019 & 0.784 $\pm$ 0.021 & 0.863 $\pm$ 0.017 & 0.842 $\pm$ 0.045 \\
-KMNIST 2-vs-3 &  0.884 $\pm$ 0.023 & 0.884 $\pm$ 0.023 & 0.893 $\pm$ 0.020 & 0.968 $\pm$ 0.005 & 0.969 $\pm$ 0.003 \\
 MNIST 0-vs-1 &  0.975 $\pm$ 0.013 & 0.975 $\pm$ 0.013 & 0.975 $\pm$ 0.013 & 0.997 $\pm$ 0.002 & 0.998 $\pm$ 0.002 \\
 MNIST 3-vs-5 &  0.800 $\pm$ 0.030 & 0.800 $\pm$ 0.030 & 0.776 $\pm$ 0.033 & 0.901 $\pm$ 0.035 & 0.896 $\pm$ 0.040 \\
+Fashion-MNIST 0-vs-6 &  0.789 $\pm$ 0.019 & 0.789 $\pm$ 0.019 & 0.784 $\pm$ 0.021 & 0.863 $\pm$ 0.017 & 0.842 $\pm$ 0.045 \\
+KMNIST 2-vs-3 &  0.884 $\pm$ 0.023 & 0.884 $\pm$ 0.023 & 0.893 $\pm$ 0.020 & 0.968 $\pm$ 0.005 & 0.969 $\pm$ 0.003 \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -771,16 +771,6 @@ MNIST 3-vs-5 &  0.800 $\pm$ 0.030 & 0.800 $\pm$ 0.030 & 0.776 $\pm$ 0.033 & 0.90
 \toprule
 \textbf{Task} & \textbf{Arm} & \textbf{Seed 0} & \textbf{Seed 1} & \textbf{Seed 2} & \textbf{Seed 3} & \textbf{Seed 4} \\
 \midrule
-Fashion 0-vs-6 & FQCNN & 0.8072 & 0.7952 & 0.8072 & 0.7771 & 0.7590 \\
- & Logistic & 0.8313 & 0.8614 & 0.8373 & 0.8554 & 0.8253 \\
- & MLP & 0.8072 & 0.8434 & 0.8253 & 0.8373 & 0.8072 \\
- & TTN & 0.8072 & 0.8012 & 0.8313 & 0.8494 & 0.6446 \\
-\addlinespace
-KMNIST 2-vs-3 & FQCNN & 0.8855 & 0.8554 & 0.9036 & 0.9157 & 0.8614 \\
- & Logistic & 0.9819 & 0.9096 & 0.9578 & 0.9458 & 0.9398 \\
- & MLP & 0.9518 & 0.9157 & 0.9518 & 0.9277 & 0.9157 \\
- & TTN & 0.9277 & 0.7892 & 0.9096 & 0.9157 & 0.7952 \\
-\addlinespace
 MNIST 0-vs-1 & FQCNN & 0.9759 & 0.9639 & 0.9578 & 0.9819 & 0.9940 \\
  & Logistic & 1.0000 & 0.9880 & 0.9940 & 0.9940 & 1.0000 \\
  & MLP & 0.9940 & 0.9819 & 0.9880 & 0.9759 & 1.0000 \\
@@ -790,6 +780,16 @@ MNIST 3-vs-5 & FQCNN & 0.7651 & 0.8133 & 0.7771 & 0.7952 & 0.8494 \\
  & Logistic & 0.9398 & 0.9337 & 0.9518 & 0.9458 & 0.9699 \\
  & MLP & 0.8675 & 0.8795 & 0.9036 & 0.8012 & 0.9337 \\
  & TTN & 0.7651 & 0.7470 & 0.6386 & 0.7590 & 0.7410 \\
+\addlinespace
+Fashion-MNIST 0-vs-6 & FQCNN & 0.8072 & 0.7952 & 0.8072 & 0.7771 & 0.7590 \\
+ & Logistic & 0.8313 & 0.8614 & 0.8373 & 0.8554 & 0.8253 \\
+ & MLP & 0.8072 & 0.8434 & 0.8253 & 0.8373 & 0.8072 \\
+ & TTN & 0.8072 & 0.8012 & 0.8313 & 0.8494 & 0.6446 \\
+\addlinespace
+KMNIST 2-vs-3 & FQCNN & 0.8855 & 0.8554 & 0.9036 & 0.9157 & 0.8614 \\
+ & Logistic & 0.9819 & 0.9096 & 0.9578 & 0.9458 & 0.9398 \\
+ & MLP & 0.9518 & 0.9157 & 0.9518 & 0.9277 & 0.9157 \\
+ & TTN & 0.9277 & 0.7892 & 0.9096 & 0.9157 & 0.7952 \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -803,10 +803,10 @@ MNIST 3-vs-5 & FQCNN & 0.7651 & 0.8133 & 0.7771 & 0.7952 & 0.8494 \\
 \toprule
 \textbf{Task} & \textbf{FQCNN $-$ Logistic} & \textbf{FQCNN $-$ MLP} & \textbf{FQCNN $-$ TTN} \\
 \midrule
-Fashion-MNIST 0-vs-6 & $-0.0530$; $p=.0625$, $p_H=.7500$ & $-0.0349$; $p=.0656$, $p_H=.7500$ & $+0.0024$; $p=.7150$, $p_H=1.0000$ \\
-KMNIST 2-vs-3 & $-0.0627$; $p=.0625$, $p_H=.7500$ & $-0.0482$; $p=.0625$, $p_H=.7500$ & $+0.0169$; $p=.4652$, $p_H=1.0000$ \\
 MNIST 0-vs-1 & $-0.0205$; $p=.0625$, $p_H=.7500$ & $-0.0133$; $p=.1250$, $p_H=.7500$ & $+0.0133$; $p=.6250$, $p_H=1.0000$ \\
 MNIST 3-vs-5 & $-0.1482$; $p=.0625$, $p_H=.7500$ & $-0.0771$; $p=.0625$, $p_H=.7500$ & $+0.0699$; $p=.0679$, $p_H=.7500$ \\
+Fashion-MNIST 0-vs-6 & $-0.0530$; $p=.0625$, $p_H=.7500$ & $-0.0349$; $p=.0656$, $p_H=.7500$ & $+0.0024$; $p=.7150$, $p_H=1.0000$ \\
+KMNIST 2-vs-3 & $-0.0627$; $p=.0625$, $p_H=.7500$ & $-0.0482$; $p=.0625$, $p_H=.7500$ & $+0.0169$; $p=.4652$, $p_H=1.0000$ \\
 \bottomrule
 \end{tabular}
 \end{table*}

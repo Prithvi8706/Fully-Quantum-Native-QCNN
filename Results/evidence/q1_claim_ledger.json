@@ -3,7 +3,7 @@
     "name": "fqcnn_q1_claim_ledger",
     "version": 2
   },
-  "generated_at_utc": "2026-10-06T14:14:42.120950Z",
+  "generated_at_utc": "2026-10-06T14:25:04.919093Z",
   "status": "ready_for_release",
   "purpose": "Machine-readable audit of numerical and scope-sensitive claims against the current manuscript and the evidence available at ledger generation time. A claim is not publication-ready unless its status is supported or supported_with_scope and every required action is closed.",
   "scope": {
@@ -26,7 +26,7 @@
     "ready_for_release": "No high-severity claim or release blocker remains; listed medium notes are bounded release-hygiene limitations."
   },
   "source_hashes_sha256": {
-    "paper/fqcnn.tex": "debbe204d35ebb24fff7c0792210c77f2801a2504e3ab2956d9189a87157fb75",
+    "paper/fqcnn.tex": "ac29599306a41cc52a8ba2ff4e2dd9c1022db6ba5b9536789e2dc85be68ded14",
     "docs/paper_code_reconciliation.md": "6ed159d7ab5c1f2ea9fdb1eee3ec82e5f66f792fc03edbdfdcd377172897103b",
     "Results/evidence/q1_fast_track_inventory.json": "b2d82ed83eec6b097d098c56340290a53e18df7ccabfafe54a740f7b3070ef4b",
     "experiments/q1_fast_track_analysis.py": "9c6071f6d433022dafbf8b808f8177c51b5d9317c74f42c11ec0d103fe450573",
