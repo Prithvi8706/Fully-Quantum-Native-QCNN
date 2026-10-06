@@ -55,7 +55,7 @@ EVIDENCE_REQUIRED = (
 # ledger may contain additional historical artifacts, but it may not omit one
 # of these bindings.
 LEDGER_REQUIRED_SOURCE_PATHS = (
-    "fqcnn.tex",
+    "paper/fqcnn.tex",
     "docs/paper_code_reconciliation.md",
     "Results/evidence/q1_fast_track_inventory.json",
     "experiments/evidence_provenance.py",
@@ -115,7 +115,7 @@ RELEASE_LINT_PATHS = (
 # test run while still rejecting source drift.
 REPRODUCTION_SOURCE_PATHS = tuple(
     dict.fromkeys((
-        "fqcnn.tex",
+        "paper/fqcnn.tex",
         "requirements-lock.txt",
         "requirements-qiskit-lock.txt",
         *RELEASE_LINT_PATHS,
@@ -744,7 +744,8 @@ def build_report(root: Path, output: Path) -> dict[str, Any]:
                         "-interaction=nonstopmode",
                         "-halt-on-error",
                         "-file-line-error",
-                        "fqcnn.tex",
+                        "-output-directory=paper",
+                        "paper/fqcnn.tex",
                     ],
                     timeout=300,
                 )

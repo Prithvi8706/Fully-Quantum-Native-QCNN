@@ -29,7 +29,6 @@ ROOT_FILES = {
     "DATASET_README.md",
     "README.md",
     "RUN_GUIDE.md",
-    "fqcnn.tex",
     "main.py",
     "noise_sim.py",
     "pytest.ini",
@@ -55,6 +54,7 @@ INCLUDED_PREFIXES = (
     "Results/q1_comparison/",
     "Results/q1_pooling_transfer/",
     "docs/submission/",
+    "paper/",
 )
 
 DOCUMENTATION_FILES = {
@@ -65,8 +65,8 @@ DOCUMENTATION_FILES = {
 }
 
 REQUIRED_FILES = {
-    "fqcnn.tex",
-    "fqcnn.pdf",
+    "paper/fqcnn.tex",
+    "paper/fqcnn.pdf",
     "requirements-lock.txt",
     "requirements-qiskit-lock.txt",
     "Results/evidence/q1_claim_ledger.json",
@@ -183,11 +183,11 @@ def selected_files(root: Path) -> list[str]:
         or path.startswith(INCLUDED_PREFIXES)
     }
 
-    tex_path = root / "fqcnn.tex"
+    tex_path = root / "paper/fqcnn.tex"
     selected.update(
         referenced_graphics(tex_path.read_text(encoding="utf-8"))
     )
-    selected.add("fqcnn.pdf")
+    selected.add("paper/fqcnn.pdf")
 
     missing = sorted(path for path in REQUIRED_FILES if not (root / path).is_file())
     if missing:
@@ -196,7 +196,7 @@ def selected_files(root: Path) -> list[str]:
         )
 
     untracked_selected = sorted(
-        path for path in selected if path != "fqcnn.pdf" and path not in tracked
+        path for path in selected if path != "paper/fqcnn.pdf" and path not in tracked
     )
     if untracked_selected:
         raise RuntimeError(
@@ -222,14 +222,14 @@ def assert_clean_tracked_tree(root: Path) -> None:
 
 
 def assert_fresh_pdf(root: Path) -> None:
-    tex = root / "fqcnn.tex"
-    pdf = root / "fqcnn.pdf"
+    tex = root / "paper/fqcnn.tex"
+    pdf = root / "paper/fqcnn.pdf"
     if not pdf.is_file():
-        raise FileNotFoundError("fqcnn.pdf is missing; build the manuscript first")
+        raise FileNotFoundError("paper/fqcnn.pdf is missing; build the manuscript first")
     if pdf.stat().st_mtime_ns < tex.stat().st_mtime_ns:
-        raise RuntimeError("fqcnn.pdf is older than fqcnn.tex; rebuild the manuscript")
+        raise RuntimeError("paper/fqcnn.pdf is older than paper/fqcnn.tex; rebuild the manuscript")
     if not pdf.read_bytes().startswith(b"%PDF-"):
-        raise ValueError("fqcnn.pdf does not have a valid PDF header")
+        raise ValueError("paper/fqcnn.pdf does not have a valid PDF header")
 
 
 def file_records(root: Path, paths: Iterable[str]) -> list[dict]:
@@ -324,8 +324,8 @@ def build_manifest(root: Path, records: list[dict]) -> dict:
             "tracked_tree_clean": True,
         },
         "scope": {
-            "article": "fqcnn.tex",
-            "rendered_article": "fqcnn.pdf",
+            "article": "paper/fqcnn.tex",
+            "rendered_article": "paper/fqcnn.pdf",
             "simulation_only": True,
             "real_qpu_submission": False,
             "journal_submission_performed": False,

@@ -53,3 +53,8 @@ Results/smoke/
 # clean commit. Keep them local (or attach them to a release) rather than
 # storing generated ZIP files in Git.
 submission_dist/
+
+# LaTeX intermediates from building the paper.
+paper/*.aux
+paper/*.log
+paper/*.out

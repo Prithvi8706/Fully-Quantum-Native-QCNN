@@ -49,8 +49,9 @@ def test_archive_verifier_checks_manifest_and_file_hashes(tmp_path):
 
 
 def test_pdf_guard_rejects_non_pdf_content(tmp_path):
-    (tmp_path / "fqcnn.tex").write_text("paper", encoding="utf-8")
-    (tmp_path / "fqcnn.pdf").write_bytes(b"not a pdf")
+    (tmp_path / "paper").mkdir()
+    (tmp_path / "paper/fqcnn.tex").write_text("paper", encoding="utf-8")
+    (tmp_path / "paper/fqcnn.pdf").write_bytes(b"not a pdf")
     with pytest.raises(ValueError, match="valid PDF header"):
         package.assert_fresh_pdf(tmp_path)
 

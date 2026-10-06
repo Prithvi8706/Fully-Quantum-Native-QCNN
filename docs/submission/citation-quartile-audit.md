@@ -1,7 +1,7 @@
 # Citation-quartile audit
 
 **Audit date:** 2026-08-30  
-**Manuscript:** `fqcnn.tex`  
+**Manuscript:** `paper/fqcnn.tex`  
 **Policy:** every bibliography item cited by the manuscript is a peer-reviewed
 journal article. The retained venue is reported as **Q1 in the 2024 SCImago
 Journal & Country Rank (SJR/Scopus) data in a category relevant to quantum

@@ -9,9 +9,11 @@ From a clean checkout of the release commit:
 ```text
 python -m pip install -r requirements-lock.txt
 python -m pytest tests -q
+cd paper
 pdflatex -interaction=nonstopmode -halt-on-error fqcnn.tex
 pdflatex -interaction=nonstopmode -halt-on-error fqcnn.tex
 pdflatex -interaction=nonstopmode -halt-on-error fqcnn.tex
+cd ..
 ruff check .  # optional release lint tool; not part of the runtime lock
 python -m compileall -q QCNN baselines experiments scripts tests
 ```

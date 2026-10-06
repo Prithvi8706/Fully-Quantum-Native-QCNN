@@ -3,11 +3,11 @@
     "name": "fqcnn_q1_claim_ledger",
     "version": 2
   },
-  "generated_at_utc": "2026-10-06T11:32:31.413242Z",
+  "generated_at_utc": "2026-10-06T11:48:49.727723Z",
   "status": "ready_for_release",
   "purpose": "Machine-readable audit of numerical and scope-sensitive claims against the current manuscript and the evidence available at ledger generation time. A claim is not publication-ready unless its status is supported or supported_with_scope and every required action is closed.",
   "scope": {
-    "manuscript": "fqcnn.tex",
+    "manuscript": "paper/fqcnn.tex",
     "governing_inventory": "Results/evidence/q1_fast_track_inventory.json",
     "reconciliation": "docs/paper_code_reconciliation.md",
     "comparison_artifact": "Results/evidence/q1_comparison.json",
@@ -26,10 +26,10 @@
     "ready_for_release": "No high-severity claim or release blocker remains; listed medium notes are bounded release-hygiene limitations."
   },
   "source_hashes_sha256": {
-    "fqcnn.tex": "ea7be6f439383eeb33ba6be245eadc2037ae47d3d72bd32a503f52ff1c41f5dd",
+    "paper/fqcnn.tex": "91ddc93bcd507cfd24e4851bfe881dcab254e54cc79e760ded0eedf015cdcecd",
     "docs/paper_code_reconciliation.md": "6ed159d7ab5c1f2ea9fdb1eee3ec82e5f66f792fc03edbdfdcd377172897103b",
     "Results/evidence/q1_fast_track_inventory.json": "b2d82ed83eec6b097d098c56340290a53e18df7ccabfafe54a740f7b3070ef4b",
-    "experiments/q1_fast_track_analysis.py": "c5e360285ef27c313ef21e9e92f5e1731cc821f4abf94609b5f0b84d912b25a2",
+    "experiments/q1_fast_track_analysis.py": "9c6071f6d433022dafbf8b808f8177c51b5d9317c74f42c11ec0d103fe450573",
     "experiments/q1_local_evidence.py": "76d1f008161645bbe5dd8fbd2a773284026a1134ff48a21a99d6929d5a4c6c13",
     "experiments/q1_pooling_transfer.py": "6ed3f0473fda41199f056ccdf1340d3072a4d66d9e2d95e84c45e1097fdb5cff",
     "experiments/run_experiments.py": "9e9eb4577919174b7d5155b469268d472205b58f0c8e3fdc3dafb5607e332929",
@@ -44,9 +44,9 @@
     "tests/fixtures/effective_params.json": "6c5021a78d4fce3ddecc331f08ec88ec4c7b252d8c0d74405b3f94d61622947f",
     "tests/fixtures/headline_signature.json": "773080573f9da762aaae93bfa46128cfc272854ad8cc31f0392c1233f77f6b54",
     "tests/fixtures/headline_expectations.npz": "46072f1eb8763b0233e42382253c3b602176f07feeb591ee0e173c840d93ab0e",
-    "scripts/build_q1_submission_package.py": "86f1f0fbc569edbc220d5ce943a081d0336bd6418378b73e73fac18f87d0dfc6",
+    "scripts/build_q1_submission_package.py": "8cb3bde16d39c4c5673006390e86426c68ae38d139af1105e3a12359a5647563",
     "scripts/refresh_q1_claim_ledger.py": "53ebc53c51f55ff84f49f40a49a0b58dfda20bf6f5d9230f68739b5548f89ad3",
-    "scripts/run_q1_reproduction.py": "ddae1394e2b849bd56c7b61f8522995318be4660cc9b007f5d408fa89723e681",
+    "scripts/run_q1_reproduction.py": "168f413e08609816951ca5c871656e428b4695d8386132423fa9633b0434bcf0",
     "experiments/evidence_provenance.py": "646d57c5bee428dd63c1b881307b0c44d1f4f347faa07e82113c4beace721e5f",
     "experiments/statistics.py": "1ce3bf4d3619a4219ac728424bd21be055149c6017e90e0278d5609daafffe3c",
     "baselines/classical_cnn.py": "88f0d8518ecd20ea34a0c1ebcfd26e6b4a8534df7fd085e3451521b3b28babc8",
@@ -695,7 +695,7 @@
       "risk": "low",
       "evidence": [
         {
-          "path": "fqcnn.tex",
+          "path": "paper/fqcnn.tex",
           "pointer": "Theorem Exact simulation, lines 200-218",
           "status": "mathematical_statement"
         },
@@ -727,7 +727,7 @@
       "risk": "medium",
       "evidence": [
         {
-          "path": "fqcnn.tex",
+          "path": "paper/fqcnn.tex",
           "pointer": "partial-trace argument and reported removal check, lines 214-227"
         },
         {
@@ -757,7 +757,7 @@
       "risk": "medium",
       "evidence": [
         {
-          "path": "fqcnn.tex",
+          "path": "paper/fqcnn.tex",
           "pointer": "Strict containment proposition and SWAP witness, lines 229-236",
           "status": "mathematical_statement"
         },
@@ -1306,7 +1306,7 @@
       "risk": "low",
       "evidence": [
         {
-          "path": "fqcnn.tex",
+          "path": "paper/fqcnn.tex",
           "pointer": "current q1_comparison figure include and caption at lines 443-447",
           "status": "manuscript_scope"
         },

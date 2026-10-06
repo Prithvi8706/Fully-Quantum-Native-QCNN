@@ -34,14 +34,6 @@ The source, locks, evidence, tests, and generated PDF are bound to an exact Git
 commit by the accompanying package manifest. A persistent public code/evidence
 archive and the author declarations will be completed before portal submission.
 
-An earlier conference draft exists. The submitted journal version is a
-substantial extension: it formalises the pooling channel result, corrects the
-main-path and locality description, adds the predeclared multi-domain repeated-
-seed comparison and pooling-transfer evidence, and reports bounded resource,
-noise, and reproducibility checks. The earlier single-task result is retained
-only as historical provenance and is not presented as the journal's headline
-evidence.
-
 Sincerely,
 
 The authors of FQCNN

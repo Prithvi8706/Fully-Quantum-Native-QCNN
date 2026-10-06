@@ -737,7 +737,7 @@ def _parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
     inventory = subparsers.add_parser("inventory", help="inventory existing evidence and claims")
     inventory.add_argument("--root", default=".")
-    inventory.add_argument("--manuscript", default="fqcnn.tex")
+    inventory.add_argument("--manuscript", default="paper/fqcnn.tex")
     inventory.add_argument("--output", required=True)
     inventory.add_argument("--full-suite-passed", type=int)
     inventory.add_argument("--full-suite-skipped", type=int)

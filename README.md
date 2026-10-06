@@ -1,8 +1,9 @@
 # FQCNN: Fully Quantum-Native QCNN 
 ### A Fully Quantum-Native Convolutional Neural Network with Coherent Unitary Pooling
 
-The canonical full-paper source is [`fqcnn.tex`](fqcnn.tex), written in the
-two-column IEEEtran format. Its generated PDF is `fqcnn.pdf`; build
+The paper lives in [`paper/`](paper): the source is
+[`paper/fqcnn.tex`](paper/fqcnn.tex), written in the two-column IEEEtran
+format, and the final PDF is [`paper/fqcnn.pdf`](paper/fqcnn.pdf). Build
 instructions and the verified release archive are documented in
 [`docs/submission/README.md`](docs/submission/README.md).
 

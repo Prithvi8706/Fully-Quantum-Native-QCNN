@@ -18,8 +18,8 @@ confirm that names, affiliations, and email addresses remain current.
 - **Contributions:** record the roles (for example, conceptualisation, theory,
   software, experiments, analysis, writing, and supervision) using the venue's
   required CRediT format if requested.
-- **Originality and prior version:** the work is not under review elsewhere, and
-  any earlier conference draft is disclosed to the editor in the cover letter.
+- **Originality:** the work has not been published and is not under review
+  elsewhere.
 - **Funding:** list grants, institutional support, and donated computing, or state
   that the authors confirmed that no specific funding applies.
 - **Competing interests:** each author has supplied a current conflict statement.

@@ -7,21 +7,21 @@ paper; it is not permission to broaden the claim.
 
 | # | Reviewer question | Evidence / pointer | Severity | Status |
 |---:|---|---|---|---|
-| 1 | Is the canonical architecture unchanged and demonstrably unitary? | `tests/test_freeze_architecture.py`; `tests/fixtures/headline_signature.json`; `fqcnn.tex` Secs. III–IV | High | Pass |
+| 1 | Is the canonical architecture unchanged and demonstrably unitary? | `tests/test_freeze_architecture.py`; `tests/fixtures/headline_signature.json`; `paper/fqcnn.tex` Secs. III–IV | High | Pass |
 | 2 | Are three dataset families and all four tasks represented without test-driven pair selection? | `Results/evidence/q1_dataset_provenance.json`; `Results/evidence/q1_comparison.json` protocol | High | Pass |
 | 3 | Are split identities, ordered IDs, seed counts, uncertainty, and one final test evaluation visible? | `Results/q1_comparison/manifests/`; per-cell JSON; aggregate `protocol` and `artifact_hashes` | High | Pass |
 | 4 | Are classical and hierarchical quantum baselines evaluated on identical data? | Aggregate split/sample identity validation; `baselines/classical_cnn.py`; `baselines/quantum_baselines.py` | High | Pass with caveat: the two-unit dense MLP has 1,573 parameters, so it is not called parameter-matched; the conservative capacity mismatch is disclosed. |
 | 5 | Are paired tests, assumptions, and multiplicity control reported? | `Results/evidence/q1_comparison.json` `proposed_vs`; Holm–Bonferroni family of 12 tests | High | Pass |
 | 6 | Does the pooling ablation separate equivalence, architecture, and accuracy? | `Results/evidence/e1_pooling_equivalence.json`, `e2_dephasing.json`, `q1_pooling_transfer.json`, `q1_pooling_controls.json` | High | Pass |
-| 7 | Are allocated, tape-reaching, and effective parameters distinguished? | `tests/fixtures/effective_params.json`; `fqcnn.tex` classifier section | Medium | Pass: 269 / 78 / 74 |
+| 7 | Are allocated, tape-reaching, and effective parameters distinguished? | `tests/fixtures/effective_params.json`; `paper/fqcnn.tex` classifier section | Medium | Pass: 269 / 78 / 74 |
 | 8 | Is the full DLA result reported without a trainability certificate? | `Results/evidence/t6_dynamical_lie_algebra.json`; `docs/simulability_statement.md` | High | Pass |
-| 9 | Are state-preparation, model-body, readout, and total resources separated? | `Results/evidence/q1_resources.json`; `fqcnn.tex` practicality section | Medium | Pass |
+| 9 | Are state-preparation, model-body, readout, and total resources separated? | `Results/evidence/q1_resources.json`; `paper/fqcnn.tex` practicality section | Medium | Pass |
 | 10 | Does zero-noise output agree with the canonical path, without calling local noise device validation? | `Results/evidence/q1_noise_validation.json`; `q1_fake_backend_rehearsal.json` | High | Pass with simulation/local-device scope |
-| 11 | Are simulator, fake backend, local transpilation, and real hardware distinct? | `README.md`; `fqcnn.tex` limitations; `Results/evidence/q1_fake_backend_rehearsal.json` | High | Pass: no real-QPU job is claimed or submitted |
-| 12 | Are advantage, locality, scalability, and robustness claims no stronger than evidence? | `fqcnn.tex` introduction, results, limitations; reconciliation table | High | Pass |
+| 11 | Are simulator, fake backend, local transpilation, and real hardware distinct? | `README.md`; `paper/fqcnn.tex` limitations; `Results/evidence/q1_fake_backend_rehearsal.json` | High | Pass: no real-QPU job is claimed or submitted |
+| 12 | Are advantage, locality, scalability, and robustness claims no stronger than evidence? | `paper/fqcnn.tex` introduction, results, limitations; reconciliation table | High | Pass |
 | 13 | Does every numerical manuscript claim trace to committed evidence? | `Results/evidence/q1_claim_ledger.json`; source/artifact SHA-256 records | High | Pass: final ledger refresh has 16 artifacts, zero unresolved items, and updated source hashes |
 | 14 | Can a clean checkout validate evidence, run tests, and build the manuscript? | `Results/evidence/q1_reproduction.json`; `scripts/build_q1_submission_package.py` | High | Pass: 652 tests (650 passed, 2 documented Windows symlink skips), clean training/Qiskit checks, three-pass LaTeX build |
-| 15 | Are limitations, negative results, and conditional hardware status explicit? | `fqcnn.tex` Sec. V/VI; `docs/submission/data-code-availability.md` | Medium | Pass |
+| 15 | Are limitations, negative results, and conditional hardware status explicit? | `paper/fqcnn.tex` Sec. V/VI; `docs/submission/data-code-availability.md` | Medium | Pass |
 
 ## One correction pass
 
